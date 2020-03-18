@@ -1,0 +1,51 @@
+name: Release Service
+
+on:
+  push:
+    tags: "service-*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    - name: Build
+      run: dotnet build --configuration Release
+      working-directory: src
+    - name: Test
+      run: dotnet test --no-build --configuration Release
+      working-directory: src
+    - name: Publish API
+      run: dotnet publish --no-build ./src/Brokerage/Brokerage.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+    - name: Publish worker
+      run: dotnet publish --no-build ./src/Brokerage.Worker/Brokerage.Worker.csproj --output ./publish-worker --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+    - name: Check API dir
+      run: ls ./publish-api
+    - name: Check worker dir
+      run: ls ./publish-worker
+    - name: Publish API to Registry
+      uses: SC-Poc/Publish-Docker-Github-Action@master
+      with:
+        name: swisschains/sirius-brokerage
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: ./publish-api
+        # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
+        tag_names: true  
+        tag_name_skip: service-    
+    - name: Publish worker to Registry
+      uses: SC-Poc/Publish-Docker-Github-Action@master
+      with:
+        name: swisschains/sirius-brokerage-worker
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: ./publish-worker
+        # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
+        tag_names: true  
+        tag_name_skip: service-

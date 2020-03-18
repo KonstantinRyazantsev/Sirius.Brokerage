@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Brokerage</AssemblyName>
+    <RootNamespace>Brokerage</RootNamespace>
+    <UserSecretsId>3484bae3-972c-41c4-9c15-aafba8c1f3fd</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="6.2.2" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.2.2" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="6.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swisschain.Sdk.Server" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Brokerage.Common\Brokerage.Common.csproj" />
+    <ProjectReference Include="..\Brokerage.ApiContract\Brokerage.ApiContract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: brokerage
+    environment: Development
+  name: brokerage
+  namespace: sirius
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 5000
+  - name: grpc
+    port: 5001
+    protocol: TCP
+    targetPort: 5001
+  selector:
+    app: brokerage
+  sessionAffinity: None
+  type: ClusterIP
