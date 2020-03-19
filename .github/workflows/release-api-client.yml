@@ -17,10 +17,8 @@ jobs:
         dotnet-version: 3.1.100
     - name: Build
       run: dotnet build --configuration Release
-      working-directory: src
     - name: Test
       run: dotnet test --no-build --configuration Release
-      working-directory: src
     - name: Create the package
       run: dotnet pack --configuration Release src/Brokerage.ApiClient /p:Version=${GITHUB_REF#refs/tags/api-client-}
     - name: Publish the package to GPR

@@ -9,11 +9,11 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 80
+    port: 8080
     protocol: TCP
     targetPort: 5000
   - name: grpc
-    port: 5001
+    port: 80
     protocol: TCP
     targetPort: 5001
   selector:

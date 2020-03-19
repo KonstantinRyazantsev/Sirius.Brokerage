@@ -7,49 +7,49 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contract", "Contract", "{65
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}"
 	ProjectSection(SolutionItems) = preProject
-		..\.dockerignore = ..\.dockerignore
-		..\.editorconfig = ..\.editorconfig
-		..\.gitattributes = ..\.gitattributes
-		..\.gitignore = ..\.gitignore
-		..\appsettings.format.json = ..\appsettings.format.json
-		..\LICENSE = ..\LICENSE
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		appsettings.format.json = appsettings.format.json
+		LICENSE = LICENSE
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage", "Brokerage\Brokerage.csproj", "{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage", "src\Brokerage\Brokerage.csproj", "{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.ApiClient", "Brokerage.ApiClient\Brokerage.ApiClient.csproj", "{9B71FE5F-2279-411C-9920-4159E3635E36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.ApiClient", "src\Brokerage.ApiClient\Brokerage.ApiClient.csproj", "{9B71FE5F-2279-411C-9920-4159E3635E36}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClient", "..\tests\TestClient\TestClient.csproj", "{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClient", "tests\TestClient\TestClient.csproj", "{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.ApiContract", "Brokerage.ApiContract\Brokerage.ApiContract.csproj", "{48E5261D-8A27-4496-88F1-EF76BE4279DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.ApiContract", "src\Brokerage.ApiContract\Brokerage.ApiContract.csproj", "{48E5261D-8A27-4496-88F1-EF76BE4279DE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrokerageTests", "..\tests\BrokerageTests\BrokerageTests.csproj", "{4C51C936-D545-49A9-816A-4F2C357B56DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrokerageTests", "tests\BrokerageTests\BrokerageTests.csproj", "{4C51C936-D545-49A9-816A-4F2C357B56DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Common", "Brokerage.Common\Brokerage.Common.csproj", "{2BFF98C7-1714-4000-A468-DBD9C24E7B02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Common", "src\Brokerage.Common\Brokerage.Common.csproj", "{2BFF98C7-1714-4000-A468-DBD9C24E7B02}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Worker", "Brokerage.Worker\Brokerage.Worker.csproj", "{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Worker", "src\Brokerage.Worker\Brokerage.Worker.csproj", "{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.MessagingContract", "Brokerage.MessagingContract\Brokerage.MessagingContract.csproj", "{64093FB1-0321-4BC3-8832-8B51CB1BA61A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.MessagingContract", "src\Brokerage.MessagingContract\Brokerage.MessagingContract.csproj", "{64093FB1-0321-4BC3-8832-8B51CB1BA61A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github workflow", "Github workflow", "{54F26A6C-5B76-40E5-8E9C-2FA0551BC226}"
 	ProjectSection(SolutionItems) = preProject
-		..\.github\workflows\ci.yml = ..\.github\workflows\ci.yml
-		..\.github\workflows\release-api-client.yml = ..\.github\workflows\release-api-client.yml
-		..\.github\workflows\release-messaging-contract.yml = ..\.github\workflows\release-messaging-contract.yml
-		..\.github\workflows\release-service.yml = ..\.github\workflows\release-service.yml
-		..\.github\workflows\validate-commit.yml = ..\.github\workflows\validate-commit.yml
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\release-api-client.yml = .github\workflows\release-api-client.yml
+		.github\workflows\release-messaging-contract.yml = .github\workflows\release-messaging-contract.yml
+		.github\workflows\release-service.yml = .github\workflows\release-service.yml
+		.github\workflows\validate-commit.yml = .github\workflows\validate-commit.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{DB08FC9E-A784-4D4D-932C-DA320E3C5091}"
 	ProjectSection(SolutionItems) = preProject
-		..\README.md = ..\README.md
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", "{AD37D2C5-7CE6-41CD-9515-B65E5A46B96C}"
 	ProjectSection(SolutionItems) = preProject
-		..\deployment\kubernetes\readme.md = ..\deployment\kubernetes\readme.md
+		deployment\kubernetes\readme.md = deployment\kubernetes\readme.md
 	EndProjectSection
 EndProject
 Global

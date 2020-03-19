@@ -18,10 +18,8 @@ jobs:
         dotnet-version: 3.1.100
     - name: Build
       run: dotnet build --configuration Release
-      working-directory: src
     - name: Test
       run: dotnet test --no-build --configuration Release
-      working-directory: src
     - name: Publish API
       run: dotnet publish --no-build ./src/Brokerage/Brokerage.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=0.0.0
     - name: Publish worker
