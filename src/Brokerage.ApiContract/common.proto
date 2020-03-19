@@ -5,6 +5,12 @@ option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.common";
 package common;
 
 message ErrorResponseBody {
-  int32 errorCode = 1;
+
+  enum ErrorCode {
+    UNKNOWN = 0;
+    NOT_A_VALID_NETWORK = 1;
+  }
+
+  ErrorCode errorCode = 1;
   string errorMessage = 2;
 }

@@ -7,7 +7,8 @@ namespace Brokerage.Worker.MessageConsumers
         public static IServiceCollection AddMessageConsumers(this IServiceCollection services)
         {
             // TODO: Just an example
-            //services.AddTransient<ExecuteSomethingConsumer>();
+            services.AddTransient<BlockchainUpdatesConsumer>();
+            services.AddTransient<NetworkUpdatesConsumer>();
 
             return services;
         }

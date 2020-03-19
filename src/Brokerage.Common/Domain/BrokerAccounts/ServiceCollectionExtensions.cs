@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Brokerage.Common.Domain.BrokerAccount
+namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public static class ServiceCollectionExtensions
     {

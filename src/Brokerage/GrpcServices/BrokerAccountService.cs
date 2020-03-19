@@ -10,16 +10,35 @@ namespace Brokerage.GrpcServices
     public class BrokerAccountService : BrokerAccount.BrokerAccountBase
     {
         private readonly IBrokerAccountRepository _brokerAccountRepository;
+        private readonly INetworkReadModelRepository _networkReadModelRepository;
 
-        public BrokerAccountService(IBrokerAccountRepository brokerAccountRepository)
+        public BrokerAccountService(
+            IBrokerAccountRepository brokerAccountRepository,
+            INetworkReadModelRepository networkReadModelRepository)
         {
             _brokerAccountRepository = brokerAccountRepository;
+            _networkReadModelRepository = networkReadModelRepository;
         }
 
         public override async Task<CreateResponse> Create(CreateRequest request, ServerCallContext context)
         {
             try
             {
+                var existingNetwork =
+                    await _networkReadModelRepository.GetOrDefaultAsync(request.BlockchainId, request.NetworkId);
+
+                if (existingNetwork == null)
+                {
+                    return new CreateResponse()
+                    {
+                        Error = new ErrorResponseBody()
+                        {
+                            ErrorCode = ErrorResponseBody.Types.ErrorCode.NotAValidNetwork,
+                            ErrorMessage = $"There is no such blockchain - network pair as {request.BlockchainId} - {request.NetworkId}",
+                        }
+                    };
+                }
+
                 var result = await _brokerAccountRepository.AddOrGetAsync(
                     request.RequestId,
                     request.TenantId,
@@ -44,7 +63,7 @@ namespace Brokerage.GrpcServices
                 {
                     Error = new ErrorResponseBody()
                     {
-                        ErrorCode = 1,
+                        ErrorCode = ErrorResponseBody.Types.ErrorCode.Unknown,
                         ErrorMessage = e.Message,
                     }
                 };

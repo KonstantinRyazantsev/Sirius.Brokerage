@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Domain.BrokerAccount;
+using Brokerage.Common.Domain.BrokerAccounts;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence
 {

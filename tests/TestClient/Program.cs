@@ -24,17 +24,33 @@ namespace TestClient
                     sw.Start();
                     var result = await client.Monitoring.IsAliveAsync(new IsAliveRequest());
 
-                    var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
                     {
-                        BlockchainId = "Bitcoin",
-                        Name = "Broker_1",
-                        RequestId = requestId,
-                        TenantId = "Tenant_1",
-                        NetworkId = "RegTest"
-                    });
+                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        {
+                            BlockchainId = "Bitcoin",
+                            Name = "Broker_1",
+                            RequestId = requestId,
+                            TenantId = "Tenant_1",
+                            NetworkId = "RegTest"
+                        });
 
-                    var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                    Console.WriteLine(serialized);
+                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                        Console.WriteLine(serialized);
+                    }
+
+                    {
+                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        {
+                            BlockchainId = "Bitcoin",
+                            Name = "Broker_1",
+                            RequestId = requestId,
+                            TenantId = "Tenant_1",
+                            NetworkId = "RegTest2"
+                        });
+
+                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                        Console.WriteLine(serialized);
+                    }
 
                     sw.Stop();
                     Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");

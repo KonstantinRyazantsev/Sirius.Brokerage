@@ -2,6 +2,7 @@
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
@@ -18,6 +19,16 @@ namespace Brokerage.Common.Migrations
                 .HasAnnotation("ProductVersion", "3.1.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            modelBuilder.Entity("Brokerage.Common.Persistence.Entities.BlockchainEntity", b =>
+                {
+                    b.Property<string>("BlockchainId")
+                        .HasColumnType("text");
+
+                    b.HasKey("BlockchainId");
+
+                    b.ToTable("blockchains");
+                });
+
             modelBuilder.Entity("Brokerage.Common.Persistence.Entities.BrokerAccountEntity", b =>
                 {
                     b.Property<string>("BlockchainId")
@@ -29,6 +40,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("BrokerAccountId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Name")
@@ -47,6 +59,19 @@ namespace Brokerage.Common.Migrations
                         .HasName("IX_BrokerAccount_RequestId");
 
                     b.ToTable("broker_accounts");
+                });
+
+            modelBuilder.Entity("Brokerage.Common.Persistence.Entities.NetworkEntity", b =>
+                {
+                    b.Property<string>("BlockchainId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NetworkId")
+                        .HasColumnType("text");
+
+                    b.HasKey("BlockchainId", "NetworkId");
+
+                    b.ToTable("networks");
                 });
 #pragma warning restore 612, 618
         }

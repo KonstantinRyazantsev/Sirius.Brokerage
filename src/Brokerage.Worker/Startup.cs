@@ -45,12 +45,16 @@ namespace Brokerage.Worker
                             TimeSpan.FromMilliseconds(100)));
             
                     cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
-            
-                    // TODO: Define your receive endpoints. It's just an example:
-                    //cfg.ReceiveEndpoint("sirius-brokerage-something-execution", e =>
-                    //{
-                    //    e.Consumer(provider.GetRequiredService<ExecuteSomethingConsumer>);
-                    //});
+                    
+                    cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updates", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<BlockchainUpdatesConsumer>);
+                    });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-network-updates", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<NetworkUpdatesConsumer>);
+                    });
                 }));
             
                 services.AddHostedService<BusHost>();

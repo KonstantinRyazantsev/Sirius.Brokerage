@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Domain.BrokerAccount
+﻿namespace Brokerage.Common.Domain.BrokerAccounts
 {
     //public class BrokerAccountService
     //{
@@ -16,7 +16,7 @@
     //        string networkId,
     //        string name)
     //    {
-    //        await _brokerAccountRepository.AddOrGetAsync(,)
+    //        await _brokerAccountRepository.AddOrReplaceAsync(,)
     //    }
     //}
 }

@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Domain.BrokerAccount
+﻿namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public class BrokerAccount
     {
