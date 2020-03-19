@@ -26,17 +26,5 @@ namespace Brokerage.Common.Persistence
 
             return services;
         }
-
-        public static IServiceCollection Migrate(this IServiceCollection services)
-        {
-            var contextOptions = services.BuildServiceProvider().GetRequiredService<DbContextOptionsBuilder<BrokerageContext>>();
-
-            using (var context = new BrokerageContext(contextOptions.Options))
-            {
-                context.Database.Migrate();
-            }
-
-            return services;
-        }
     }
 }
