@@ -1,27 +1,27 @@
-﻿using System.Threading.Tasks;
-using MassTransit;
-using Microsoft.Extensions.Logging;
-using Brokerage.Common.Domain.AppFeatureExample;
+﻿//using System.Threading.Tasks;
+//using MassTransit;
+//using Microsoft.Extensions.Logging;
+//using Brokerage.Common.Domain.AppFeatureExample;
 
-namespace Brokerage.Worker.MessageConsumers
-{
-    // TODO: Just an example
-    public class ExecuteSomethingConsumer : IConsumer<ExecuteSomething>
-    {
-        private readonly ILogger<ExecuteSomethingConsumer> _logger;
+//namespace Brokerage.Worker.MessageConsumers
+//{
+//    // TODO: Just an example
+//    public class ExecuteSomethingConsumer : IConsumer<ExecuteSomething>
+//    {
+//        private readonly ILogger<ExecuteSomethingConsumer> _logger;
 
-        public ExecuteSomethingConsumer(ILogger<ExecuteSomethingConsumer> logger)
-        {
-            _logger = logger;
-        }
+//        public ExecuteSomethingConsumer(ILogger<ExecuteSomethingConsumer> logger)
+//        {
+//            _logger = logger;
+//        }
 
-        public async Task Consume(ConsumeContext<ExecuteSomething> context)
-        {
-            var command = context.Message;
+//        public async Task Consume(ConsumeContext<ExecuteSomething> context)
+//        {
+//            var command = context.Message;
 
-            _logger.LogInformation("'Execute something' command has been processed {@command}", command);
+//            _logger.LogInformation("'Execute something' command has been processed {@command}", command);
 
-            await Task.CompletedTask;
-        }
-    }
-}
+//            await Task.CompletedTask;
+//        }
+//    }
+//}

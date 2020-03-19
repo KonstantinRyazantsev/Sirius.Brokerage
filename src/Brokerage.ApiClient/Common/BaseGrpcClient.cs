@@ -7,9 +7,9 @@ namespace Swisschain.Sirius.Brokerage.ApiClient.Common
     {
         protected GrpcChannel Channel { get; }
 
-        public BaseGrpcClient(string serverGrpcUrl)
+        public BaseGrpcClient(string serverGrpcUrl, bool unencrypted)
         {
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", unencrypted);
 
             Channel = GrpcChannel.ForAddress(serverGrpcUrl);
         }

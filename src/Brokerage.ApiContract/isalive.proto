@@ -2,7 +2,8 @@ syntax = "proto3";
 
 option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
-package common;
+import "common.proto";
+package services;
 
 service Monitoring {
 	rpc IsAlive (IsAliveRequest) returns (IsAliveResponce);

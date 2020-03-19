@@ -13,7 +13,8 @@ namespace TestClient
         {
             Console.WriteLine("Press enter to start");
             Console.ReadLine();
-            var client = new BrokerageClient("http://localhost:5001");
+            var client = new BrokerageClient("http://localhost:5001", true);
+            var requestId = Guid.NewGuid().ToString();
 
             while (true)
             {
@@ -22,6 +23,19 @@ namespace TestClient
                     var sw = new Stopwatch();
                     sw.Start();
                     var result = await client.Monitoring.IsAliveAsync(new IsAliveRequest());
+
+                    var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                    {
+                        BlockchainId = "Bitcoin",
+                        Name = "Broker_1",
+                        RequestId = requestId,
+                        TenantId = "Tenant_1",
+                        NetworkId = "RegTest"
+                    });
+
+                    var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                    Console.WriteLine(serialized);
+
                     sw.Stop();
                     Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");
                 }

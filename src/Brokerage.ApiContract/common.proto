@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.common";
+
+package common;
+
+message ErrorResponseBody {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+}

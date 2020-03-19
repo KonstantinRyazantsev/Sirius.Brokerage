@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Brokerage.Common.Persistence.DbContexts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Brokerage.Common.Persistence
 {
@@ -6,7 +8,31 @@ namespace Brokerage.Common.Persistence
     {
         public static IServiceCollection AddPersistence(this IServiceCollection services, string connectionString)
         {
-            // TODO: Register repositories
+            services.AddTransient<IBrokerAccountRepository, BrokerAccountRepository>();
+
+            services.AddSingleton<DbContextOptionsBuilder<BrokerageContext>>(x =>
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BrokerageContext>();
+                optionsBuilder.UseNpgsql(connectionString,
+                    builder =>
+                        builder.MigrationsHistoryTable(
+                            PostgresRepositoryConfiguration.MigrationHistoryTable,
+                            PostgresRepositoryConfiguration.SchemaName));
+
+                return optionsBuilder;
+            });
+
+            return services;
+        }
+
+        public static IServiceCollection Migrate(this IServiceCollection services)
+        {
+            var contextOptions = services.BuildServiceProvider().GetRequiredService<DbContextOptionsBuilder<BrokerageContext>>();
+
+            using (var context = new BrokerageContext(contextOptions.Options))
+            {
+                context.Database.Migrate();
+            }
 
             return services;
         }

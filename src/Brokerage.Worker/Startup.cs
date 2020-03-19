@@ -3,12 +3,11 @@ using GreenPipes;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Brokerage.Common.Configuration;
-using Brokerage.Common.Domain.AppFeatureExample;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
+using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
 using Swisschain.Sdk.Server.Common;
 
@@ -26,7 +25,7 @@ namespace Brokerage.Worker
 
             services.AddHttpClient();
             services.AddPersistence(Config.Db.ConnectionString);
-            services.AddAppFeatureExample();
+            services.AddHostedService<MigrationHost>();
             services.AddMessageConsumers();
             
             services.AddMassTransit(x =>
@@ -38,22 +37,22 @@ namespace Brokerage.Worker
                         host.Username(Config.RabbitMq.Username);
                         host.Password(Config.RabbitMq.Password);
                     });
-
+            
                     cfg.UseMessageRetry(y =>
                         y.Exponential(5, 
                             TimeSpan.FromMilliseconds(100),
                             TimeSpan.FromMilliseconds(10_000), 
                             TimeSpan.FromMilliseconds(100)));
-
+            
                     cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
-
+            
                     // TODO: Define your receive endpoints. It's just an example:
-                    cfg.ReceiveEndpoint("sirius-brokerage-something-execution", e =>
-                    {
-                        e.Consumer(provider.GetRequiredService<ExecuteSomethingConsumer>);
-                    });
+                    //cfg.ReceiveEndpoint("sirius-brokerage-something-execution", e =>
+                    //{
+                    //    e.Consumer(provider.GetRequiredService<ExecuteSomethingConsumer>);
+                    //});
                 }));
-
+            
                 services.AddHostedService<BusHost>();
             });
         }
