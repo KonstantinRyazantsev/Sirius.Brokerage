@@ -11,8 +11,6 @@ namespace Brokerage.Common.Persistence
         Task<BrokerAccount> AddOrGetAsync(
             string requestId,
             string tenantId,
-            string blockchainId, 
-            string networkId,
             string name);
     }
 }

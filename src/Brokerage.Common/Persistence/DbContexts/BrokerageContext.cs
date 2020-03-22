@@ -14,7 +14,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         public DbSet<BlockchainEntity> Blockchains { get; set; }
 
-        public DbSet<NetworkEntity> Networks { get; set; }
+        public DbSet<ProtocolEntity> Networks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,7 +22,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
 
             modelBuilder.Entity<BrokerAccountEntity>()
-                .HasKey(c => new { c.BlockchainId, c.NetworkId, c.BrokerAccountId });
+                .HasKey(c => new { c.BrokerAccountId });
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasIndex(x => x.RequestId)
@@ -34,8 +34,8 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasIdentityOptions(startValue: 100_000);
 
 
-            modelBuilder.Entity<NetworkEntity>()
-                .HasKey(c => new { c.BlockchainId, c.NetworkId});
+            modelBuilder.Entity<ProtocolEntity>()
+                .HasKey(c => new { BlockchainId = c.ProtocolId});
 
             base.OnModelCreating(modelBuilder);
         }

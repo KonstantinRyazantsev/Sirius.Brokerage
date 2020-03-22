@@ -27,11 +27,9 @@ namespace TestClient
                     {
                         var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
                         {
-                            BlockchainId = "Bitcoin",
                             Name = "Broker_1",
                             RequestId = requestId,
                             TenantId = "Tenant_1",
-                            NetworkId = "RegTest"
                         });
 
                         var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
@@ -41,11 +39,20 @@ namespace TestClient
                     {
                         var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
                         {
-                            BlockchainId = "Bitcoin",
                             Name = "Broker_1",
                             RequestId = requestId,
-                            TenantId = "Tenant_1",
-                            NetworkId = "RegTest2"
+                            TenantId = "Tenant_2",
+                        });
+
+                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                        Console.WriteLine(serialized);
+                    }
+
+                    {
+                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        {
+                            RequestId = requestId,
+                            TenantId = "Tenant_2",
                         });
 
                         var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);

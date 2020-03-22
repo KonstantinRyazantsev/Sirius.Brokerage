@@ -51,9 +51,9 @@ namespace Brokerage.Worker
                         e.Consumer(provider.GetRequiredService<BlockchainUpdatesConsumer>);
                     });
 
-                    cfg.ReceiveEndpoint("sirius-brokerage-network-updates", e =>
+                    cfg.ReceiveEndpoint("sirius-brokerage-protocol-updates", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<NetworkUpdatesConsumer>);
+                        e.Consumer(provider.GetRequiredService<ProtocolUpdatesConsumer>);
                     });
                 }));
             

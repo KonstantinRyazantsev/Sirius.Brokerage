@@ -47,7 +47,7 @@ namespace Brokerage
             base.RegisterEndpoints(endpoints);
 
             endpoints.MapGrpcService<MonitoringService>();
-            endpoints.MapGrpcService<BrokerAccountService>();
+            endpoints.MapGrpcService<BrokerAccountsService>();
         }
     }
 }

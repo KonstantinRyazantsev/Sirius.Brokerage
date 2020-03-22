@@ -35,6 +35,11 @@ namespace Brokerage.Worker
             new HostBuilder()
                 .SwisschainService<Startup>(options =>
                 {
+                    #if DEBUG
+
+                    options.UsePorts(5100, 5101);
+
+                    #endif
                     options.UseLoggerFactory(loggerFactory);
                     options.WithWebJsonConfigurationSource(ApplicationEnvironment.Config["RemoteSettingsUrl"]);
                 });

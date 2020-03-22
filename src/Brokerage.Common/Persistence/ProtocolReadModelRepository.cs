@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Domain.Networks;
+using Brokerage.Common.Domain.Protocols;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,32 +8,31 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence
 {
-    public class NetworkReadModelRepository : INetworkReadModelRepository
+    public class ProtocolReadModelRepository : IProtocolReadModelRepository
     {
         private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
 
-        public NetworkReadModelRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public ProtocolReadModelRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<Network> GetOrDefaultAsync(BlockchainId blockchainId, NetworkId networkId)
+        public async Task<Protocol> GetOrDefaultAsync(ProtocolId protocolId)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
-            var entity = await context.Networks.FindAsync(blockchainId.Value, networkId.Value);
+            var entity = await context.Networks.FindAsync(protocolId.Value);
 
             return MapToDomain(entity);
         }
 
-        public async Task<Network> AddOrReplaceAsync(Network network)
+        public async Task<Protocol> AddOrReplaceAsync(Protocol protocol)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
-            var entity = new NetworkEntity()
+            var entity = new ProtocolEntity()
             {
-                BlockchainId = network.BlockchainId,
-                NetworkId = network.NetworkId
+                ProtocolId = protocol.ProtocolId
             };
 
             try
@@ -55,15 +54,14 @@ namespace Brokerage.Common.Persistence
             }
         }
 
-        private static Network MapToDomain(NetworkEntity networkEntity)
+        private static Protocol MapToDomain(ProtocolEntity protocolEntity)
         {
-            if (networkEntity == null)
+            if (protocolEntity == null)
                 return null;
 
-            return new Network()
+            return new Protocol()
             {
-                BlockchainId = networkEntity.BlockchainId,
-                NetworkId = networkEntity.NetworkId,
+                ProtocolId = protocolEntity.ProtocolId
             };
         }
     }

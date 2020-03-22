@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -31,8 +32,6 @@ namespace Brokerage.Common.Persistence
         public async Task<BrokerAccount> AddOrGetAsync(
             string requestId,
             string tenantId,
-            string blockchainId, 
-            string networkId,
             string name)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
@@ -40,8 +39,8 @@ namespace Brokerage.Common.Persistence
             var newEntity = new BrokerAccountEntity()
             {
                 Name = name,
-                BlockchainId = blockchainId,
-                NetworkId = networkId,
+                State = BrokerAccountStateEnum.Creating,
+                CreationDateTime = DateTime.UtcNow,
                 TenantId = tenantId,
                 RequestId = requestId
             };
@@ -63,6 +62,9 @@ namespace Brokerage.Common.Persistence
                     .BrokerAccounts
                     .FirstOrDefaultAsync(x => x.RequestId == requestId);
 
+                if (entity.TenantId != tenantId)
+                    return null;
+
                 return MapToDomain(entity);
             }
         }
@@ -74,8 +76,6 @@ namespace Brokerage.Common.Persistence
 
             var brokerAccount = new BrokerAccount()
             {
-                BlockchainId = brokerAccountEntity.BlockchainId,
-                NetworkId = brokerAccountEntity.NetworkId,
                 Name = brokerAccountEntity.Name,
                 BrokerAccountId = brokerAccountEntity.BrokerAccountId,
                 TenantId = brokerAccountEntity.TenantId,

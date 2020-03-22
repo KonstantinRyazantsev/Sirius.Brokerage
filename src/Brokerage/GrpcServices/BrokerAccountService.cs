@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
 using Grpc.Core;
 using Swisschain.Sirius.Brokerage.ApiContract;
@@ -7,34 +8,28 @@ using Swisschain.Sirius.Brokerage.ApiContract.common;
 
 namespace Brokerage.GrpcServices
 {
-    public class BrokerAccountService : BrokerAccount.BrokerAccountBase
+    public class BrokerAccountsService : BrokerAccounts.BrokerAccountsBase
     {
         private readonly IBrokerAccountRepository _brokerAccountRepository;
-        private readonly INetworkReadModelRepository _networkReadModelRepository;
 
-        public BrokerAccountService(
-            IBrokerAccountRepository brokerAccountRepository,
-            INetworkReadModelRepository networkReadModelRepository)
+        public BrokerAccountsService(
+            IBrokerAccountRepository brokerAccountRepository)
         {
             _brokerAccountRepository = brokerAccountRepository;
-            _networkReadModelRepository = networkReadModelRepository;
         }
 
         public override async Task<CreateResponse> Create(CreateRequest request, ServerCallContext context)
         {
             try
             {
-                var existingNetwork =
-                    await _networkReadModelRepository.GetOrDefaultAsync(request.BlockchainId, request.NetworkId);
-
-                if (existingNetwork == null)
+                if (string.IsNullOrEmpty(request.Name))
                 {
                     return new CreateResponse()
                     {
                         Error = new ErrorResponseBody()
                         {
-                            ErrorCode = ErrorResponseBody.Types.ErrorCode.NotAValidNetwork,
-                            ErrorMessage = $"There is no such blockchain - network pair as {request.BlockchainId} - {request.NetworkId}",
+                            ErrorCode = ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
+                            ErrorMessage = $"Name is empty"
                         }
                     };
                 }
@@ -42,18 +37,28 @@ namespace Brokerage.GrpcServices
                 var result = await _brokerAccountRepository.AddOrGetAsync(
                     request.RequestId,
                     request.TenantId,
-                    request.BlockchainId,
-                    request.NetworkId,
                     request.Name);
+
+                //TODO: Refactor this 
+                if (result == null)
+                {
+                    return new CreateResponse()
+                    {
+                        Error = new ErrorResponseBody()
+                        {
+                            ErrorCode = ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
+                            ErrorMessage = "Not authorized to perform action"
+                        }
+                    };
+                }
 
                 return new CreateResponse()
                 {
                     Response = new CreateResponseBody()
                     {
                         BrokerAccountId = result.BrokerAccountId.ToString(),
-                        BlockchainId = result.BlockchainId,
                         Name = result.Name,
-                        NetworkId = result.NetworkId
+                        Status = MapToResponse(result.State)
                     }
                 };
             }
@@ -68,6 +73,19 @@ namespace Brokerage.GrpcServices
                     }
                 };
             }
+        }
+
+        private CreateResponseBody.Types.BrokerAccountStatus MapToResponse(BrokerAccountState resultState)
+        {
+            var result = resultState switch
+            {
+                BrokerAccountState.Creating => CreateResponseBody.Types.BrokerAccountStatus.Creating,
+                BrokerAccountState.Active=> CreateResponseBody.Types.BrokerAccountStatus.Active,
+                BrokerAccountState.Blocked => CreateResponseBody.Types.BrokerAccountStatus.Blocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
+            };
+
+            return result;
         }
     }
 }

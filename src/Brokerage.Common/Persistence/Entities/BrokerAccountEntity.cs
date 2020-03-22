@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brokerage.Common.Persistence.Entities
@@ -8,9 +9,6 @@ namespace Brokerage.Common.Persistence.Entities
     {
         public string RequestId { get; set; }
 
-        public string BlockchainId { get; set; }
-
-        public string NetworkId { get; set; }
         public string TenantId { get; set; }
 
         [Key]
@@ -18,5 +16,13 @@ namespace Brokerage.Common.Persistence.Entities
         public long BrokerAccountId { get; set; }
 
         public string Name { get; set; }
+
+        public BrokerAccountStateEnum State { get; set; }
+
+        public DateTime CreationDateTime { get; set; }
+
+        public DateTime? ActivationDateTime { get; set; }
+
+        public DateTime? BlockingDateTime { get; set; }
     }
 }

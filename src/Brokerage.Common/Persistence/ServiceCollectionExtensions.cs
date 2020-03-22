@@ -9,7 +9,7 @@ namespace Brokerage.Common.Persistence
         public static IServiceCollection AddPersistence(this IServiceCollection services, string connectionString)
         {
             services.AddTransient<IBrokerAccountRepository, BrokerAccountRepository>();
-            services.AddTransient<INetworkReadModelRepository, NetworkReadModelRepository>();
+            services.AddTransient<IProtocolReadModelRepository, ProtocolReadModelRepository>();
             services.AddTransient<IBlockchainReadModelRepository, BlockchainReadModelRepository>();
 
             services.AddSingleton<DbContextOptionsBuilder<BrokerageContext>>(x =>
