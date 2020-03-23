@@ -8,6 +8,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             Name = name;
             TenantId = tenantId;
+            State = BrokerAccountState.Creating;
         }
 
         private BrokerAccount(
@@ -41,17 +42,17 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public BrokerAccountState State { get; }
 
-        public bool ISOwnedBy(string tenantId)
+        public bool IsOwnedBy(string tenantId)
         {
             return this.TenantId == tenantId;
         }
 
-        public static BrokerAccount CreateAccount(string name, string tenantId)
+        public static BrokerAccount Create(string name, string tenantId)
         {
             return new BrokerAccount(name, tenantId);
         }
 
-        public static BrokerAccount RestoreAccount(
+        public static BrokerAccount Restore(
             long brokerAccountId,
             string name,
             string tenantId,

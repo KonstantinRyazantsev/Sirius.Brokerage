@@ -35,10 +35,19 @@ namespace Brokerage.Common.Persistence
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
+            var state = brokerAccount.State switch
+            {
+                BrokerAccountState.Active => BrokerAccountStateEnum.Active,
+                BrokerAccountState.Blocked => BrokerAccountStateEnum.Blocked,
+                BrokerAccountState.Creating => BrokerAccountStateEnum.Creating,
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
             var newEntity = new BrokerAccountEntity()
             {
                 Name = brokerAccount.Name,
-                State = BrokerAccountStateEnum.Creating,
+                State = state,
                 CreationDateTime = DateTime.UtcNow,
                 TenantId = brokerAccount.TenantId,
                 RequestId = requestId
@@ -78,7 +87,7 @@ namespace Brokerage.Common.Persistence
                 _ => throw new ArgumentOutOfRangeException($"{brokerAccountEntity.State} is not processed")
             };
 
-            var brokerAccount = BrokerAccount.RestoreAccount(
+            var brokerAccount = BrokerAccount.Restore(
                 brokerAccountEntity.BrokerAccountId,
                 brokerAccountEntity.Name,
                 brokerAccountEntity.TenantId,

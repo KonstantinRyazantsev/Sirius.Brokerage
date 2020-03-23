@@ -34,13 +34,13 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                var newBrokerAccount = BrokerAccount.CreateAccount(request.Name, request.TenantId);
+                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId);
                 var createdBrokerAccount = await _brokerAccountRepository.AddOrGetAsync(
                     request.RequestId,
                     newBrokerAccount);
 
                 //TODO: Refactor this 
-                if (!createdBrokerAccount.ISOwnedBy(request.TenantId))
+                if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
                 {
                     return new CreateResponse()
                     {
