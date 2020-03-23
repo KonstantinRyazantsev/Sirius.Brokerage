@@ -12,6 +12,8 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
 
+        public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
+
         public DbSet<BlockchainEntity> Blockchains { get; set; }
 
         public DbSet<ProtocolEntity> Networks { get; set; }
@@ -36,6 +38,19 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<ProtocolEntity>()
                 .HasKey(c => new { BlockchainId = c.ProtocolId});
+
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasKey(c => new { c.Id });
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique(true)
+                .HasName("IX_BrokerAccountRequisites_RequestId");
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 100_000);
 
             base.OnModelCreating(modelBuilder);
         }

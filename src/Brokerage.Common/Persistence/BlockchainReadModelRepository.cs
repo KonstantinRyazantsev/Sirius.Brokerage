@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.Blockchains;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -25,6 +28,25 @@ namespace Brokerage.Common.Persistence
             var entity = await context.Blockchains.FindAsync(blockchainId.Value);
 
             return MapToDomain(entity);
+        }
+
+        public async Task<IReadOnlyCollection<Blockchain>> GetManyAsync(BlockchainId cursor, int take)
+        {
+            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+
+            var query = context.Blockchains.Select(x => x);
+
+            if (cursor != null)
+            {
+                query = query.Where(x => x.BlockchainId.CompareTo(cursor.Value) > 1);
+            }
+
+            var result = await query
+                .OrderBy(x => x.BlockchainId)
+                .Take(take)
+                .ToListAsync();
+
+            return result.Select(MapToDomain).ToArray();
         }
 
         public async Task<Blockchain> AddOrReplaceAsync(Blockchain blockchain)

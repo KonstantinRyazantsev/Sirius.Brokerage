@@ -29,12 +29,43 @@ namespace Brokerage.Common.Persistence
             return MapToDomain(entity);
         }
 
-        public async Task<BrokerAccount> AddOrGetAsync(
-            string requestId,
-            BrokerAccount brokerAccount)
+        public async Task UpdateAsync(BrokerAccount brokerAccount)
+        {
+            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            var entity = MapToEntity(brokerAccount);
+            context.BrokerAccounts.Update(entity);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<BrokerAccount> AddOrGetAsync(BrokerAccount brokerAccount)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
+            var newEntity = MapToEntity(brokerAccount);
+
+            context.BrokerAccounts.Add(newEntity);
+
+            try
+            {
+                await context.SaveChangesAsync();
+
+                return MapToDomain(newEntity);
+            }
+            catch (DbUpdateException e) //Check that request was already processed (by constraint)
+                when (e.InnerException is PostgresException pgEx &&
+                      pgEx.SqlState == "23505" &&
+                      pgEx.ConstraintName == "IX_BrokerAccount_RequestId")
+            {
+                var entity = await context
+                    .BrokerAccounts
+                    .FirstOrDefaultAsync(x => x.RequestId == brokerAccount.RequestId);
+
+                return MapToDomain(entity);
+            }
+        }
+
+        private static BrokerAccountEntity MapToEntity(BrokerAccount brokerAccount)
+        {
             var state = brokerAccount.State switch
             {
                 BrokerAccountState.Active => BrokerAccountStateEnum.Active,
@@ -50,30 +81,14 @@ namespace Brokerage.Common.Persistence
                 State = state,
                 CreationDateTime = DateTime.UtcNow,
                 TenantId = brokerAccount.TenantId,
-                RequestId = requestId
+                RequestId = brokerAccount.RequestId,
+                ActivationDateTime = brokerAccount.ActivationDateTime,
+                BrokerAccountId = brokerAccount.BrokerAccountId,
+                BlockingDateTime = brokerAccount.BlockingDateTime
             };
-
-            context.BrokerAccounts.Add(newEntity);
-
-            try
-            {
-                await context.SaveChangesAsync();
-
-                return MapToDomain(newEntity);
-            }
-            catch (DbUpdateException e) //Check that request was already processed (by constraint)
-                when (e.InnerException is PostgresException pgEx && 
-                      pgEx.SqlState == "23505" &&
-                      pgEx.ConstraintName == "IX_BrokerAccount_RequestId")
-            {
-                var entity = await context
-                    .BrokerAccounts
-                    .FirstOrDefaultAsync(x => x.RequestId == requestId);
-
-                return MapToDomain(entity);
-            }
+            return newEntity;
         }
-        
+
         private BrokerAccount MapToDomain(BrokerAccountEntity brokerAccountEntity)
         {
             if (brokerAccountEntity == null)
@@ -94,7 +109,8 @@ namespace Brokerage.Common.Persistence
                 brokerAccountEntity.CreationDateTime,
                 brokerAccountEntity.BlockingDateTime,
                 brokerAccountEntity.ActivationDateTime,
-                state
+                state,
+                brokerAccountEntity.RequestId
             );
 
             return brokerAccount;

@@ -1,11 +1,17 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Brokerage.Common.Configuration;
+using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.GrpcServices;
 using Brokerage.HostedServices;
+using MassTransit;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Swisschain.Sdk.Server.Common;
 
 namespace Brokerage
@@ -22,24 +28,24 @@ namespace Brokerage
 
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<DbSchemaValidationHost>();
-            //services.AddMassTransit(x =>
-            //{
-            //    // TODO: Register commands recipient endpoints. It's just an example.
-            //    EndpointConvention.Map<ExecuteSomething>(new Uri("queue:sirius-brokerage-something-execution"));
-            //
-            //    x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
-            //    {
-            //        cfg.Host(Config.RabbitMq.HostUrl, host =>
-            //        {
-            //            host.Username(Config.RabbitMq.Username);
-            //            host.Password(Config.RabbitMq.Password);
-            //        });
-            //
-            //        cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
-            //    }));
-            //
-            //    services.AddSingleton<IHostedService, BusHost>();
-            //});
+            services.AddMassTransit(x =>
+            {
+                EndpointConvention.Map<FinalizeBrokerAccountCreation>(
+                    new Uri("queue:sirius-brokerage-finalize-broker-account-creation"));
+            
+                x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
+                {
+                    cfg.Host(Config.RabbitMq.HostUrl, host =>
+                    {
+                        host.Username(Config.RabbitMq.Username);
+                        host.Password(Config.RabbitMq.Password);
+                    });
+            
+                    cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
+                }));
+            
+                services.AddSingleton<IHostedService, BusHost>();
+            });
         }
 
         protected override void RegisterEndpoints(IEndpointRouteBuilder endpoints)
