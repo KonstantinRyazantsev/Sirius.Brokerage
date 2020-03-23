@@ -10,7 +10,6 @@ namespace Brokerage.Common.Persistence
 
         Task<BrokerAccount> AddOrGetAsync(
             string requestId,
-            string tenantId,
-            string name);
+            BrokerAccount brokerAccount);
     }
 }

@@ -4,18 +4,63 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public class BrokerAccount
     {
-        public long BrokerAccountId { get; set; }
+        private BrokerAccount(string name, string tenantId)
+        {
+            Name = name;
+            TenantId = tenantId;
+        }
 
-        public string Name { get; set; }
+        private BrokerAccount(
+            long brokerAccountId, 
+            string name,
+            string tenantId, 
+            DateTime creationDateTime, 
+            DateTime? blockingDateTime, 
+            DateTime? activationDateTime, 
+            BrokerAccountState state)
+        {
+            BrokerAccountId = brokerAccountId;
+            Name = name;
+            TenantId = tenantId;
+            CreationDateTime = creationDateTime;
+            BlockingDateTime = blockingDateTime;
+            ActivationDateTime = activationDateTime;
+            State = state;
+        }
+        public long BrokerAccountId { get; }
 
-        public string TenantId { get; set; }
+        public string Name { get; }
 
-        public DateTime CreationDateTime { get; set; }
+        public string TenantId { get; }
 
-        public DateTime? BlockedDateTime { get; set; }
+        public DateTime CreationDateTime { get; }
 
-        public DateTime? ActivationDateTime { get; set; }
+        public DateTime? BlockingDateTime { get; }
 
-        public BrokerAccountState State { get; set; }
+        public DateTime? ActivationDateTime { get; }
+
+        public BrokerAccountState State { get; }
+
+        public bool ISOwnedBy(string tenantId)
+        {
+            return this.TenantId == tenantId;
+        }
+
+        public static BrokerAccount CreateAccount(string name, string tenantId)
+        {
+            return new BrokerAccount(name, tenantId);
+        }
+
+        public static BrokerAccount RestoreAccount(
+            long brokerAccountId,
+            string name,
+            string tenantId,
+            DateTime creationDateTime,
+            DateTime? blockingDateTime,
+            DateTime? activationDateTime,
+            BrokerAccountState state)
+        {
+            return new BrokerAccount(brokerAccountId, name, tenantId, creationDateTime, blockingDateTime, activationDateTime, state);
+        }
     }
 }

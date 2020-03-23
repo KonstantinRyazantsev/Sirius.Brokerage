@@ -31,17 +31,16 @@ namespace Brokerage.Common.Persistence
 
         public async Task<BrokerAccount> AddOrGetAsync(
             string requestId,
-            string tenantId,
-            string name)
+            BrokerAccount brokerAccount)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
             var newEntity = new BrokerAccountEntity()
             {
-                Name = name,
+                Name = brokerAccount.Name,
                 State = BrokerAccountStateEnum.Creating,
                 CreationDateTime = DateTime.UtcNow,
-                TenantId = tenantId,
+                TenantId = brokerAccount.TenantId,
                 RequestId = requestId
             };
 
@@ -62,9 +61,6 @@ namespace Brokerage.Common.Persistence
                     .BrokerAccounts
                     .FirstOrDefaultAsync(x => x.RequestId == requestId);
 
-                if (entity.TenantId != tenantId)
-                    return null;
-
                 return MapToDomain(entity);
             }
         }
@@ -74,12 +70,23 @@ namespace Brokerage.Common.Persistence
             if (brokerAccountEntity == null)
                 return null;
 
-            var brokerAccount = new BrokerAccount()
+            var state = brokerAccountEntity.State switch
             {
-                Name = brokerAccountEntity.Name,
-                BrokerAccountId = brokerAccountEntity.BrokerAccountId,
-                TenantId = brokerAccountEntity.TenantId,
+                BrokerAccountStateEnum.Active => BrokerAccountState.Active,
+                BrokerAccountStateEnum.Blocked => BrokerAccountState.Blocked,
+                BrokerAccountStateEnum.Creating => BrokerAccountState.Creating,
+                _ => throw new ArgumentOutOfRangeException($"{brokerAccountEntity.State} is not processed")
             };
+
+            var brokerAccount = BrokerAccount.RestoreAccount(
+                brokerAccountEntity.BrokerAccountId,
+                brokerAccountEntity.Name,
+                brokerAccountEntity.TenantId,
+                brokerAccountEntity.CreationDateTime,
+                brokerAccountEntity.BlockingDateTime,
+                brokerAccountEntity.ActivationDateTime,
+                state
+            );
 
             return brokerAccount;
         }

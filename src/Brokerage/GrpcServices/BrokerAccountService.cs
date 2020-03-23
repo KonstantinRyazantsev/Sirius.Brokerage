@@ -34,13 +34,13 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                var result = await _brokerAccountRepository.AddOrGetAsync(
+                var newBrokerAccount = BrokerAccount.CreateAccount(request.Name, request.TenantId);
+                var createdBrokerAccount = await _brokerAccountRepository.AddOrGetAsync(
                     request.RequestId,
-                    request.TenantId,
-                    request.Name);
+                    newBrokerAccount);
 
                 //TODO: Refactor this 
-                if (result == null)
+                if (!createdBrokerAccount.ISOwnedBy(request.TenantId))
                 {
                     return new CreateResponse()
                     {
@@ -56,9 +56,9 @@ namespace Brokerage.GrpcServices
                 {
                     Response = new CreateResponseBody()
                     {
-                        BrokerAccountId = result.BrokerAccountId.ToString(),
-                        Name = result.Name,
-                        Status = MapToResponse(result.State)
+                        BrokerAccountId = createdBrokerAccount.BrokerAccountId.ToString(),
+                        Name = createdBrokerAccount.Name,
+                        Status = MapToResponse(createdBrokerAccount.State)
                     }
                 };
             }
