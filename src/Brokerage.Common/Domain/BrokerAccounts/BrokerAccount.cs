@@ -4,10 +4,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public class BrokerAccount
     {
-        private BrokerAccount(string name, string tenantId)
+        private BrokerAccount(string name, string tenantId, string requestId)
         {
             Name = name;
             TenantId = tenantId;
+            RequestId = requestId;
             State = BrokerAccountState.Creating;
         }
 
@@ -18,7 +19,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime creationDateTime, 
             DateTime? blockingDateTime, 
             DateTime? activationDateTime, 
-            BrokerAccountState state)
+            BrokerAccountState state,
+            string requestId)
         {
             BrokerAccountId = brokerAccountId;
             Name = name;
@@ -27,29 +29,31 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             BlockingDateTime = blockingDateTime;
             ActivationDateTime = activationDateTime;
             State = state;
+            RequestId = requestId;
         }
         public long BrokerAccountId { get; }
 
         public string Name { get; }
 
         public string TenantId { get; }
+        public string RequestId { get; }
 
         public DateTime CreationDateTime { get; }
 
         public DateTime? BlockingDateTime { get; }
 
-        public DateTime? ActivationDateTime { get; }
+        public DateTime? ActivationDateTime { get; private set; }
 
-        public BrokerAccountState State { get; }
+        public BrokerAccountState State { get; private set; }
 
         public bool IsOwnedBy(string tenantId)
         {
             return this.TenantId == tenantId;
         }
 
-        public static BrokerAccount Create(string name, string tenantId)
+        public static BrokerAccount Create(string name, string tenantId, string requestId)
         {
-            return new BrokerAccount(name, tenantId);
+            return new BrokerAccount(name, tenantId, requestId);
         }
 
         public static BrokerAccount Restore(
@@ -59,9 +63,24 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime creationDateTime,
             DateTime? blockingDateTime,
             DateTime? activationDateTime,
-            BrokerAccountState state)
+            BrokerAccountState state,
+            string requestId)
         {
-            return new BrokerAccount(brokerAccountId, name, tenantId, creationDateTime, blockingDateTime, activationDateTime, state);
+            return new BrokerAccount(
+                brokerAccountId, 
+                name, 
+                tenantId, 
+                creationDateTime, 
+                blockingDateTime, 
+                activationDateTime, 
+                state, 
+                requestId);
+        }
+
+        public void Activate()
+        {
+            this.ActivationDateTime = DateTime.UtcNow;
+            this.State = BrokerAccountState.Active;
         }
     }
 }

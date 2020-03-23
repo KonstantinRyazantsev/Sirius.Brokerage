@@ -10,6 +10,7 @@ using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
 using Swisschain.Sdk.Server.Common;
+using Swisschain.Sirius.VaultAgent.ApiClient;
 
 namespace Brokerage.Worker
 {
@@ -24,6 +25,7 @@ namespace Brokerage.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
+            services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(this.Config.VaultAgent.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
             services.AddMessageConsumers();
@@ -54,6 +56,11 @@ namespace Brokerage.Worker
                     cfg.ReceiveEndpoint("sirius-brokerage-protocol-updates", e =>
                     {
                         e.Consumer(provider.GetRequiredService<ProtocolUpdatesConsumer>);
+                    });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-finalize-broker-account-creation", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<FinalizeBrokerAccountCreationConsumer>);
                     });
                 }));
             

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
 using Grpc.Core;
+using MassTransit;
 using Swisschain.Sirius.Brokerage.ApiContract;
 using Swisschain.Sirius.Brokerage.ApiContract.common;
 
@@ -11,11 +12,14 @@ namespace Brokerage.GrpcServices
     public class BrokerAccountsService : BrokerAccounts.BrokerAccountsBase
     {
         private readonly IBrokerAccountRepository _brokerAccountRepository;
+        private readonly ISendEndpointProvider _sendEndpointProvider;
 
         public BrokerAccountsService(
-            IBrokerAccountRepository brokerAccountRepository)
+            IBrokerAccountRepository brokerAccountRepository,
+            ISendEndpointProvider sendEndpointProvider)
         {
             _brokerAccountRepository = brokerAccountRepository;
+            _sendEndpointProvider = sendEndpointProvider;
         }
 
         public override async Task<CreateResponse> Create(CreateRequest request, ServerCallContext context)
@@ -34,10 +38,8 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId);
-                var createdBrokerAccount = await _brokerAccountRepository.AddOrGetAsync(
-                    request.RequestId,
-                    newBrokerAccount);
+                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId);
+                var createdBrokerAccount = await _brokerAccountRepository.AddOrGetAsync(newBrokerAccount);
 
                 //TODO: Refactor this 
                 if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
@@ -51,6 +53,13 @@ namespace Brokerage.GrpcServices
                         }
                     };
                 }
+
+                await _sendEndpointProvider.Send(new FinalizeBrokerAccountCreation()
+                {
+                    BrokerAccountId = createdBrokerAccount.BrokerAccountId,
+                    TenantId = createdBrokerAccount.TenantId,
+                    RequestId = request.RequestId
+                });
 
                 return new CreateResponse()
                 {

@@ -8,8 +8,8 @@ namespace Brokerage.Common.Persistence
     {
         Task<BrokerAccount> GetAsync(long brokerAccountId);
 
-        Task<BrokerAccount> AddOrGetAsync(
-            string requestId,
-            BrokerAccount brokerAccount);
+        Task<BrokerAccount> AddOrGetAsync(BrokerAccount brokerAccount);
+
+        Task UpdateAsync(BrokerAccount brokerAccount);
     }
 }
