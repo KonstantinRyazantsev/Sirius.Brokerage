@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -30,19 +31,25 @@ namespace Brokerage.Common.Persistence
 
         public async Task<BrokerAccount> AddOrGetAsync(
             string requestId,
-            string tenantId,
-            string blockchainId, 
-            string networkId,
-            string name)
+            BrokerAccount brokerAccount)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
+            var state = brokerAccount.State switch
+            {
+                BrokerAccountState.Active => BrokerAccountStateEnum.Active,
+                BrokerAccountState.Blocked => BrokerAccountStateEnum.Blocked,
+                BrokerAccountState.Creating => BrokerAccountStateEnum.Creating,
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
             var newEntity = new BrokerAccountEntity()
             {
-                Name = name,
-                BlockchainId = blockchainId,
-                NetworkId = networkId,
-                TenantId = tenantId,
+                Name = brokerAccount.Name,
+                State = state,
+                CreationDateTime = DateTime.UtcNow,
+                TenantId = brokerAccount.TenantId,
                 RequestId = requestId
             };
 
@@ -72,14 +79,23 @@ namespace Brokerage.Common.Persistence
             if (brokerAccountEntity == null)
                 return null;
 
-            var brokerAccount = new BrokerAccount()
+            var state = brokerAccountEntity.State switch
             {
-                BlockchainId = brokerAccountEntity.BlockchainId,
-                NetworkId = brokerAccountEntity.NetworkId,
-                Name = brokerAccountEntity.Name,
-                BrokerAccountId = brokerAccountEntity.BrokerAccountId,
-                TenantId = brokerAccountEntity.TenantId,
+                BrokerAccountStateEnum.Active => BrokerAccountState.Active,
+                BrokerAccountStateEnum.Blocked => BrokerAccountState.Blocked,
+                BrokerAccountStateEnum.Creating => BrokerAccountState.Creating,
+                _ => throw new ArgumentOutOfRangeException($"{brokerAccountEntity.State} is not processed")
             };
+
+            var brokerAccount = BrokerAccount.Restore(
+                brokerAccountEntity.BrokerAccountId,
+                brokerAccountEntity.Name,
+                brokerAccountEntity.TenantId,
+                brokerAccountEntity.CreationDateTime,
+                brokerAccountEntity.BlockingDateTime,
+                brokerAccountEntity.ActivationDateTime,
+                state
+            );
 
             return brokerAccount;
         }

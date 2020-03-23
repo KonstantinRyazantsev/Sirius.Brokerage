@@ -8,7 +8,8 @@ message ErrorResponseBody {
 
   enum ErrorCode {
     UNKNOWN = 0;
-    NOT_A_VALID_NETWORK = 1;
+    NAME_IS_EMPTY = 1;
+    IS_NOT_AUTHORIZED = 2;
   }
 
   ErrorCode errorCode = 1;

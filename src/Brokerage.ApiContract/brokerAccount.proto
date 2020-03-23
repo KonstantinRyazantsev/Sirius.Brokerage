@@ -5,30 +5,31 @@ option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 import "common.proto";
 package services;
 
-service BrokerAccount {
+service BrokerAccounts {
   rpc Create (CreateRequest) returns (CreateResponse);
 }
 
 message CreateRequest {
-  string blockchainId = 1;
+  string tenantId = 1;
 
-  string networkId = 2;
+  string requestId = 2;
 
-  string tenantId = 3;
-
-  string requestId = 4;
-
-  string name = 5;
+  string name = 3;
 }
 
 message CreateResponseBody {
-  string blockchainId = 1;
+  
+  string brokerAccountId = 1;
 
-  string networkId = 2;
+  string name = 2;
 
-  string brokerAccountId = 3;
+  BrokerAccountStatus status = 3;
 
-  string name = 4;
+  enum BrokerAccountStatus {
+    CREATING = 0;
+    ACTIVE = 1;
+    BLOCKED = 2;
+  } 
 }
 
 message CreateResponse {

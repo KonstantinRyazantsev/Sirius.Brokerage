@@ -6,6 +6,6 @@ namespace Swisschain.Sirius.Brokerage.ApiClient
     {
         Monitoring.MonitoringClient Monitoring { get; }
 
-        BrokerAccount.BrokerAccountClient BrokerAccount { get; }
+        BrokerAccounts.BrokerAccountsClient BrokerAccount { get; }
     }
 }

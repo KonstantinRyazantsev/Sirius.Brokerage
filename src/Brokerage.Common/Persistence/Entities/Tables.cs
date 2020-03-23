@@ -5,6 +5,6 @@
         public const string BrokerAccountsTableName = "broker_accounts";
         public const string RequestsTableName = "requests";
         public const string BlockchainsTableName = "blockchains";
-        public const string NetworksTableName = "networks";
+        public const string ProtocolsTableName = "protocols";
     }
 }
