@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(BrokerageContext))]
-    partial class BrokerageContextModelSnapshot : ModelSnapshot
+    [Migration("20200324112500_AddedTimeStampTz")]
+    partial class AddedTimeStampTz
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,14 +40,14 @@ namespace Brokerage.Common.Migrations
                         .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<DateTimeOffset?>("ActivationDateTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime?>("ActivationDateTime")
+                        .HasColumnType("timestamptz");
 
-                    b.Property<DateTimeOffset?>("BlockingDateTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime?>("BlockingDateTime")
+                        .HasColumnType("timestamptz");
 
-                    b.Property<DateTimeOffset>("CreationDateTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime>("CreationDateTime")
+                        .HasColumnType("timestamptz");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");

@@ -79,7 +79,7 @@ namespace Brokerage.Common.Persistence
             {
                 Name = brokerAccount.Name,
                 State = state,
-                CreationDateTime = DateTime.UtcNow,
+                CreationDateTime = brokerAccount.CreationDateTime,
                 TenantId = brokerAccount.TenantId,
                 RequestId = brokerAccount.RequestId,
                 ActivationDateTime = brokerAccount.ActivationDateTime,
@@ -106,9 +106,9 @@ namespace Brokerage.Common.Persistence
                 brokerAccountEntity.BrokerAccountId,
                 brokerAccountEntity.Name,
                 brokerAccountEntity.TenantId,
-                brokerAccountEntity.CreationDateTime,
-                brokerAccountEntity.BlockingDateTime,
-                brokerAccountEntity.ActivationDateTime,
+                brokerAccountEntity.CreationDateTime.UtcDateTime,
+                brokerAccountEntity.BlockingDateTime?.UtcDateTime,
+                brokerAccountEntity.ActivationDateTime?.UtcDateTime,
                 state,
                 brokerAccountEntity.RequestId
             );

@@ -10,6 +10,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             TenantId = tenantId;
             RequestId = requestId;
             State = BrokerAccountState.Creating;
+            CreationDateTime = DateTime.UtcNow;
         }
 
         private BrokerAccount(

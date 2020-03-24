@@ -19,10 +19,10 @@ namespace Brokerage.Common.Persistence.Entities
 
         public BrokerAccountStateEnum State { get; set; }
 
-        public DateTime CreationDateTime { get; set; }
+        public DateTimeOffset CreationDateTime { get; set; }
 
-        public DateTime? ActivationDateTime { get; set; }
+        public DateTimeOffset? ActivationDateTime { get; set; }
 
-        public DateTime? BlockingDateTime { get; set; }
+        public DateTimeOffset? BlockingDateTime { get; set; }
     }
 }
