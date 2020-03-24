@@ -3,6 +3,8 @@ syntax = "proto3";
 option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
 import "common.proto";
+import "google/protobuf/timestamp.proto";
+
 package services;
 
 service BrokerAccounts {
@@ -24,6 +26,12 @@ message CreateResponseBody {
   string name = 2;
 
   BrokerAccountStatus status = 3;
+
+  google.protobuf.Timestamp creationDateTime = 4;
+
+  google.protobuf.Timestamp activationDateTime = 5;
+
+  google.protobuf.Timestamp blockingDateTime = 6;
 
   enum BrokerAccountStatus {
     CREATING = 0;

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MassTransit;
 using Swisschain.Sirius.Brokerage.ApiContract;
@@ -67,7 +68,12 @@ namespace Brokerage.GrpcServices
                     {
                         BrokerAccountId = createdBrokerAccount.BrokerAccountId.ToString(),
                         Name = createdBrokerAccount.Name,
-                        Status = MapToResponse(createdBrokerAccount.State)
+                        Status = MapToResponse(createdBrokerAccount.State),
+                        ActivationDateTime = createdBrokerAccount.ActivationDateTime.HasValue ? 
+                            Timestamp.FromDateTime(createdBrokerAccount.ActivationDateTime.Value) : null,
+                        BlockingDateTime = createdBrokerAccount.BlockingDateTime.HasValue ? 
+                            Timestamp.FromDateTime(createdBrokerAccount.BlockingDateTime.Value) : null,
+                        CreationDateTime = Timestamp.FromDateTime(createdBrokerAccount.CreationDateTime)
                     }
                 };
             }
