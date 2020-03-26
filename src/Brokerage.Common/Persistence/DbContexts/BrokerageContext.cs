@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Persistence.Entities;
+﻿using System.Security.Cryptography.X509Certificates;
+using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Brokerage.Common.Persistence.DbContexts
@@ -13,6 +14,10 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
 
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
+
+        public DbSet<AccountEntity> Accounts { get; set; }
+
+        public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
 
         public DbSet<BlockchainEntity> Blockchains { get; set; }
 
@@ -51,6 +56,44 @@ namespace Brokerage.Common.Persistence.DbContexts
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 100_000);
+
+
+            modelBuilder.Entity<AccountEntity>()
+                .HasKey(c => new { Id = c.AccountId });
+
+            modelBuilder.Entity<AccountEntity>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique(true)
+                .HasName("IX_Account_RequestId");
+
+            modelBuilder.Entity<AccountEntity>()
+                .Property(b => b.AccountId)
+                .HasIdentityOptions(startValue: 100_000);
+
+            modelBuilder.Entity<BrokerAccountEntity>()
+                .HasMany<AccountEntity>(s => s.Accounts)
+                .WithOne(s => s.BrokerAccount)
+                .HasForeignKey(x => x.BrokerAccountId)
+                .IsRequired(true);
+
+
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .HasKey(c => new { c.Id });
+
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique(true)
+                .HasName("IX_AccountRequisites_RequestId");
+
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 100_000);
+
+            modelBuilder.Entity<AccountEntity>()
+                .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
+                .WithOne(s => s.Account)
+                .HasForeignKey(x => x.AccountId);
+
 
             base.OnModelCreating(modelBuilder);
         }

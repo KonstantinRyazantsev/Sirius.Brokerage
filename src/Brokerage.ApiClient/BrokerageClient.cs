@@ -8,11 +8,14 @@ namespace Swisschain.Sirius.Brokerage.ApiClient
         public BrokerageClient(string serverGrpcUrl, bool unencrypted) : base(serverGrpcUrl, unencrypted)
         {
             Monitoring = new Monitoring.MonitoringClient(Channel);
-            BrokerAccount = new BrokerAccounts.BrokerAccountsClient(Channel);
+            BrokerAccounts = new BrokerAccounts.BrokerAccountsClient(Channel);
+            Accounts = new Accounts.AccountsClient(Channel);
         }
 
         public Monitoring.MonitoringClient Monitoring { get; }
 
-        public BrokerAccounts.BrokerAccountsClient BrokerAccount { get; }
+        public BrokerAccounts.BrokerAccountsClient BrokerAccounts { get; }
+
+        public Accounts.AccountsClient Accounts { get; }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.AccountRequisites;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccountRequisites;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
@@ -13,29 +15,29 @@ using Swisschain.Sirius.VaultAgent.ApiContract;
 
 namespace Brokerage.Worker.MessageConsumers
 {
-    public class FinalizeBrokerAccountCreationConsumer : IConsumer<FinalizeBrokerAccountCreation>
+    public class FinalizeAccountCreationConsumer : IConsumer<FinalizeAccountCreation>
     {
-        private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
+        private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
         private readonly IBlockchainReadModelRepository _blockchainReadModelRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
-        private readonly IBrokerAccountRepository _brokerAccountRepository;
+        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly IAccountRepository _accountRepository;
 
-        public FinalizeBrokerAccountCreationConsumer(
-            ILogger<FinalizeBrokerAccountCreationConsumer> logger,
+        public FinalizeAccountCreationConsumer(
+            ILogger<FinalizeAccountCreationConsumer> logger,
             IBlockchainReadModelRepository blockchainReadModelRepository,
             IVaultAgentClient vaultAgentClient,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IBrokerAccountRepository brokerAccountRepository)
+            IAccountRequisitesRepository accountRequisitesRepository,
+            IAccountRepository accountRepository)
         {
             _logger = logger;
             _blockchainReadModelRepository = blockchainReadModelRepository;
             _vaultAgentClient = vaultAgentClient;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
-            _brokerAccountRepository = brokerAccountRepository;
+            _accountRequisitesRepository = accountRequisitesRepository;
+            _accountRepository = accountRepository;
         }
 
-        public async Task Consume(ConsumeContext<FinalizeBrokerAccountCreation> context)
+        public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
         {
             var message = context.Message;
             BlockchainId cursor = null;
@@ -52,17 +54,19 @@ namespace Brokerage.Worker.MessageConsumers
                 foreach (var blockchain in blockchains)
                 {
                     var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
-                    var newRequisites = BrokerAccountRequisites.Create(
+                    var newRequisites = AccountRequisites.Create(
                         requestIdForCreation,
-                        message.BrokerAccountId,
-                        blockchain.BlockchainId);
+                        message.AccountId,
+                        message.TenantId,
+                        blockchain.BlockchainId,
+                        null);
 
-                    var requisites = await _brokerAccountRequisitesRepository.AddOrGetAsync(newRequisites);
+                    var requisites = await _accountRequisitesRepository.AddOrGetAsync(newRequisites);
 
                     if (requisites.Address != null)
                         continue;
 
-                    var requestIdForGeneration = $"{message.RequestId}_{requisites.Id}";
+                    var requestIdForGeneration = $"{message.RequestId}_{requisites.AccountRequisitesId}";
 
                     var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest()
                     {
@@ -73,34 +77,30 @@ namespace Brokerage.Worker.MessageConsumers
 
                     if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
                     {
-                        _logger.LogWarning("FinalizeBrokerAccountCreation command has been failed {@message}" +
+                        _logger.LogWarning("FinalizeAccountCreation command has been failed {@message}" +
                                                "error response from vault agent {@response}", message, response);
 
-                        throw new InvalidOperationException($"FinalizeBrokerAccountCreation command " +
+                        throw new InvalidOperationException($"FinalizeAccountCreation command " +
                                                             $"has been failed with {response.Error.ErrorMessage}");
                     }
 
                     requisites.Address = response.Response.Address;
-                    await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
+                    await _accountRequisitesRepository.UpdateAsync(requisites);
                 }
 
             } while (true);
 
 
-            var brokerAccount = await _brokerAccountRepository.GetAsync(message.BrokerAccountId);
+            var account = await _accountRepository.GetAsync(message.BrokerAccountId);
+            account.Activate();
 
-            if (brokerAccount.State == BrokerAccountState.Creating)
-            {
-                brokerAccount.Activate();
+            await _accountRepository.UpdateAsync(account);
 
-                await _brokerAccountRepository.UpdateAsync(brokerAccount);
-            }
-
-            await context.Publish(new BrokerAccountActivated()
+            await context.Publish(new AccountActivated()
             {
                 // ReSharper disable once PossibleInvalidOperationException
-                ActivationDate = brokerAccount.ActivationDateTime.Value,
-                BrokerAccountId = brokerAccount.BrokerAccountId
+                ActivationDate = account.ActivationDateTime.Value,
+                AccountId = account.BrokerAccountId
             });
 
             _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@message}", message);

@@ -7,5 +7,7 @@
         public const string BlockchainsTableName = "blockchains";
         public const string ProtocolsTableName = "protocols";
         public const string BrokerAccountRequisitesTableName = "broker_account_requisites";
+        public const string AccountsTableName = "accounts";
+        public const string AccountRequisitesTableName = "account_requisites";
     }
 }
