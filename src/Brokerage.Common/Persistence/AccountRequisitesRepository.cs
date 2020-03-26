@@ -6,6 +6,7 @@ using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence
 {
@@ -26,8 +27,6 @@ namespace Brokerage.Common.Persistence
 
             var entity = await context
                 .AccountRequisites
-                .Include(x => x.Account)
-                .Include(x => x.Account.BrokerAccount)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             return MapToDomain(entity);
@@ -54,7 +53,7 @@ namespace Brokerage.Common.Persistence
             {
                 var entity = await context
                     .AccountRequisites
-                    .FirstOrDefaultAsync(x => x.RequestId == brokerAccount.RequestId);
+                    .FirstAsync(x => x.RequestId == brokerAccount.RequestId);
 
                 return MapToDomain(entity);
             }
@@ -74,8 +73,8 @@ namespace Brokerage.Common.Persistence
         {
             var tagType = domainModel.TagType.HasValue ? (TagTypeEnum?)(domainModel.TagType.Value switch
             {
-                TagType.Number => TagTypeEnum.Number,
-                TagType.Text => TagTypeEnum.Text,
+                DestinationTagType.Number => TagTypeEnum.Number,
+                DestinationTagType.Text => TagTypeEnum.Text,
                 _ => throw  new ArgumentOutOfRangeException(nameof(domainModel.TagType), domainModel.TagType.Value, null)
 
             }) : null;
@@ -97,10 +96,10 @@ namespace Brokerage.Common.Persistence
             if (entity == null)
                 return null;
 
-            var tagType = entity.TagType.HasValue ? (TagType?)(entity.TagType.Value switch
+            var tagType = entity.TagType.HasValue ? (DestinationTagType?)(entity.TagType.Value switch
             {
-                TagTypeEnum.Number => TagType.Number,
-                TagTypeEnum.Text => TagType.Text,
+                TagTypeEnum.Number => DestinationTagType.Number,
+                TagTypeEnum.Text => DestinationTagType.Text,
                 _ => throw new ArgumentOutOfRangeException(nameof(entity.TagType), entity.TagType.Value, null)
 
             }) : null;
@@ -109,7 +108,6 @@ namespace Brokerage.Common.Persistence
                 entity.RequestId,
                 entity.Id,
                 entity.AccountId,
-                entity.Account.BrokerAccount.TenantId,
                 entity.BlockchainId,
                 entity.Address,
                 entity.Tag,

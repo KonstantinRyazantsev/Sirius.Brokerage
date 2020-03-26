@@ -41,67 +41,71 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var message = context.Message;
             BlockchainId cursor = null;
+            var account = await _accountRepository.GetOrDefaultAsync(message.AccountId);
 
-            do
+            if (account == null)
             {
-                var blockchains = await _blockchainReadModelRepository.GetManyAsync(cursor, 100);
-
-                if (!blockchains.Any())
-                    break;
-
-                cursor = blockchains.Last().BlockchainId;
-
-                foreach (var blockchain in blockchains)
+                _logger.LogInformation("FinalizeBrokerAccountCreation command has no related account {@message}", message);
+            }
+            else if (account.AccountState == AccountState.Creating)
+            {
+                do
                 {
-                    var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
-                    var newRequisites = AccountRequisites.Create(
-                        requestIdForCreation,
-                        message.AccountId,
-                        message.TenantId,
-                        blockchain.BlockchainId,
-                        null);
+                    var blockchains = await _blockchainReadModelRepository.GetManyAsync(cursor, 100);
 
-                    var requisites = await _accountRequisitesRepository.AddOrGetAsync(newRequisites);
+                    if (!blockchains.Any())
+                        break;
 
-                    if (requisites.Address != null)
-                        continue;
+                    cursor = blockchains.Last().BlockchainId;
 
-                    var requestIdForGeneration = $"{message.RequestId}_{requisites.AccountRequisitesId}";
-
-                    var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest()
+                    foreach (var blockchain in blockchains)
                     {
-                        BlockchainId = blockchain.BlockchainId.Value,
-                        TenantId = message.TenantId,
-                        RequestId = requestIdForGeneration
-                    });
+                        var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
+                        var newRequisites = AccountRequisites.Create(
+                            requestIdForCreation,
+                            message.AccountId,
+                            blockchain.BlockchainId,
+                            null);
 
-                    if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
-                    {
-                        _logger.LogWarning("FinalizeAccountCreation command has been failed {@message}" +
+                        var requisites = await _accountRequisitesRepository.AddOrGetAsync(newRequisites);
+
+                        if (requisites.Address != null)
+                            continue;
+
+                        var requestIdForGeneration = $"{message.RequestId}_{requisites.AccountRequisitesId}";
+
+                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest()
+                        {
+                            BlockchainId = blockchain.BlockchainId.Value,
+                            RequestId = requestIdForGeneration
+                        });
+
+                        if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
+                        {
+                            _logger.LogWarning("FinalizeAccountCreation command has been failed {@message}" +
                                                "error response from vault agent {@response}", message, response);
 
-                        throw new InvalidOperationException($"FinalizeAccountCreation command " +
-                                                            $"has been failed with {response.Error.ErrorMessage}");
+                            throw new InvalidOperationException($"FinalizeAccountCreation command " +
+                                                                $"has been failed with {response.Error.ErrorMessage}");
+                        }
+
+                        requisites.Address = response.Response.Address;
+                        await _accountRequisitesRepository.UpdateAsync(requisites);
                     }
 
-                    requisites.Address = response.Response.Address;
-                    await _accountRequisitesRepository.UpdateAsync(requisites);
-                }
+                } while (true);
 
-            } while (true);
+                account.Activate();
 
+                await context.Publish(new AccountActivated()
+                {
+                    // ReSharper disable once PossibleInvalidOperationException
+                    ActivationDate = account.ActivationDateTime.Value,
+                    AccountId = account.AccountId
+                });
 
-            var account = await _accountRepository.GetAsync(message.BrokerAccountId);
-            account.Activate();
-
-            await _accountRepository.UpdateAsync(account);
-
-            await context.Publish(new AccountActivated()
-            {
-                // ReSharper disable once PossibleInvalidOperationException
-                ActivationDate = account.ActivationDateTime.Value,
-                AccountId = account.BrokerAccountId
-            });
+                await _accountRepository.UpdateAsync(account);
+            }
 
             _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@message}", message);
 

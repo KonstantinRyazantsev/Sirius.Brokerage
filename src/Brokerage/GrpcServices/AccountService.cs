@@ -30,12 +30,10 @@ namespace Brokerage.GrpcServices
                 var newAccount = Account.Create(
                     request.RequestId, 
                     request.BrokerAccountId, 
-                    request.ReferenceId,
-                    request.TenantId);
+                    request.ReferenceId);
                 var createdAccount = await _accountRepository.AddOrGetAsync(newAccount);
 
-                if (!createdAccount.IsOwnedBy(request.TenantId) ||
-                    createdAccount.BrokerAccountId != request.BrokerAccountId)
+                if (createdAccount.BrokerAccountId != request.BrokerAccountId)
                 {
                     return new CreateAccountResponse()
                     {
@@ -49,9 +47,9 @@ namespace Brokerage.GrpcServices
 
                 await _sendEndpointProvider.Send(new FinalizeAccountCreation()
                 {
-                    BrokerAccountId = createdAccount.BrokerAccountId,
                     AccountId = createdAccount.AccountId,
-                    RequestId = request.RequestId
+                    RequestId = request.RequestId,
+
                 });
 
                 return new CreateAccountResponse()

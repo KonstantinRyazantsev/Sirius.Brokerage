@@ -5,7 +5,7 @@ namespace Brokerage.Common.Persistence
 {
     public interface IAccountRepository
     {
-        Task<Account> GetAsync(long accountId);
+        Task<Account> GetOrDefaultAsync(long accountId);
 
         Task<Account> AddOrGetAsync(Account account);
 

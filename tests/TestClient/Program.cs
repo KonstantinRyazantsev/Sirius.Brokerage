@@ -35,7 +35,6 @@ namespace TestClient
 
                         var account = await client.Accounts.CreateAsync(new CreateAccountRequest()
                         {
-                            TenantId = tenantId,
                             RequestId = requestId,
                             ReferenceId = "some ref",
                             BrokerAccountId = brokerAccount.Response.BrokerAccountId
@@ -43,7 +42,6 @@ namespace TestClient
 
                         var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest()
                         {
-                            TenantId = "Tenant_2",
                             RequestId = requestId,
                             ReferenceId = "some ref",
                             BrokerAccountId = 1
@@ -82,6 +80,7 @@ namespace TestClient
 
                     sw.Stop();
                     Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");
+                    Thread.Sleep(100_000);
                 }
                 catch(Exception ex)
                 {

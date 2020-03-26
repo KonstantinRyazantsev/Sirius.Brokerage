@@ -4,6 +4,7 @@ option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
 import "common.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 package services;
 
@@ -16,9 +17,7 @@ message CreateAccountRequest {
 
   string requestId = 2;
 
-  string referenceId = 3;
-
-  string tenantId = 4;
+  google.protobuf.StringValue referenceId = 3;
 }
 
 message CreateAccountResponseBody {
@@ -35,9 +34,7 @@ message CreateAccountResponseBody {
 
   google.protobuf.Timestamp blockingDateTime = 6;
 
-  string referenceId = 7;
-
-  string tenantId = 8;
+  google.protobuf.StringValue referenceId = 7;
 
   enum AccountStatus {
     CREATING = 0;

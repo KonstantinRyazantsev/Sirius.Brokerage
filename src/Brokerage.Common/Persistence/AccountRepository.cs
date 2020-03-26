@@ -18,7 +18,7 @@ namespace Brokerage.Common.Persistence
         }
 
 
-        public async Task<Account> GetAsync(long accountId)
+        public async Task<Account> GetOrDefaultAsync(long accountId)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
@@ -48,7 +48,6 @@ namespace Brokerage.Common.Persistence
             try
             {
                 await context.SaveChangesAsync();
-                await context.Entry(newEntity).Reference(s => s.BrokerAccount).LoadAsync();
 
                 return MapToDomain(newEntity);
             }
@@ -59,8 +58,7 @@ namespace Brokerage.Common.Persistence
             {
                 var entity = await context
                     .Accounts
-                    .FirstOrDefaultAsync(x => x.RequestId == brokerAccount.RequestId);
-                await context.Entry(entity).Reference(s => s.BrokerAccount).LoadAsync();
+                    .FirstAsync(x => x.RequestId == brokerAccount.RequestId);
 
                 return MapToDomain(entity);
             }
@@ -109,7 +107,6 @@ namespace Brokerage.Common.Persistence
                 entity.RequestId,
                 entity.AccountId,
                 entity.BrokerAccountId,
-                entity.BrokerAccount.TenantId,
                 entity.ReferenceId,
                 state,
                 entity.CreationDateTime.UtcDateTime,

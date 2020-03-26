@@ -8,7 +8,6 @@ namespace Brokerage.Common.Domain.Accounts
             string requestId,
             long accountId,
             long brokerAccountId,
-            string tenantId,
             string referenceId,
             AccountState accountState,
             DateTime creationDateTime,
@@ -18,7 +17,6 @@ namespace Brokerage.Common.Domain.Accounts
             RequestId = requestId;
             AccountId = accountId;
             BrokerAccountId = brokerAccountId;
-            TenantId = tenantId;
             ReferenceId = referenceId;
             AccountState = accountState;
             CreationDateTime = creationDateTime;
@@ -52,14 +50,12 @@ namespace Brokerage.Common.Domain.Accounts
         public static Account Create(
             string requestId,
             long brokerAccountId,
-            string tenantId,
             string referenceId)
         {
             return new Account(
                 requestId,
                 default,
                 brokerAccountId,
-                tenantId,
                 referenceId,
                 AccountState.Creating,
                 DateTime.UtcNow,
@@ -71,7 +67,6 @@ namespace Brokerage.Common.Domain.Accounts
             string requestId,
             long accountId,
             long brokerAccountId,
-            string tenantId,
             string referenceId,
             AccountState accountState,
             DateTime creationDateTime,
@@ -82,7 +77,6 @@ namespace Brokerage.Common.Domain.Accounts
                 requestId,
                 accountId,
                 brokerAccountId,
-                tenantId,
                 referenceId,
                 accountState,
                 creationDateTime,
