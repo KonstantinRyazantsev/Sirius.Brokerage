@@ -25,19 +25,38 @@ namespace TestClient
                     var result = await client.Monitoring.IsAliveAsync(new IsAliveRequest());
 
                     {
-                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        var tenantId = "Tenant_1";
+                        var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest()
                         {
                             Name = "Broker_1",
                             RequestId = requestId,
-                            TenantId = "Tenant_1",
+                            TenantId = tenantId,
                         });
 
-                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                        Console.WriteLine(serialized);
+                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest()
+                        {
+                            RequestId = requestId,
+                            ReferenceId = "some ref",
+                            BrokerAccountId = brokerAccount.Response.BrokerAccountId
+                        });
+
+                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest()
+                        {
+                            RequestId = requestId,
+                            ReferenceId = "some ref",
+                            BrokerAccountId = 1
+                        });
+
+                        var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
+                        var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
+                        
+                        Console.WriteLine(serializedBrokerAccount);
+                        Console.WriteLine();
+                        Console.WriteLine(serializedAccount);
                     }
 
                     {
-                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest()
                         {
                             Name = "Broker_1",
                             RequestId = requestId,
@@ -49,7 +68,7 @@ namespace TestClient
                     }
 
                     {
-                        var response = await client.BrokerAccount.CreateAsync(new CreateRequest()
+                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest()
                         {
                             RequestId = requestId,
                             TenantId = "Tenant_2",
@@ -61,6 +80,7 @@ namespace TestClient
 
                     sw.Stop();
                     Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");
+                    Thread.Sleep(100_000);
                 }
                 catch(Exception ex)
                 {

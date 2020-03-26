@@ -2,9 +2,9 @@
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
-    public class BrokerAccountActivated
+    public class AccountActivated
     {
-        public long BrokerAccountId { get; set; }
+        public long AccountId { get; set; }
 
         public DateTime ActivationDate { get; set; }
     }

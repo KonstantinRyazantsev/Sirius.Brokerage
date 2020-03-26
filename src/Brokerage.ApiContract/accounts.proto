@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package services;
+
+service Accounts {
+  rpc Create (CreateAccountRequest) returns (CreateAccountResponse);
+}
+
+message CreateAccountRequest {
+  int64 brokerAccountId = 1;
+
+  string requestId = 2;
+
+  google.protobuf.StringValue referenceId = 3;
+}
+
+message CreateAccountResponseBody {
+  
+  int64 brokerAccountId = 1;
+
+  int64 accountId = 2;
+
+  AccountStatus status = 3;
+
+  google.protobuf.Timestamp creationDateTime = 4;
+
+  google.protobuf.Timestamp activationDateTime = 5;
+
+  google.protobuf.Timestamp blockingDateTime = 6;
+
+  google.protobuf.StringValue referenceId = 7;
+
+  enum AccountStatus {
+    CREATING = 0;
+    ACTIVE = 1;
+    BLOCKED = 2;
+  } 
+}
+
+message CreateAccountResponse {
+   oneof body{
+     CreateAccountResponseBody response = 1;
+     common.ErrorResponseBody error = 2;
+   }
+}

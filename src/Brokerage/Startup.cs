@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Brokerage.Common.Configuration;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
@@ -32,7 +33,9 @@ namespace Brokerage
             {
                 EndpointConvention.Map<FinalizeBrokerAccountCreation>(
                     new Uri("queue:sirius-brokerage-finalize-broker-account-creation"));
-            
+                EndpointConvention.Map<FinalizeAccountCreation>(
+                    new Uri("queue:sirius-brokerage-finalize-account-creation"));
+
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {
                     cfg.Host(Config.RabbitMq.HostUrl, host =>
@@ -54,6 +57,7 @@ namespace Brokerage
 
             endpoints.MapGrpcService<MonitoringService>();
             endpoints.MapGrpcService<BrokerAccountsService>();
+            endpoints.MapGrpcService<AccountService>();
         }
     }
 }

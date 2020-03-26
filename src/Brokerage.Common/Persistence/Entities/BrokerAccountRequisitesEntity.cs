@@ -17,4 +17,10 @@ namespace Brokerage.Common.Persistence.Entities
 
         public string Address { get; set; }
     }
+
+    public enum TagTypeEnum
+    {
+        Text,
+        Number
+    }
 }

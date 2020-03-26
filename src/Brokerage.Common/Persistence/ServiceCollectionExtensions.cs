@@ -10,6 +10,9 @@ namespace Brokerage.Common.Persistence
         {
             services.AddTransient<IBrokerAccountRepository, BrokerAccountRepository>();
             services.AddTransient<IBrokerAccountRequisitesRepository, BrokerAccountRequisitesRepository>();
+            services.AddTransient<IAccountRepository, AccountRepository>();
+            services.AddTransient<IAccountRequisitesRepository, AccountRequisitesRepository>();
+
             services.AddTransient<IProtocolReadModelRepository, ProtocolReadModelRepository>();
             services.AddTransient<IBlockchainReadModelRepository, BlockchainReadModelRepository>();
 

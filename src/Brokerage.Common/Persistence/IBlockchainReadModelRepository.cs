@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Blockchains;
 using Swisschain.Sirius.Sdk.Primitives;

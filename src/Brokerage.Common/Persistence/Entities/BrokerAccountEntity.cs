@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,6 +8,10 @@ namespace Brokerage.Common.Persistence.Entities
     [Table(name: Tables.BrokerAccountsTableName)]
     public class BrokerAccountEntity
     {
+        public BrokerAccountEntity()
+        {
+            Accounts = new HashSet<AccountEntity>();
+        }
         public string RequestId { get; set; }
 
         public string TenantId { get; set; }
@@ -24,5 +29,7 @@ namespace Brokerage.Common.Persistence.Entities
         public DateTimeOffset? ActivationDateTime { get; set; }
 
         public DateTimeOffset? BlockingDateTime { get; set; }
+
+        public ICollection<AccountEntity> Accounts { get; set; }
     }
 }

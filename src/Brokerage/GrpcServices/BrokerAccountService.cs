@@ -66,7 +66,7 @@ namespace Brokerage.GrpcServices
                 {
                     Response = new CreateResponseBody()
                     {
-                        BrokerAccountId = createdBrokerAccount.BrokerAccountId.ToString(),
+                        BrokerAccountId = createdBrokerAccount.BrokerAccountId,
                         Name = createdBrokerAccount.Name,
                         Status = MapToResponse(createdBrokerAccount.State),
                         ActivationDateTime = createdBrokerAccount.ActivationDateTime.HasValue ? 

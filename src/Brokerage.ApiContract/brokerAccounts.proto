@@ -21,7 +21,7 @@ message CreateRequest {
 
 message CreateResponseBody {
   
-  string brokerAccountId = 1;
+  int64 brokerAccountId = 1;
 
   string name = 2;
 
