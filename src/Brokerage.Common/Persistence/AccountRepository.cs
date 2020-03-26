@@ -18,13 +18,13 @@ namespace Brokerage.Common.Persistence
         }
 
 
-        public async Task<Account> GetOrDefaultAsync(long accountId)
+        public async Task<Account> GetAsync(long accountId)
         {
             await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .Accounts
-                .FirstOrDefaultAsync(x => x.AccountId == accountId);
+                .FirstAsync(x => x.AccountId == accountId);
 
             return MapToDomain(entity);
         }

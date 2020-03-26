@@ -27,7 +27,7 @@ namespace Brokerage.Common.Persistence
 
             var entity = await context
                 .AccountRequisites
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstAsync(x => x.Id == id);
 
             return MapToDomain(entity);
         }
