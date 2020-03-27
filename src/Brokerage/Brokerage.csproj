@@ -3,9 +3,21 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Brokerage</AssemblyName>
+    <AssemblyName>Swisschain.Sirius.Brokerage</AssemblyName>
     <RootNamespace>Brokerage</RootNamespace>
     <UserSecretsId>3484bae3-972c-41c4-9c15-aafba8c1f3fd</UserSecretsId>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DocumentationFile>bin\Sirius.Brokerage.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swisschain.Sdk.Server" Version="2.5.0" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

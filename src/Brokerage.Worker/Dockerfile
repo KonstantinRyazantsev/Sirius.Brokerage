@@ -3,4 +3,4 @@ WORKDIR /app
 EXPOSE 5101
 EXPOSE 5100
 COPY . .
-ENTRYPOINT ["dotnet", "Brokerage.Worker.dll"]
+ENTRYPOINT ["dotnet", "Swisschain.Sirius.Brokerage.Worker.dll"]

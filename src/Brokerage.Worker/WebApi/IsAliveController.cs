@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Brokerage.Worker.WebApi.Models.IsAlive;
 using Swisschain.Sdk.Server.Common;
@@ -10,6 +11,7 @@ namespace Brokerage.Worker.WebApi
     public class IsAliveController : ControllerBase
     {
         [HttpGet]
+        [ProducesResponseType(typeof(IsAliveResponse), StatusCodes.Status200OK)]
         public IsAliveResponse Get()
         {
             var response = new IsAliveResponse
