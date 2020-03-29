@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.BrokerAccountRequisites;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
 using MassTransit;
@@ -121,7 +120,7 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(new BrokerAccountRequisitesAdded
                 {
-                    CreationDateTime = DateTime.UtcNow,
+                    CreationDateTime = requisites.CreationDateTime,
                     Address = requisites.Address,
                     BlockchainId = requisites.BlockchainId,
                     BrokerAccountId = requisites.BrokerAccountId,

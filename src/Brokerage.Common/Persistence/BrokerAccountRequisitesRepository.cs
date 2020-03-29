@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.BrokerAccountRequisites;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -99,29 +99,31 @@ namespace Brokerage.Common.Persistence
             await context.SaveChangesAsync();
         }
 
-        private BrokerAccountRequisitesEntity MapToEntity(BrokerAccountRequisites brokerAccount)
+        private static BrokerAccountRequisitesEntity MapToEntity(BrokerAccountRequisites requisites)
         {
             return new BrokerAccountRequisitesEntity
             {
-                RequestId = brokerAccount.RequestId,
-                BlockchainId = brokerAccount.BlockchainId,
-                BrokerAccountId = brokerAccount.BrokerAccountId,
-                Address = brokerAccount.Address,
-                Id = brokerAccount.Id
+                RequestId = requisites.RequestId,
+                BlockchainId = requisites.BlockchainId,
+                BrokerAccountId = requisites.BrokerAccountId,
+                Address = requisites.Address,
+                Id = requisites.Id,
+                CreationDateTime = requisites.CreationDateTime
             };
         }
 
-        private BrokerAccountRequisites MapToDomain(BrokerAccountRequisitesEntity brokerAccountRequisitesEntity)
+        private BrokerAccountRequisites MapToDomain(BrokerAccountRequisitesEntity entity)
         {
-            if (brokerAccountRequisitesEntity == null)
+            if (entity == null)
                 return null;
 
             var brokerAccount = BrokerAccountRequisites.Restore(
-                brokerAccountRequisitesEntity.RequestId,
-                brokerAccountRequisitesEntity.Id,
-                brokerAccountRequisitesEntity.BrokerAccountId,
-                brokerAccountRequisitesEntity.BlockchainId,
-                brokerAccountRequisitesEntity.Address
+                entity.RequestId,
+                entity.Id,
+                entity.BrokerAccountId,
+                entity.BlockchainId,
+                entity.Address,
+                entity.CreationDateTime.UtcDateTime
             );
 
             return brokerAccount;

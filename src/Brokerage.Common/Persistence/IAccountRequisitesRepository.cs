@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.AccountRequisites;
+using Brokerage.Common.Domain.Accounts;
 
 namespace Brokerage.Common.Persistence
 {

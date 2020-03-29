@@ -1,6 +1,7 @@
-﻿using Swisschain.Sirius.Sdk.Primitives;
+﻿using System;
+using Swisschain.Sirius.Sdk.Primitives;
 
-namespace Brokerage.Common.Domain.AccountRequisites
+namespace Brokerage.Common.Domain.Accounts
 {
     public class AccountRequisites
     {
@@ -11,7 +12,8 @@ namespace Brokerage.Common.Domain.AccountRequisites
             BlockchainId blockchainId,
             string address,
             DestinationTag tag,
-            DestinationTagType? tagType)
+            DestinationTagType? tagType,
+            DateTime creationDate)
         {
             RequestId = requestId;
             AccountRequisitesId = accountRequisitesId;
@@ -20,16 +22,18 @@ namespace Brokerage.Common.Domain.AccountRequisites
             Address = address;
             Tag = tag;
             TagType = tagType;
+            CreationDateTime = creationDate;
         }
 
-        // TODO: This is here 
+        // TODO: This is here only because of EF - we can't update DB record without having entire entity
         public string RequestId { get; }
         public long AccountRequisitesId { get; }
         public long AccountId { get; }
         public BlockchainId BlockchainId { get; }
-        public string Address { get; set; }
         public DestinationTag Tag { get; }
         public DestinationTagType? TagType { get; }
+        public DateTime CreationDateTime { get; }
+        public string Address { get; set; }
 
         public static AccountRequisites Create(
             string requestId,
@@ -46,7 +50,8 @@ namespace Brokerage.Common.Domain.AccountRequisites
                     blockchainId,
                     address,
                     tag,
-                    tagType);
+                    tagType,
+                    DateTime.UtcNow);
         }
 
         public static AccountRequisites Restore(
@@ -55,8 +60,9 @@ namespace Brokerage.Common.Domain.AccountRequisites
             long accountId,
             BlockchainId blockchainId,
             string address,
-            DestinationTag tag = null,
-            DestinationTagType? tagType = null)
+            DestinationTag tag,
+            DestinationTagType? tagType,
+            DateTime creationDateTime)
         {
             return new AccountRequisites(
                 requestId,
@@ -65,7 +71,8 @@ namespace Brokerage.Common.Domain.AccountRequisites
                 blockchainId,
                 address,
                 tag,
-                tagType);
+                tagType,
+                creationDateTime);
         }
     }
 }

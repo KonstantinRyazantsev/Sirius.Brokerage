@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.AccountRequisites;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -99,25 +99,26 @@ namespace Brokerage.Common.Persistence
             await context.SaveChangesAsync();
         }
 
-        private static AccountRequisitesEntity MapToEntity(AccountRequisites domainModel)
+        private static AccountRequisitesEntity MapToEntity(AccountRequisites requisites)
         {
-            var tagType = domainModel.TagType.HasValue ? (TagTypeEnum?)(domainModel.TagType.Value switch
+            var tagType = requisites.TagType.HasValue ? (TagTypeEnum?)(requisites.TagType.Value switch
             {
                 DestinationTagType.Number => TagTypeEnum.Number,
                 DestinationTagType.Text => TagTypeEnum.Text,
-                _ => throw  new ArgumentOutOfRangeException(nameof(domainModel.TagType), domainModel.TagType.Value, null)
+                _ => throw  new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType.Value, null)
 
             }) : null;
 
             return new AccountRequisitesEntity
             {
-                RequestId = domainModel.RequestId,
-                Address = domainModel.Address,
-                Id = domainModel.AccountRequisitesId,
-                AccountId = domainModel.AccountId,
-                BlockchainId = domainModel.BlockchainId,
-                Tag = domainModel.Tag,
-                TagType = tagType
+                RequestId = requisites.RequestId,
+                Address = requisites.Address,
+                Id = requisites.AccountRequisitesId,
+                AccountId = requisites.AccountId,
+                BlockchainId = requisites.BlockchainId,
+                Tag = requisites.Tag,
+                TagType = tagType,
+                CreationDateTime = requisites.CreationDateTime
             };
         }
 
@@ -138,7 +139,8 @@ namespace Brokerage.Common.Persistence
                 entity.BlockchainId,
                 entity.Address,
                 entity.Tag,
-                tagType);
+                tagType,
+                entity.CreationDateTime.UtcDateTime);
 
             return brokerAccount;
         }
