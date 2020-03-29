@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.AccountRequisites;
@@ -12,6 +13,7 @@ using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract;
+using DestinationTagType = Swisschain.Sirius.Brokerage.MessagingContract.DestinationTagType;
 
 namespace Brokerage.Worker.MessageConsumers
 {
@@ -49,6 +51,8 @@ namespace Brokerage.Worker.MessageConsumers
             }
             else
             {
+                var accountRequisites = new List<AccountRequisites>(20);
+
                 if (account.AccountState == AccountState.Creating)
                 {
                     do
@@ -93,6 +97,8 @@ namespace Brokerage.Worker.MessageConsumers
 
                             requisites.Address = response.Response.Address;
                             await _accountRequisitesRepository.UpdateAsync(requisites);
+
+                            accountRequisites.Add(requisites);
                         }
 
                     } while (true);
@@ -100,6 +106,45 @@ namespace Brokerage.Worker.MessageConsumers
                     account.Activate();
 
                     await _accountRepository.UpdateAsync(account);
+                }
+
+                if (accountRequisites.Count == 0)
+                {
+                    long? requisitesCursor = null;
+
+                    do
+                    {
+                        var result = await
+                            _accountRequisitesRepository.SearchAsync(account.AccountId, 100, requisitesCursor, true);
+
+                        if (!result.Any())
+                            break;
+
+                        accountRequisites.AddRange(result);
+                        requisitesCursor = result.Last()?.AccountRequisitesId;
+
+                    } while (requisitesCursor != null);
+                }
+
+                foreach (var requisites in accountRequisites)
+                {
+                    await context.Publish(new AccountRequisitesAdded()
+                    {
+                        CreationDateTime = DateTime.UtcNow,
+                        Address = requisites.Address,
+                        BlockchainId = requisites.BlockchainId,
+                        Tag = requisites.Tag,
+                        TagType = requisites.TagType.HasValue ?
+                            requisites.TagType.Value switch
+                            {
+                                Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Number => DestinationTagType.Number,
+                                Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Text=> DestinationTagType.Text,
+
+                                _ => throw  new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType, null)
+                            } : (DestinationTagType?)null ,
+                        AccountId = requisites.AccountId,
+                        AccountRequisitesId = requisites.AccountRequisitesId
+                    });
                 }
 
                 await context.Publish(new AccountActivated()

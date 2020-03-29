@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.AccountRequisites;
 using Brokerage.Common.Domain.BrokerAccountRequisites;
@@ -19,6 +21,48 @@ namespace Brokerage.Common.Persistence
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
+        public async Task<IReadOnlyCollection<AccountRequisites>> SearchAsync(
+            long accountId,
+            int limit,
+            long? cursor,
+            bool sortAsc)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var query = context
+                .AccountRequisites
+                .Where(x => x.AccountId == accountId);
+
+            if (sortAsc)
+            {
+                if (cursor != null)
+                {
+                    // ReSharper disable once StringCompareToIsCultureSpecific
+                    query = query.Where(x => cursor < 0);
+                }
+
+                query = query.OrderBy(x => x.Id);
+            }
+            else
+            {
+                if (cursor != null)
+                {
+                    // ReSharper disable once StringCompareToIsCultureSpecific
+                    query = query.Where(x => cursor > 0);
+                }
+
+                query = query.OrderByDescending(x => x.Id);
+            }
+
+            query = query.Take(limit);
+
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
 
         public async Task<AccountRequisites> GetAsync(string brokerAccountRequisitesId)
         {
