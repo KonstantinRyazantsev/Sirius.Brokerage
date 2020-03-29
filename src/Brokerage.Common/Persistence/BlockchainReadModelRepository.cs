@@ -12,9 +12,9 @@ namespace Brokerage.Common.Persistence
 {
     public class BlockchainReadModelRepository : IBlockchainReadModelRepository
     {
-        private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public BlockchainReadModelRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public BlockchainReadModelRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
@@ -22,7 +22,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<Blockchain> GetOrDefaultAsync(BlockchainId blockchainId)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context.Blockchains.FindAsync(blockchainId.Value);
 
@@ -31,7 +31,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<IReadOnlyCollection<Blockchain>> GetManyAsync(BlockchainId cursor, int take)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var query = context.Blockchains.Select(x => x);
 
@@ -50,7 +50,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<Blockchain> AddOrReplaceAsync(Blockchain blockchain)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var entity = new BlockchainEntity() { BlockchainId = blockchain.BlockchainId };
 
             try

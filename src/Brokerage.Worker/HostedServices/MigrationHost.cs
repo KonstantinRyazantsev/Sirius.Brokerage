@@ -10,9 +10,9 @@ namespace Brokerage.Worker.HostedServices
     public class MigrationHost : IHostedService
     {
         private readonly ILogger<MigrationHost> _logger;
-        private readonly DbContextOptionsBuilder<BrokerageContext> _contextOptions;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _contextOptions;
 
-        public MigrationHost(ILogger<MigrationHost> logger, DbContextOptionsBuilder<BrokerageContext> contextOptions)
+        public MigrationHost(ILogger<MigrationHost> logger, DbContextOptionsBuilder<DatabaseContext> contextOptions)
         {
             _logger = logger;
             _contextOptions = contextOptions;
@@ -22,7 +22,7 @@ namespace Brokerage.Worker.HostedServices
         {
             _logger.LogInformation("EF Migration is being started...");
 
-            await using var context = new BrokerageContext(_contextOptions.Options);
+            await using var context = new DatabaseContext(_contextOptions.Options);
 
             await context.Database.MigrateAsync(cancellationToken);
 

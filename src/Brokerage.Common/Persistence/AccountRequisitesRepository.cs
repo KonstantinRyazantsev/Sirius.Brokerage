@@ -12,9 +12,9 @@ namespace Brokerage.Common.Persistence
 {
     public class AccountRequisitesRepository : IAccountRequisitesRepository
     {
-        private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public AccountRequisitesRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public AccountRequisitesRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
@@ -23,7 +23,7 @@ namespace Brokerage.Common.Persistence
         public async Task<AccountRequisites> GetAsync(string brokerAccountRequisitesId)
         {
             long.TryParse(brokerAccountRequisitesId, out var id);
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .AccountRequisites
@@ -34,7 +34,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<AccountRequisites> AddOrGetAsync(AccountRequisites brokerAccount)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var newEntity = MapToEntity(brokerAccount);
 
@@ -61,7 +61,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task UpdateAsync(AccountRequisites brokerAccount)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var entity = MapToEntity(brokerAccount);
             context
                 .AccountRequisites

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccountRequisites;
@@ -48,6 +49,8 @@ namespace Brokerage.Worker.MessageConsumers
             }
             else
             {
+                var brokerAccountRequisites = new List<BrokerAccountRequisites>(20);
+
                 if (brokerAccount.State == BrokerAccountState.Creating)
                 {
                     do
@@ -92,6 +95,8 @@ namespace Brokerage.Worker.MessageConsumers
 
                             requisites.Address = response.Response.Address;
                             await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
+
+                            brokerAccountRequisites.Add(requisites);
                         }
 
                     } while (true);
@@ -99,6 +104,36 @@ namespace Brokerage.Worker.MessageConsumers
                     brokerAccount.Activate();
 
                     await _brokerAccountRepository.UpdateAsync(brokerAccount);
+                }
+
+                if (brokerAccountRequisites.Count == 0)
+                {
+                    long? requisitesCursor = null;
+
+                    do
+                    {
+                        var result = await
+                            _brokerAccountRequisitesRepository.SearchAsync(brokerAccount.BrokerAccountId, 100, requisitesCursor, true);
+
+                        if (!result.Any())
+                            break;
+
+                        brokerAccountRequisites.AddRange(result);
+                        requisitesCursor = result.Last()?.Id;
+
+                    } while (requisitesCursor != null);
+                }
+
+                foreach (var requisites in brokerAccountRequisites)
+                {
+                    await context.Publish(new BrokerAccountRequisitesAdded()
+                    {
+                        CreationDateTime = DateTime.UtcNow,
+                        Address = requisites.Address,
+                        BlockchainId = requisites.BlockchainId,
+                        BrokerAccountId = requisites.BrokerAccountId,
+                        BrokerAccountRequisitesId = requisites.Id
+                    });
                 }
 
                 await context.Publish(new BrokerAccountActivated()

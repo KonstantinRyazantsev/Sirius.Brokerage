@@ -10,9 +10,9 @@ namespace Brokerage.Common.Persistence
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public AccountRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public AccountRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
@@ -20,7 +20,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<Account> GetAsync(long accountId)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .Accounts
@@ -31,7 +31,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task UpdateAsync(Account account)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var entity = MapToEntity(account);
             context.Accounts.Update(entity);
             await context.SaveChangesAsync();
@@ -39,7 +39,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<Account> AddOrGetAsync(Account brokerAccount)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var newEntity = MapToEntity(brokerAccount);
 

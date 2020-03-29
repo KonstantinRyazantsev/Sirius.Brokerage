@@ -12,9 +12,9 @@ namespace Brokerage.HostedServices
     public class DbSchemaValidationHost : IHostedService
     {
         private readonly ILogger<DbSchemaValidationHost> _logger;
-        private readonly DbContextOptionsBuilder<BrokerageContext> _contextOptions;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _contextOptions;
 
-        public DbSchemaValidationHost(ILogger<DbSchemaValidationHost> logger, DbContextOptionsBuilder<BrokerageContext> contextOptions)
+        public DbSchemaValidationHost(ILogger<DbSchemaValidationHost> logger, DbContextOptionsBuilder<DatabaseContext> contextOptions)
         {
             _logger = logger;
             _contextOptions = contextOptions;
@@ -24,7 +24,7 @@ namespace Brokerage.HostedServices
         {
             _logger.LogInformation("EF Schema validation is being started...");
 
-            await using var context = new BrokerageContext(_contextOptions.Options);
+            await using var context = new DatabaseContext(_contextOptions.Options);
 
             var pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
 

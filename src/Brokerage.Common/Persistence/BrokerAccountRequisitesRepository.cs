@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccountRequisites;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -9,18 +12,61 @@ namespace Brokerage.Common.Persistence
 {
     public class BrokerAccountRequisitesRepository : IBrokerAccountRequisitesRepository
     {
-        private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public BrokerAccountRequisitesRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public BrokerAccountRequisitesRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
 
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(
+            long brokerAccountId,
+            int limit,
+            long? cursor,
+            bool sortAsc)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var query = context
+                .BrokerAccountsRequisites
+                .Where(x => x.BrokerAccountId == brokerAccountId);
+
+            if (sortAsc)
+            {
+                if (cursor != null)
+                {
+                    // ReSharper disable once StringCompareToIsCultureSpecific
+                    query = query.Where(x => cursor < 0);
+                }
+
+                query = query.OrderBy(x => x.Id);
+            }
+            else
+            {
+                if (cursor != null)
+                {
+                    // ReSharper disable once StringCompareToIsCultureSpecific
+                    query = query.Where(x => cursor > 0);
+                }
+
+                query = query.OrderByDescending(x => x.Id);
+            }
+
+            query = query.Take(limit);
+
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task<BrokerAccountRequisites> GetAsync(string brokerAccountRequisitesId)
         {
             long.TryParse(brokerAccountRequisitesId, out var id);
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .BrokerAccountsRequisites
@@ -31,7 +77,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var newEntity = MapToEntity(brokerAccount);
 
@@ -58,7 +104,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task UpdateAsync(BrokerAccountRequisites brokerAccount)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var entity = MapToEntity(brokerAccount);
             context
                 .BrokerAccountsRequisites
