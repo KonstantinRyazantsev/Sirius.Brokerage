@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brokerage.Common.Persistence.Entities
 {
-    [Table(name: Tables.BrokerAccountRequisitesTableName)]
+    [Table(name: Tables.BrokerAccountRequisites)]
     public class BrokerAccountRequisitesEntity
     {
         [Key]

@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.Blockchains;
-using Swisschain.Sirius.Sdk.Primitives;
+using Brokerage.Common.ReadModels.Blockchains;
 
 namespace Brokerage.Common.Persistence
 {
     public interface IBlockchainsRepository
     {
-        Task<Blockchain> AddOrReplaceAsync(Blockchain blockchain);
+        Task AddOrReplaceAsync(Blockchain blockchain);
 
-        Task<IReadOnlyCollection<Blockchain>> GetAllAsync(BlockchainId cursor, int limit);
+        Task<IReadOnlyCollection<Blockchain>> GetAllAsync(string cursor, int limit);
     }
 }

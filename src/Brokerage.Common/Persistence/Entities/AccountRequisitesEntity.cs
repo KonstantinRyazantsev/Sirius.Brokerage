@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brokerage.Common.Persistence.Entities
 {
-    [Table(name: Tables.AccountRequisitesTableName)]
+    [Table(name: Tables.AccountRequisites)]
     public class AccountRequisitesEntity
     {
         [Key]
@@ -11,7 +11,7 @@ namespace Brokerage.Common.Persistence.Entities
         public long Id { get; set; }
         public string RequestId { get; set; }
 
-        [ForeignKey(Tables.AccountsTableName)]
+        [ForeignKey(Tables.Accounts)]
         public long AccountId { get; set; }
 
         public AccountEntity Account { get; set; }

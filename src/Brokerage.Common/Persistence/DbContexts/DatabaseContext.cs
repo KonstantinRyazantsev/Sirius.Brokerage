@@ -1,4 +1,5 @@
 ﻿using Brokerage.Common.Persistence.Entities;
+using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 
 namespace Brokerage.Common.Persistence.DbContexts
@@ -11,59 +12,55 @@ namespace Brokerage.Common.Persistence.DbContexts
         }
 
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
-
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
-
         public DbSet<AccountEntity> Accounts { get; set; }
-
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
-
-        public DbSet<BlockchainEntity> Blockchains { get; set; }
-
-        public DbSet<ProtocolEntity> Networks { get; set; }
+        public DbSet<Blockchain> Blockchains { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema(PostgresRepositoryConfiguration.SchemaName);
+            
+            BuildBrokerAccount(modelBuilder);
+            BuildBrokerAccountRequisites(modelBuilder);
+            BuildAccount(modelBuilder);
+            BuildAccountRequisites(modelBuilder);
+            BuildBlockchain(modelBuilder);
+            
+            base.OnModelCreating(modelBuilder);
+        }
 
+        private static void BuildBlockchain(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Blockchain>()
+                .ToTable(Tables.Blockchains)
+                .HasKey(x => x.BlockchainId);
+        }
 
-            modelBuilder.Entity<BrokerAccountEntity>()
-                .HasKey(c => new { c.BrokerAccountId });
+        private static void BuildAccountRequisites(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .HasKey(c => new {c.Id});
 
-            modelBuilder.Entity<BrokerAccountEntity>()
+            modelBuilder.Entity<AccountRequisitesEntity>()
                 .HasIndex(x => x.RequestId)
                 .IsUnique(true)
-                .HasName("IX_BrokerAccount_RequestId");
+                .HasName("IX_AccountRequisites_RequestId");
 
-            modelBuilder.Entity<BrokerAccountEntity>()
-                .Property(b => b.BrokerAccountId)
-                .HasIdentityOptions(startValue: 100_000);
-
-
-            modelBuilder.Entity<ProtocolEntity>()
-                .HasKey(c => new { BlockchainId = c.ProtocolId});
-
-
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasKey(c => new { c.Id });
-
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasIndex(x => x.RequestId)
-                .IsUnique(true)
-                .HasName("IX_BrokerAccountRequisites_RequestId");
-
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<AccountRequisitesEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 100_000);
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasIndex(x => x.BrokerAccountId)
-                .IsUnique(false)
-                .HasName("IX_BrokerAccountRequisites_BrokerAccountId"); ;
-
-
             modelBuilder.Entity<AccountEntity>()
-                .HasKey(c => new { Id = c.AccountId });
+                .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
+                .WithOne(s => s.Account)
+                .HasForeignKey(x => x.AccountId);
+        }
+
+        private static void BuildAccount(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<AccountEntity>()
+                .HasKey(c => new {Id = c.AccountId});
 
             modelBuilder.Entity<AccountEntity>()
                 .HasIndex(x => x.RequestId)
@@ -79,27 +76,42 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .WithOne(s => s.BrokerAccount)
                 .HasForeignKey(x => x.BrokerAccountId)
                 .IsRequired(true);
+        }
 
+        private static void BuildBrokerAccountRequisites(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasKey(c => new {c.Id});
 
-            modelBuilder.Entity<AccountRequisitesEntity>()
-                .HasKey(c => new { c.Id });
-
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .HasIndex(x => x.RequestId)
                 .IsUnique(true)
-                .HasName("IX_AccountRequisites_RequestId");
+                .HasName("IX_BrokerAccountRequisites_RequestId");
 
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 100_000);
 
-            modelBuilder.Entity<AccountEntity>()
-                .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
-                .WithOne(s => s.Account)
-                .HasForeignKey(x => x.AccountId);
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.BrokerAccountId)
+                .IsUnique(false)
+                .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
+            ;
+        }
 
+        private static void BuildBrokerAccount(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<BrokerAccountEntity>()
+                .HasKey(c => new {c.BrokerAccountId});
 
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<BrokerAccountEntity>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique(true)
+                .HasName("IX_BrokerAccount_RequestId");
+
+            modelBuilder.Entity<BrokerAccountEntity>()
+                .Property(b => b.BrokerAccountId)
+                .HasIdentityOptions(startValue: 100_000);
         }
     }
 }

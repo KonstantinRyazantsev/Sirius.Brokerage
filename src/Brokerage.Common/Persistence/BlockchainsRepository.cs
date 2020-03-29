@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.Blockchains;
 using Brokerage.Common.Persistence.DbContexts;
-using Brokerage.Common.Persistence.Entities;
+using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence
 {
@@ -19,7 +17,7 @@ namespace Brokerage.Common.Persistence
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<IReadOnlyCollection<Blockchain>> GetAllAsync(BlockchainId cursor, int limit)
+        public async Task<IReadOnlyCollection<Blockchain>> GetAllAsync(string cursor, int limit)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -28,48 +26,31 @@ namespace Brokerage.Common.Persistence
             if (cursor != null)
             {
                 // ReSharper disable once StringCompareToIsCultureSpecific
-                query = query.Where(x => x.BlockchainId.CompareTo(cursor.Value) > 1);
+                query = query.Where(x => x.BlockchainId.CompareTo(cursor) > 1);
             }
 
-            var result = await query
+            return await query
                 .OrderBy(x => x.BlockchainId)
                 .Take(limit)
                 .ToListAsync();
-
-            return result.Select(MapToDomain).ToArray();
         }
 
-        public async Task<Blockchain> AddOrReplaceAsync(Blockchain blockchain)
+        public async Task AddOrReplaceAsync(Blockchain blockchain)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            var entity = new BlockchainEntity
-            {
-                BlockchainId = blockchain.BlockchainId
-            };
-
+            
             try
             {
-                context.Blockchains.Add(entity);
+                context.Blockchains.Add(blockchain);
+             
                 await context.SaveChangesAsync();
-
-                return MapToDomain(entity);
             }
             catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
             {
-                context.Blockchains.Update(entity);
+                context.Blockchains.Update(blockchain);
 
                 await context.SaveChangesAsync();
-
-                return MapToDomain(entity);
             }
-        }
-
-        private static Blockchain MapToDomain(BlockchainEntity blockchainEntity)
-        {
-            return new Blockchain
-            {
-                BlockchainId = blockchainEntity.BlockchainId
-            };
         }
     }
 }

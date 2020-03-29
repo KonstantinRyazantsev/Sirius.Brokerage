@@ -72,7 +72,7 @@ namespace Brokerage.Worker.MessageConsumers
 
                         var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest
                         {
-                            BlockchainId = blockchain.BlockchainId.Value,
+                            BlockchainId = blockchain.BlockchainId,
                             TenantId = message.TenantId,
                             RequestId = requestIdForGeneration
                         });

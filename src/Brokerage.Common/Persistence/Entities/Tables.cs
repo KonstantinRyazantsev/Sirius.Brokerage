@@ -2,12 +2,10 @@
 {
     public static class Tables
     {
-        public const string BrokerAccountsTableName = "broker_accounts";
-        public const string RequestsTableName = "requests";
-        public const string BlockchainsTableName = "blockchains";
-        public const string ProtocolsTableName = "protocols";
-        public const string BrokerAccountRequisitesTableName = "broker_account_requisites";
-        public const string AccountsTableName = "accounts";
-        public const string AccountRequisitesTableName = "account_requisites";
+        public const string BrokerAccounts = "broker_accounts";
+        public const string BrokerAccountRequisites = "broker_account_requisites";
+        public const string Accounts = "accounts";
+        public const string AccountRequisites = "account_requisites";
+        public const string Blockchains = "blockchains";
     }
 }

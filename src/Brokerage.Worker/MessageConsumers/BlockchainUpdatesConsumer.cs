@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Domain.Blockchains;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.ReadModels.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Integrations.MessagingContract;
