@@ -20,8 +20,8 @@ namespace Brokerage.Common.Persistence
                 optionsBuilder.UseNpgsql(connectionString,
                     builder =>
                         builder.MigrationsHistoryTable(
-                            PostgresRepositoryConfiguration.MigrationHistoryTable,
-                            PostgresRepositoryConfiguration.SchemaName));
+                            DatabaseContext.MigrationHistoryTable,
+                            DatabaseContext.SchemaName));
 
                 return optionsBuilder;
             });

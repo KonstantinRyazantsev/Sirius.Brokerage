@@ -6,6 +6,9 @@ namespace Brokerage.Common.Persistence.DbContexts
 {
     public class DatabaseContext : DbContext
     {
+        public const string SchemaName = "brokerage";
+        public const string MigrationHistoryTable = "__EFMigrationsHistory";
+
         public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
         {
@@ -19,7 +22,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema(PostgresRepositoryConfiguration.SchemaName);
+            modelBuilder.HasDefaultSchema(SchemaName);
             
             BuildBrokerAccount(modelBuilder);
             BuildBrokerAccountRequisites(modelBuilder);
