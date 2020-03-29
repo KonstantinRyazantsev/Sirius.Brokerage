@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Sirius.Brokerage.MessagingContract;
-using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Swisschain.Sirius.VaultAgent.ApiContract;
 
 namespace Brokerage.Worker.MessageConsumers
 {
     public class FinalizeAccountCreationConsumer : IConsumer<FinalizeAccountCreation>
     {
+        private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
         private readonly IBlockchainsRepository blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
@@ -22,12 +18,14 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IAccountsRepository accountsRepository;
 
         public FinalizeAccountCreationConsumer(
+            ILoggerFactory loggerFactory,
             ILogger<FinalizeAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IAccountRequisitesRepository accountRequisitesRepository,
             IAccountsRepository accountsRepository)
         {
+            this.loggerFactory = loggerFactory;
             _logger = logger;
             this.blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
@@ -39,112 +37,30 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var command = context.Message;
             var account = await accountsRepository.GetAsync(command.AccountId);
-            var accountRequisites = new List<AccountRequisites>(20);
 
-            if (account.State == AccountState.Creating)
+            try
             {
-                BlockchainId cursor = null;
+                await account.FinalizeCreation(
+                    loggerFactory.CreateLogger<Account>(),
+                    blockchainsRepository,
+                    _accountRequisitesRepository,
+                    _vaultAgentClient);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Account finalization has been failed {@context}", command);
 
-                do
-                {
-                    var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
-
-                    if (!blockchains.Any())
-                        break;
-
-                    cursor = blockchains.Last().BlockchainId;
-
-                    foreach (var blockchain in blockchains)
-                    {
-                        var requestIdForCreation = $"{command.RequestId}_{blockchain.BlockchainId}";
-                        var newRequisites = AccountRequisites.Create(
-                            requestIdForCreation,
-                            command.AccountId,
-                            blockchain.BlockchainId,
-                            null);
-
-                        var requisites = await _accountRequisitesRepository.AddOrGetAsync(newRequisites);
-
-                        if (requisites.Address != null)
-                            continue;
-
-                        var requestIdForGeneration = $"{command.RequestId}_{requisites.AccountRequisitesId}";
-
-                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest
-                        {
-                            BlockchainId = blockchain.BlockchainId,
-                            RequestId = requestIdForGeneration
-                        });
-
-                        if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
-                        {
-                            _logger.LogWarning("FinalizeAccountCreation command has been failed {@message}" +
-                                               "error response from vault agent {@response}", command, response);
-
-                            throw new InvalidOperationException($"FinalizeAccountCreation command " +
-                                                                $"has been failed with {response.Error.ErrorMessage}");
-                        }
-
-                        requisites.Address = response.Response.Address;
-                        await _accountRequisitesRepository.UpdateAsync(requisites);
-
-                        accountRequisites.Add(requisites);
-                    }
-
-                } while (true);
-
-                account.Activate();
-
-                await accountsRepository.UpdateAsync(account);
+                throw;
             }
 
-            if (accountRequisites.Count == 0)
+            await accountsRepository.UpdateAsync(account);
+
+            foreach (var evt in account.Events)
             {
-                long? requisitesCursor = null;
-
-                do
-                {
-                    var result = await
-                        _accountRequisitesRepository.GetByAccountAsync(account.AccountId, 100, requisitesCursor, true);
-
-                    if (!result.Any())
-                        break;
-
-                    accountRequisites.AddRange(result);
-                    requisitesCursor = result.Last()?.AccountRequisitesId;
-
-                } while (requisitesCursor != null);
+                await context.Publish(evt);
             }
 
-            foreach (var requisites in accountRequisites)
-            {
-                await context.Publish(new AccountRequisitesAdded
-                {
-                    CreationDateTime = requisites.CreationDateTime,
-                    Address = requisites.Address,
-                    BlockchainId = requisites.BlockchainId,
-                    Tag = requisites.Tag,
-                    TagType = requisites.TagType.HasValue ?
-                        requisites.TagType.Value switch
-                        {
-                            Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Number => TagType.Number,
-                            Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Text=> TagType.Text,
-
-                            _ => throw  new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType, null)
-                        } : (TagType?)null ,
-                    AccountId = requisites.AccountId,
-                    AccountRequisitesId = requisites.AccountRequisitesId
-                });
-            }
-
-            await context.Publish(new AccountActivated
-            {
-                // ReSharper disable once PossibleInvalidOperationException
-                ActivationDate = account.ActivationDateTime.Value,
-                AccountId = account.AccountId
-            });
-
-            _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@context}", command);
+            _logger.LogInformation("Account finalization has been complete {@context}", command);
         }
     }
 }
