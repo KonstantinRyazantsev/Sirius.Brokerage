@@ -8,16 +8,15 @@ using Npgsql;
 
 namespace Brokerage.Common.Persistence
 {
-    public class AccountRepository : IAccountRepository
+    public class AccountsRepository : IAccountsRepository
     {
         private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public AccountRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public AccountsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
-
-
+        
         public async Task<Account> GetAsync(long accountId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -32,8 +31,11 @@ namespace Brokerage.Common.Persistence
         public async Task UpdateAsync(Account account)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            
             var entity = MapToEntity(account);
+            
             context.Accounts.Update(entity);
+            
             await context.SaveChangesAsync();
         }
 
@@ -51,10 +53,9 @@ namespace Brokerage.Common.Persistence
 
                 return MapToDomain(newEntity);
             }
-            catch (DbUpdateException e) //Check that request was already processed (by constraint)
-                when (e.InnerException is PostgresException pgEx &&
-                      pgEx.SqlState == "23505" &&
-                      pgEx.ConstraintName == "IX_Account_RequestId")
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx &&
+                                              pgEx.SqlState == "23505" &&
+                                              pgEx.ConstraintName == "IX_Account_RequestId")
             {
                 var entity = await context
                     .Accounts
@@ -66,16 +67,16 @@ namespace Brokerage.Common.Persistence
 
         private static AccountEntity MapToEntity(Account domainModel)
         {
-            var state = domainModel.AccountState switch
+            var state = domainModel.State switch
             {
                 AccountState.Active =>   AccountStateEnum.Active,
                 AccountState.Blocked =>  AccountStateEnum.Blocked,
                 AccountState.Creating => AccountStateEnum.Creating,
 
-                _ => throw new ArgumentOutOfRangeException(nameof(domainModel.AccountState), domainModel.AccountState, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(domainModel.State), domainModel.State, null)
             };
 
-            var entity = new AccountEntity()
+            var entity = new AccountEntity
             {
                 State = state,
                 CreationDateTime = domainModel.CreationDateTime,
@@ -90,7 +91,7 @@ namespace Brokerage.Common.Persistence
             return entity;
         }
 
-        private Account MapToDomain(AccountEntity entity)
+        private static Account MapToDomain(AccountEntity entity)
         {
             if (entity == null)
                 return null;
@@ -100,7 +101,7 @@ namespace Brokerage.Common.Persistence
                 AccountStateEnum.Active => AccountState.Active,
                 AccountStateEnum.Blocked => AccountState.Blocked,
                 AccountStateEnum.Creating => AccountState.Creating,
-                _ => throw new ArgumentOutOfRangeException($"{entity.State} is not processed")
+                _ => throw new ArgumentOutOfRangeException(nameof(entity.State), entity.State, null)
             };
 
             var brokerAccount = Account.Restore(

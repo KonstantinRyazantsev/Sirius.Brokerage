@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using Brokerage.Common.Persistence.Entities;
+﻿using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Brokerage.Common.Persistence.DbContexts

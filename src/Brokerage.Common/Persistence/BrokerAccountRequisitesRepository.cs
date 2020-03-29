@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccountRequisites;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -63,18 +62,6 @@ namespace Brokerage.Common.Persistence
                 .ToArray();
         }
 
-        public async Task<BrokerAccountRequisites> GetAsync(string brokerAccountRequisitesId)
-        {
-            long.TryParse(brokerAccountRequisitesId, out var id);
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
-                .BrokerAccountsRequisites
-                .FindAsync(id);
-
-            return MapToDomain(entity);
-        }
-
         public async Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -114,7 +101,7 @@ namespace Brokerage.Common.Persistence
 
         private BrokerAccountRequisitesEntity MapToEntity(BrokerAccountRequisites brokerAccount)
         {
-            return new BrokerAccountRequisitesEntity()
+            return new BrokerAccountRequisitesEntity
             {
                 RequestId = brokerAccount.RequestId,
                 BlockchainId = brokerAccount.BlockchainId,

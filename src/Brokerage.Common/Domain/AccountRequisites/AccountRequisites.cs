@@ -22,11 +22,10 @@ namespace Brokerage.Common.Domain.AccountRequisites
             TagType = tagType;
         }
 
+        // TODO: This is here 
         public string RequestId { get; }
         public long AccountRequisitesId { get; }
-
         public long AccountId { get; }
-
         public BlockchainId BlockchainId { get; }
         public string Address { get; set; }
         public DestinationTag Tag { get; }

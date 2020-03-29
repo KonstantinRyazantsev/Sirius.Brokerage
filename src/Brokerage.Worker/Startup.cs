@@ -25,7 +25,7 @@ namespace Brokerage.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
-            services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(this.Config.VaultAgent.Url));
+            services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
             services.AddMessageConsumers();

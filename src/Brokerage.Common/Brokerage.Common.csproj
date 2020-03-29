@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ReadModels\" />
     <Folder Include="ServiceFunctions\" />
   </ItemGroup>
 

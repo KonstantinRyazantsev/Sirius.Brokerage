@@ -9,7 +9,7 @@ namespace Brokerage.Common.Domain.Accounts
             long accountId,
             long brokerAccountId,
             string referenceId,
-            AccountState accountState,
+            AccountState state,
             DateTime creationDateTime,
             DateTime? blockingDateTime,
             DateTime? activationDateTime)
@@ -18,35 +18,22 @@ namespace Brokerage.Common.Domain.Accounts
             AccountId = accountId;
             BrokerAccountId = brokerAccountId;
             ReferenceId = referenceId;
-            AccountState = accountState;
+            State = state;
             CreationDateTime = creationDateTime;
             BlockingDateTime = blockingDateTime;
             ActivationDateTime = activationDateTime;
         }
 
+        // TODO: This is here only because of EF - we can't update DB record without having entire entity
         public string RequestId { get; }
-
         public long AccountId { get; }
-
-        public string TenantId { get;}
-
         public long BrokerAccountId { get; }
-
         public string ReferenceId { get; }
-
-        public AccountState AccountState { get; private set; }
-
+        public AccountState State { get; private set; }
         public DateTime CreationDateTime { get; }
-
         public DateTime? BlockingDateTime { get; }
-
         public DateTime? ActivationDateTime { get; private set; }
-
-        public bool IsOwnedBy(string tenantId)
-        {
-            return this.TenantId == tenantId;
-        }
-
+        
         public static Account Create(
             string requestId,
             long brokerAccountId,
@@ -86,8 +73,8 @@ namespace Brokerage.Common.Domain.Accounts
 
         public void Activate()
         {
-            this.AccountState = AccountState.Active;
-            this.ActivationDateTime = DateTime.UtcNow;
+            State = AccountState.Active;
+            ActivationDateTime = DateTime.UtcNow;
         }
     }
 }

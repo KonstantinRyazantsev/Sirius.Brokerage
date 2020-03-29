@@ -18,9 +18,6 @@ namespace Brokerage.Worker.WebApi.Models.IsAlive
         [JsonPropertyName("host")]
         public string HostName { get; set; }
 
-        [JsonPropertyName("isDebug")]
-        public bool IsDebug { get; set; }
-
         [JsonPropertyName("startedAt")]
         public DateTime StartedAt { get; set; }
 

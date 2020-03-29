@@ -19,13 +19,10 @@ namespace Brokerage.Common.Domain.BrokerAccountRequisites
         }
 
         public long Id { get; }
-
         public long BrokerAccountId { get; }
-
-        public string RequestId { get; set; }
-
+        // TODO: This is here only because of EF - we can't update DB record without having entire entity
+        public string RequestId { get; }
         public BlockchainId BlockchainId { get; }
-
         public Address Address { get; set; }
 
         public static BrokerAccountRequisites Create(
@@ -37,10 +34,10 @@ namespace Brokerage.Common.Domain.BrokerAccountRequisites
         }
 
         public static BrokerAccountRequisites Restore(string requestId,
-        long id, 
-        long brokerAccountId, 
-        BlockchainId blockchainId, 
-        Address address)
+            long id, 
+            long brokerAccountId, 
+            BlockchainId blockchainId, 
+            Address address)
         {
             return new BrokerAccountRequisites(id, brokerAccountId, blockchainId, address, requestId);
         }

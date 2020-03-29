@@ -26,21 +26,21 @@ namespace TestClient
 
                     {
                         var tenantId = "Tenant_1";
-                        var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest()
+                        var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
                             Name = "Broker_1",
                             RequestId = requestId,
                             TenantId = tenantId,
                         });
 
-                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest()
+                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest
                         {
                             RequestId = requestId,
                             ReferenceId = "some ref",
                             BrokerAccountId = brokerAccount.Response.BrokerAccountId
                         });
 
-                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest()
+                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
                         {
                             RequestId = requestId,
                             ReferenceId = "some ref",
@@ -56,7 +56,7 @@ namespace TestClient
                     }
 
                     {
-                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest()
+                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
                             Name = "Broker_1",
                             RequestId = requestId,
@@ -68,7 +68,7 @@ namespace TestClient
                     }
 
                     {
-                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest()
+                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
                             RequestId = requestId,
                             TenantId = "Tenant_2",

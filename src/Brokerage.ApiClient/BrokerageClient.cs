@@ -13,9 +13,7 @@ namespace Swisschain.Sirius.Brokerage.ApiClient
         }
 
         public Monitoring.MonitoringClient Monitoring { get; }
-
         public BrokerAccounts.BrokerAccountsClient BrokerAccounts { get; }
-
         public Accounts.AccountsClient Accounts { get; }
     }
 }

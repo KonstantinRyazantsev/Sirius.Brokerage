@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.AccountRequisites;
-using Brokerage.Common.Domain.BrokerAccountRequisites;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +20,7 @@ namespace Brokerage.Common.Persistence
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> SearchAsync(
+        public async Task<IReadOnlyCollection<AccountRequisites>> GetByAccountAsync(
             long accountId,
             int limit,
             long? cursor,
@@ -37,8 +36,7 @@ namespace Brokerage.Common.Persistence
             {
                 if (cursor != null)
                 {
-                    // ReSharper disable once StringCompareToIsCultureSpecific
-                    query = query.Where(x => cursor < 0);
+                    query = query.Where(x => x.AccountId > cursor);
                 }
 
                 query = query.OrderBy(x => x.Id);
@@ -47,8 +45,7 @@ namespace Brokerage.Common.Persistence
             {
                 if (cursor != null)
                 {
-                    // ReSharper disable once StringCompareToIsCultureSpecific
-                    query = query.Where(x => cursor > 0);
+                    query = query.Where(x => x.AccountId < cursor);
                 }
 
                 query = query.OrderByDescending(x => x.Id);
@@ -64,23 +61,11 @@ namespace Brokerage.Common.Persistence
                 .ToArray();
         }
 
-        public async Task<AccountRequisites> GetAsync(string brokerAccountRequisitesId)
-        {
-            long.TryParse(brokerAccountRequisitesId, out var id);
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
-                .AccountRequisites
-                .FirstAsync(x => x.Id == id);
-
-            return MapToDomain(entity);
-        }
-
-        public async Task<AccountRequisites> AddOrGetAsync(AccountRequisites brokerAccount)
+        public async Task<AccountRequisites> AddOrGetAsync(AccountRequisites requisites)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var newEntity = MapToEntity(brokerAccount);
+            var newEntity = MapToEntity(requisites);
 
             context.AccountRequisites.Add(newEntity);
 
@@ -97,23 +82,24 @@ namespace Brokerage.Common.Persistence
             {
                 var entity = await context
                     .AccountRequisites
-                    .FirstAsync(x => x.RequestId == brokerAccount.RequestId);
+                    .FirstAsync(x => x.RequestId == requisites.RequestId);
 
                 return MapToDomain(entity);
             }
         }
 
-        public async Task UpdateAsync(AccountRequisites brokerAccount)
+        public async Task UpdateAsync(AccountRequisites requisites)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            var entity = MapToEntity(brokerAccount);
-            context
-                .AccountRequisites
-                .Update(entity);
+            
+            var entity = MapToEntity(requisites);
+            
+            context.AccountRequisites.Update(entity);
+
             await context.SaveChangesAsync();
         }
 
-        private AccountRequisitesEntity MapToEntity(AccountRequisites domainModel)
+        private static AccountRequisitesEntity MapToEntity(AccountRequisites domainModel)
         {
             var tagType = domainModel.TagType.HasValue ? (TagTypeEnum?)(domainModel.TagType.Value switch
             {
@@ -123,7 +109,7 @@ namespace Brokerage.Common.Persistence
 
             }) : null;
 
-            return new AccountRequisitesEntity()
+            return new AccountRequisitesEntity
             {
                 RequestId = domainModel.RequestId,
                 Address = domainModel.Address,
@@ -135,11 +121,8 @@ namespace Brokerage.Common.Persistence
             };
         }
 
-        private AccountRequisites MapToDomain(AccountRequisitesEntity entity)
+        private static AccountRequisites MapToDomain(AccountRequisitesEntity entity)
         {
-            if (entity == null)
-                return null;
-
             var tagType = entity.TagType.HasValue ? (DestinationTagType?)(entity.TagType.Value switch
             {
                 TagTypeEnum.Number => DestinationTagType.Number,

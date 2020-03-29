@@ -5,12 +5,10 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence
 {
-    public interface IBlockchainReadModelRepository
+    public interface IBlockchainsRepository
     {
-        Task<Blockchain> GetOrDefaultAsync(BlockchainId blockchainId);
-
         Task<Blockchain> AddOrReplaceAsync(Blockchain blockchain);
 
-        Task<IReadOnlyCollection<Blockchain>> GetManyAsync(BlockchainId cursor, int take);
+        Task<IReadOnlyCollection<Blockchain>> GetAllAsync(BlockchainId cursor, int limit);
     }
 }

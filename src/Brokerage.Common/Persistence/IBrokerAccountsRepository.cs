@@ -3,7 +3,7 @@ using Brokerage.Common.Domain.BrokerAccounts;
 
 namespace Brokerage.Common.Persistence
 {
-    public interface IBrokerAccountRepository
+    public interface IBrokerAccountsRepository
     {
         Task<BrokerAccount> GetAsync(long brokerAccountId);
 

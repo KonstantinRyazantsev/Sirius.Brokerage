@@ -57,7 +57,7 @@ namespace Brokerage
 
             endpoints.MapGrpcService<MonitoringService>();
             endpoints.MapGrpcService<BrokerAccountsService>();
-            endpoints.MapGrpcService<AccountService>();
+            endpoints.MapGrpcService<AccountsService>();
         }
     }
 }

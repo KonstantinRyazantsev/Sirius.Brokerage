@@ -1,8 +1,8 @@
 ﻿namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
-    public enum DestinationTagType
+    public enum TagType
     {
-        Text,
-        Number
+        Text = 0,
+        Number = 1
     }
 }

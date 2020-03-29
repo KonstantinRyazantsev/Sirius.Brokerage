@@ -11,8 +11,6 @@ namespace Brokerage.Common.Persistence
             long? cursor,
             bool sortAsc);
 
-        Task<BrokerAccountRequisites> GetAsync(string brokerAccountRequisitesId);
-
         Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount);
 
         Task UpdateAsync(BrokerAccountRequisites brokerAccount);

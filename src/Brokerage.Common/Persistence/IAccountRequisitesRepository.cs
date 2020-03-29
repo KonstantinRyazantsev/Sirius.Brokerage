@@ -6,15 +6,14 @@ namespace Brokerage.Common.Persistence
 {
     public interface IAccountRequisitesRepository
     {
-        Task<IReadOnlyCollection<AccountRequisites>> SearchAsync(
+        Task<IReadOnlyCollection<AccountRequisites>> GetByAccountAsync(
             long accountId,
             int limit,
             long? cursor,
             bool sortAsc);
-        Task<AccountRequisites> GetAsync(string brokerAccountRequisitesId);
 
-        Task<AccountRequisites> AddOrGetAsync(AccountRequisites brokerAccount);
+        Task<AccountRequisites> AddOrGetAsync(AccountRequisites requisites);
 
-        Task UpdateAsync(AccountRequisites brokerAccount);
+        Task UpdateAsync(AccountRequisites requisites);
     }
 }

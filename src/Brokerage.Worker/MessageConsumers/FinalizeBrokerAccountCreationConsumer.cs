@@ -17,136 +17,126 @@ namespace Brokerage.Worker.MessageConsumers
     public class FinalizeBrokerAccountCreationConsumer : IConsumer<FinalizeBrokerAccountCreation>
     {
         private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
-        private readonly IBlockchainReadModelRepository _blockchainReadModelRepository;
+        private readonly IBlockchainsRepository blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
-        private readonly IBrokerAccountRepository _brokerAccountRepository;
+        private readonly IBrokerAccountsRepository brokerAccountsRepository;
 
         public FinalizeBrokerAccountCreationConsumer(
             ILogger<FinalizeBrokerAccountCreationConsumer> logger,
-            IBlockchainReadModelRepository blockchainReadModelRepository,
+            IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IBrokerAccountRepository brokerAccountRepository)
+            IBrokerAccountsRepository brokerAccountsRepository)
         {
             _logger = logger;
-            _blockchainReadModelRepository = blockchainReadModelRepository;
+            this.blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
-            _brokerAccountRepository = brokerAccountRepository;
+            this.brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Consume(ConsumeContext<FinalizeBrokerAccountCreation> context)
         {
             var message = context.Message;
-            BlockchainId cursor = null;
+            var brokerAccount = await brokerAccountsRepository.GetAsync(message.BrokerAccountId);
+            var brokerAccountRequisites = new List<BrokerAccountRequisites>(20);
 
-            var brokerAccount = await _brokerAccountRepository.GetAsync(message.BrokerAccountId);
-
-            if (brokerAccount == null)
+            if (brokerAccount.State == BrokerAccountState.Creating)
             {
-                _logger.LogInformation("FinalizeBrokerAccountCreation command has no related broker account {@message}", message);
-            }
-            else
-            {
-                var brokerAccountRequisites = new List<BrokerAccountRequisites>(20);
+                BlockchainId cursor = null;
 
-                if (brokerAccount.State == BrokerAccountState.Creating)
+                do
                 {
-                    do
+                    var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
+
+                    if (!blockchains.Any())
+                        break;
+
+                    cursor = blockchains.Last().BlockchainId;
+
+                    foreach (var blockchain in blockchains)
                     {
-                        var blockchains = await _blockchainReadModelRepository.GetManyAsync(cursor, 100);
+                        var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
+                        var newRequisites = BrokerAccountRequisites.Create(
+                            requestIdForCreation,
+                            message.BrokerAccountId,
+                            blockchain.BlockchainId);
 
-                        if (!blockchains.Any())
-                            break;
+                        var requisites = await _brokerAccountRequisitesRepository.AddOrGetAsync(newRequisites);
 
-                        cursor = blockchains.Last().BlockchainId;
+                        if (requisites.Address != null)
+                            continue;
 
-                        foreach (var blockchain in blockchains)
+                        var requestIdForGeneration = $"{message.RequestId}_{requisites.Id}";
+
+                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest
                         {
-                            var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
-                            var newRequisites = BrokerAccountRequisites.Create(
-                                requestIdForCreation,
-                                message.BrokerAccountId,
-                                blockchain.BlockchainId);
+                            BlockchainId = blockchain.BlockchainId.Value,
+                            TenantId = message.TenantId,
+                            RequestId = requestIdForGeneration
+                        });
 
-                            var requisites = await _brokerAccountRequisitesRepository.AddOrGetAsync(newRequisites);
+                        if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
+                        {
+                            _logger.LogWarning("FinalizeBrokerAccountCreation command has been failed {@message}" +
+                                               "error response from vault agent {@response}", message, response);
 
-                            if (requisites.Address != null)
-                                continue;
-
-                            var requestIdForGeneration = $"{message.RequestId}_{requisites.Id}";
-
-                            var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest()
-                            {
-                                BlockchainId = blockchain.BlockchainId.Value,
-                                TenantId = message.TenantId,
-                                RequestId = requestIdForGeneration
-                            });
-
-                            if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
-                            {
-                                _logger.LogWarning("FinalizeBrokerAccountCreation command has been failed {@message}" +
-                                                   "error response from vault agent {@response}", message, response);
-
-                                throw new InvalidOperationException($"FinalizeBrokerAccountCreation command " +
-                                                                    $"has been failed with {response.Error.ErrorMessage}");
-                            }
-
-                            requisites.Address = response.Response.Address;
-                            await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
-
-                            brokerAccountRequisites.Add(requisites);
+                            throw new InvalidOperationException($"FinalizeBrokerAccountCreation command " +
+                                                                $"has been failed with {response.Error.ErrorMessage}");
                         }
 
-                    } while (true);
+                        requisites.Address = response.Response.Address;
+                        await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
 
-                    brokerAccount.Activate();
+                        brokerAccountRequisites.Add(requisites);
+                    }
 
-                    await _brokerAccountRepository.UpdateAsync(brokerAccount);
-                }
+                } while (true);
 
-                if (brokerAccountRequisites.Count == 0)
+                brokerAccount.Activate();
+
+                await brokerAccountsRepository.UpdateAsync(brokerAccount);
+            }
+
+            if (brokerAccountRequisites.Count == 0)
+            {
+                long? requisitesCursor = null;
+
+                do
                 {
-                    long? requisitesCursor = null;
+                    var result = await
+                        _brokerAccountRequisitesRepository.SearchAsync(brokerAccount.BrokerAccountId, 100, requisitesCursor, true);
 
-                    do
-                    {
-                        var result = await
-                            _brokerAccountRequisitesRepository.SearchAsync(brokerAccount.BrokerAccountId, 100, requisitesCursor, true);
+                    if (!result.Any())
+                        break;
 
-                        if (!result.Any())
-                            break;
+                    brokerAccountRequisites.AddRange(result);
+                    requisitesCursor = result.Last()?.Id;
 
-                        brokerAccountRequisites.AddRange(result);
-                        requisitesCursor = result.Last()?.Id;
+                } while (requisitesCursor != null);
+            }
 
-                    } while (requisitesCursor != null);
-                }
-
-                foreach (var requisites in brokerAccountRequisites)
+            foreach (var requisites in brokerAccountRequisites)
+            {
+                await context.Publish(new BrokerAccountRequisitesAdded
                 {
-                    await context.Publish(new BrokerAccountRequisitesAdded()
-                    {
-                        CreationDateTime = DateTime.UtcNow,
-                        Address = requisites.Address,
-                        BlockchainId = requisites.BlockchainId,
-                        BrokerAccountId = requisites.BrokerAccountId,
-                        BrokerAccountRequisitesId = requisites.Id
-                    });
-                }
-
-                await context.Publish(new BrokerAccountActivated()
-                {
-                    // ReSharper disable once PossibleInvalidOperationException
-                    ActivationDate = brokerAccount.ActivationDateTime.Value,
-                    BrokerAccountId = brokerAccount.BrokerAccountId
+                    CreationDateTime = DateTime.UtcNow,
+                    Address = requisites.Address,
+                    BlockchainId = requisites.BlockchainId,
+                    BrokerAccountId = requisites.BrokerAccountId,
+                    BrokerAccountRequisitesId = requisites.Id
                 });
             }
 
-            _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@message}", message);
+            await context.Publish(new BrokerAccountActivated
+            {
+                // ReSharper disable once PossibleInvalidOperationException
+                ActivationDate = brokerAccount.ActivationDateTime.Value,
+                BrokerAccountId = brokerAccount.BrokerAccountId
+            });
 
-            await Task.CompletedTask;
+            _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@context}", message);
         }
     }
 }

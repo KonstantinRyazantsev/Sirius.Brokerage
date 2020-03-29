@@ -24,14 +24,14 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var @event = context.Message;
 
-            var model = new Protocol()
+            var model = new Protocol
             {
                 ProtocolId = @event.ProtocolId
             };
 
             await _protocolReadModelRepository.AddOrReplaceAsync(model);
 
-            _logger.LogInformation("ProtocolAdded command has been processed {@message}", @event);
+            _logger.LogInformation("ProtocolAdded command has been processed {@context}", @event);
 
             await Task.CompletedTask;
         }

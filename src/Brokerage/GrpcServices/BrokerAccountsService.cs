@@ -12,14 +12,14 @@ namespace Brokerage.GrpcServices
 {
     public class BrokerAccountsService : BrokerAccounts.BrokerAccountsBase
     {
-        private readonly IBrokerAccountRepository _brokerAccountRepository;
+        private readonly IBrokerAccountsRepository brokerAccountsRepository;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
         public BrokerAccountsService(
-            IBrokerAccountRepository brokerAccountRepository,
+            IBrokerAccountsRepository brokerAccountsRepository,
             ISendEndpointProvider sendEndpointProvider)
         {
-            _brokerAccountRepository = brokerAccountRepository;
+            this.brokerAccountsRepository = brokerAccountsRepository;
             _sendEndpointProvider = sendEndpointProvider;
         }
 
@@ -29,9 +29,9 @@ namespace Brokerage.GrpcServices
             {
                 if (string.IsNullOrEmpty(request.Name))
                 {
-                    return new CreateResponse()
+                    return new CreateResponse
                     {
-                        Error = new ErrorResponseBody()
+                        Error = new ErrorResponseBody
                         {
                             ErrorCode = ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
                             ErrorMessage = $"Name is empty"
@@ -40,14 +40,13 @@ namespace Brokerage.GrpcServices
                 }
 
                 var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId);
-                var createdBrokerAccount = await _brokerAccountRepository.AddOrGetAsync(newBrokerAccount);
+                var createdBrokerAccount = await brokerAccountsRepository.AddOrGetAsync(newBrokerAccount);
 
-                //TODO: Refactor this 
                 if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
                 {
-                    return new CreateResponse()
+                    return new CreateResponse
                     {
-                        Error = new ErrorResponseBody()
+                        Error = new ErrorResponseBody
                         {
                             ErrorCode = ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
                             ErrorMessage = "Not authorized to perform action"
@@ -55,16 +54,16 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                await _sendEndpointProvider.Send(new FinalizeBrokerAccountCreation()
+                await _sendEndpointProvider.Send(new FinalizeBrokerAccountCreation
                 {
                     BrokerAccountId = createdBrokerAccount.BrokerAccountId,
                     TenantId = createdBrokerAccount.TenantId,
                     RequestId = request.RequestId
                 });
 
-                return new CreateResponse()
+                return new CreateResponse
                 {
-                    Response = new CreateResponseBody()
+                    Response = new CreateResponseBody
                     {
                         BrokerAccountId = createdBrokerAccount.BrokerAccountId,
                         Name = createdBrokerAccount.Name,
@@ -79,9 +78,9 @@ namespace Brokerage.GrpcServices
             }
             catch (Exception e)
             {
-                return new CreateResponse()
+                return new CreateResponse
                 {
-                    Error = new ErrorResponseBody()
+                    Error = new ErrorResponseBody
                     {
                         ErrorCode = ErrorResponseBody.Types.ErrorCode.Unknown,
                         ErrorMessage = e.Message,
@@ -90,12 +89,12 @@ namespace Brokerage.GrpcServices
             }
         }
 
-        private CreateResponseBody.Types.BrokerAccountStatus MapToResponse(BrokerAccountState resultState)
+        private static CreateResponseBody.Types.BrokerAccountStatus MapToResponse(BrokerAccountState resultState)
         {
             var result = resultState switch
             {
                 BrokerAccountState.Creating => CreateResponseBody.Types.BrokerAccountStatus.Creating,
-                BrokerAccountState.Active=> CreateResponseBody.Types.BrokerAccountStatus.Active,
+                BrokerAccountState.Active => CreateResponseBody.Types.BrokerAccountStatus.Active,
                 BrokerAccountState.Blocked => CreateResponseBody.Types.BrokerAccountStatus.Blocked,
                 _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
             };

@@ -10,16 +10,16 @@ using Swisschain.Sirius.Brokerage.ApiContract.common;
 
 namespace Brokerage.GrpcServices
 {
-    public class AccountService : Accounts.AccountsBase
+    public class AccountsService : Accounts.AccountsBase
     {
-        private readonly IAccountRepository _accountRepository;
+        private readonly IAccountsRepository accountsRepository;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
-        public AccountService(
-            IAccountRepository accountRepository,
+        public AccountsService(
+            IAccountsRepository accountsRepository,
             ISendEndpointProvider sendEndpointProvider)
         {
-            _accountRepository = accountRepository;
+            this.accountsRepository = accountsRepository;
             _sendEndpointProvider = sendEndpointProvider;
         }
 
@@ -31,13 +31,13 @@ namespace Brokerage.GrpcServices
                     request.RequestId, 
                     request.BrokerAccountId, 
                     request.ReferenceId);
-                var createdAccount = await _accountRepository.AddOrGetAsync(newAccount);
+                var createdAccount = await accountsRepository.AddOrGetAsync(newAccount);
 
                 if (createdAccount.BrokerAccountId != request.BrokerAccountId)
                 {
-                    return new CreateAccountResponse()
+                    return new CreateAccountResponse
                     {
-                        Error = new ErrorResponseBody()
+                        Error = new ErrorResponseBody
                         {
                             ErrorCode = ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
                             ErrorMessage = "Not authorized to perform action"
@@ -45,19 +45,19 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                await _sendEndpointProvider.Send(new FinalizeAccountCreation()
+                await _sendEndpointProvider.Send(new FinalizeAccountCreation
                 {
                     AccountId = createdAccount.AccountId,
                     RequestId = request.RequestId,
 
                 });
 
-                return new CreateAccountResponse()
+                return new CreateAccountResponse
                 {
-                    Response = new CreateAccountResponseBody()
+                    Response = new CreateAccountResponseBody
                     {
                         BrokerAccountId = createdAccount.BrokerAccountId,
-                        Status = MapToResponse(createdAccount.AccountState),
+                        Status = MapToResponse(createdAccount.State),
                         AccountId = createdAccount.AccountId,
                         ReferenceId = createdAccount.ReferenceId,
                         ActivationDateTime = createdAccount.ActivationDateTime.HasValue ? 
@@ -70,9 +70,9 @@ namespace Brokerage.GrpcServices
             }
             catch (Exception e)
             {
-                return new CreateAccountResponse()
+                return new CreateAccountResponse
                 {
-                    Error = new ErrorResponseBody()
+                    Error = new ErrorResponseBody
                     {
                         ErrorCode = ErrorResponseBody.Types.ErrorCode.Unknown,
                         ErrorMessage = e.Message,
@@ -81,12 +81,12 @@ namespace Brokerage.GrpcServices
             }
         }
 
-        private CreateAccountResponseBody.Types.AccountStatus MapToResponse(AccountState resultState)
+        private static CreateAccountResponseBody.Types.AccountStatus MapToResponse(AccountState resultState)
         {
             var result = resultState switch
             {
                 AccountState.Creating => CreateAccountResponseBody.Types.AccountStatus.Creating,
-                AccountState.Active=>    CreateAccountResponseBody.Types.AccountStatus.Active,
+                AccountState.Active =>    CreateAccountResponseBody.Types.AccountStatus.Active,
                 AccountState.Blocked =>  CreateAccountResponseBody.Types.AccountStatus.Blocked,
                 _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
             };

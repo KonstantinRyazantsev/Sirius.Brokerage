@@ -32,24 +32,20 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             State = state;
             RequestId = requestId;
         }
+        
         public long BrokerAccountId { get; }
-
         public string Name { get; }
-
         public string TenantId { get; }
+        // TODO: This is here only because of EF - we can't update DB record without having entire entity
         public string RequestId { get; }
-
         public DateTime CreationDateTime { get; }
-
         public DateTime? BlockingDateTime { get; }
-
         public DateTime? ActivationDateTime { get; private set; }
-
         public BrokerAccountState State { get; private set; }
 
         public bool IsOwnedBy(string tenantId)
         {
-            return this.TenantId == tenantId;
+            return TenantId == tenantId;
         }
 
         public static BrokerAccount Create(string name, string tenantId, string requestId)
@@ -80,8 +76,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public void Activate()
         {
-            this.ActivationDateTime = DateTime.UtcNow;
-            this.State = BrokerAccountState.Active;
+            ActivationDateTime = DateTime.UtcNow;
+            State = BrokerAccountState.Active;
         }
     }
 }
