@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200326115253_Initial")]
-    partial class Initial
+    [Migration("20200329143029_BrokerAccountIdAsIndex")]
+    partial class BrokerAccountIdAsIndex
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -168,6 +168,8 @@ namespace Brokerage.Common.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrokerAccountId");
 
                     b.HasIndex("RequestId")
                         .IsUnique()

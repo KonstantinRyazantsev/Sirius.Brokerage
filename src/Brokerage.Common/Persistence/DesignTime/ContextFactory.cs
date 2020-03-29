@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Brokerage.Common.Persistence.DesignTime
 {
-    public class ContextFactory : IDesignTimeDbContextFactory<BrokerageContext>
+    public class ContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
     {
-        public BrokerageContext CreateDbContext(string[] args)
+        public DatabaseContext CreateDbContext(string[] args)
         {
             var connString = Environment.GetEnvironmentVariable("POSTGRE_SQL_CONNECTION_STRING");
 
-            var optionsBuilder = new DbContextOptionsBuilder<BrokerageContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
             optionsBuilder.UseNpgsql(connString);
 
-            return new BrokerageContext(optionsBuilder.Options);
+            return new DatabaseContext(optionsBuilder.Options);
         }
     }
 }

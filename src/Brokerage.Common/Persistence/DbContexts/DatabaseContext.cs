@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Brokerage.Common.Persistence.DbContexts
 {
-    public class BrokerageContext : DbContext
+    public class DatabaseContext : DbContext
     {
-        public BrokerageContext(DbContextOptions<BrokerageContext> options) :
+        public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
         {
         }
@@ -56,6 +56,11 @@ namespace Brokerage.Common.Persistence.DbContexts
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 100_000);
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.BrokerAccountId)
+                .IsUnique(false)
+                .HasName("IX_BrokerAccountRequisites_BrokerAccountId"); ;
 
 
             modelBuilder.Entity<AccountEntity>()

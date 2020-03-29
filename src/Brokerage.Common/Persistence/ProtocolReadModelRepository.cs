@@ -10,16 +10,16 @@ namespace Brokerage.Common.Persistence
 {
     public class ProtocolReadModelRepository : IProtocolReadModelRepository
     {
-        private readonly DbContextOptionsBuilder<BrokerageContext> _dbContextOptionsBuilder;
+        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public ProtocolReadModelRepository(DbContextOptionsBuilder<BrokerageContext> dbContextOptionsBuilder)
+        public ProtocolReadModelRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
         public async Task<Protocol> GetOrDefaultAsync(ProtocolId protocolId)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context.Networks.FindAsync(protocolId.Value);
 
@@ -28,7 +28,7 @@ namespace Brokerage.Common.Persistence
 
         public async Task<Protocol> AddOrReplaceAsync(Protocol protocol)
         {
-            await using var context = new BrokerageContext(_dbContextOptionsBuilder.Options);
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = new ProtocolEntity()
             {

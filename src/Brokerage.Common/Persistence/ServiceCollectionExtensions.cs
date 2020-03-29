@@ -16,9 +16,9 @@ namespace Brokerage.Common.Persistence
             services.AddTransient<IProtocolReadModelRepository, ProtocolReadModelRepository>();
             services.AddTransient<IBlockchainReadModelRepository, BlockchainReadModelRepository>();
 
-            services.AddSingleton<DbContextOptionsBuilder<BrokerageContext>>(x =>
+            services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {
-                var optionsBuilder = new DbContextOptionsBuilder<BrokerageContext>();
+                var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
                 optionsBuilder.UseNpgsql(connectionString,
                     builder =>
                         builder.MigrationsHistoryTable(

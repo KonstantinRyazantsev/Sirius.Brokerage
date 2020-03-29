@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
-    [DbContext(typeof(BrokerageContext))]
+    [DbContext(typeof(DatabaseContext))]
     partial class BrokerageContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -166,6 +166,9 @@ namespace Brokerage.Common.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrokerAccountId")
+                        .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
 
                     b.HasIndex("RequestId")
                         .IsUnique()
