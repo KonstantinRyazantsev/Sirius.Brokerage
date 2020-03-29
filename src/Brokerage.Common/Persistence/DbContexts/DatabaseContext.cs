@@ -59,7 +59,8 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .HasIndex(x => x.BrokerAccountId)
-                .IsUnique(false);
+                .IsUnique(false)
+                .HasName("IX_BrokerAccountRequisites_BrokerAccountId"); ;
 
 
             modelBuilder.Entity<AccountEntity>()
