@@ -111,7 +111,9 @@ namespace Brokerage.Common.Domain.Accounts
                         AccountId, 
                         100, 
                         requisitesCursor, 
-                        true);
+                        true,
+                        null,
+                        null);
 
                     if (!requisitesBatch.Any())
                     {

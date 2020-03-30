@@ -105,7 +105,13 @@ namespace Brokerage.Worker.MessageConsumers
                 do
                 {
                     var result = await
-                        _brokerAccountRequisitesRepository.SearchAsync(brokerAccount.BrokerAccountId, 100, requisitesCursor, true);
+                        _brokerAccountRequisitesRepository.SearchAsync(
+                            brokerAccount.BrokerAccountId, 
+                            100, 
+                            requisitesCursor, 
+                            true,
+                            null,
+                            null);
 
                     if (!result.Any())
                         break;

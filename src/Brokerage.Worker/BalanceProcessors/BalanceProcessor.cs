@@ -1,0 +1,307 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
+using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
+using Brokerage.Bilv1.Domain.Models.Operations;
+using Brokerage.Bilv1.Domain.Repositories;
+using Brokerage.Bilv1.Domain.Utils;
+using Brokerage.Common.Persistence;
+using Lykke.Service.BlockchainApi.Client;
+using Lykke.Service.BlockchainApi.Client.Models;
+using MassTransit;
+using Microsoft.Extensions.Logging;
+using Polly;
+using Swisschain.Sirius.Indexer.MessagingContract;
+
+namespace Brokerage.Worker.BalanceProcessors
+{
+    public class BalanceProcessor
+    {
+        private readonly string _blockchainId;
+        private readonly string _networkId;
+        private readonly ILogger<BalanceProcessor> _logger;
+        private readonly IBlockchainApiClient _blockchainApiClient;
+        private readonly IEnrolledBalanceRepository _enrolledBalanceRepository;
+        private readonly HashSet<string> _warningAssets;
+        private readonly IReadOnlyDictionary<string, (string blockchainId, long blockchainAssetId)> _assets = 
+            new ReadOnlyDictionary<string, (string blockchainId, long blockchainAssetId)>(
+            new Dictionary<string, (string blockchainId, long blockchainAssetId)>()
+            {
+                {"BTC", ("bitcoin-regtest", 100_000)},
+                {"ETH", ("ethereum-ropsten", 100_001)}
+            });
+
+        private IReadOnlyDictionary<string, BlockchainAsset> _blockchainAssets;
+        private readonly IOperationRepository _operationRepository;
+        private readonly IPublishEndpoint _eventPublisher;
+        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
+        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly DepositsDetector  _depositsDetector;
+        private readonly WithdrawalsDetector _withdrawalsDetector;
+
+        public BalanceProcessor(
+            string blockchainId,
+            string networkId,
+            ILogger<BalanceProcessor> logger,
+            IBlockchainApiClient blockchainApiClient,
+            IEnrolledBalanceRepository enrolledBalanceRepository,
+            IOperationRepository operationRepository,
+            IPublishEndpoint eventPublisher,
+            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IAccountRequisitesRepository accountRequisitesRepository,
+            DepositsDetector depositsDetector,
+            WithdrawalsDetector withdrawalsDetector,
+            IReadOnlyDictionary<string, BlockchainAsset> blockchainAssets)
+        {
+            _blockchainId = blockchainId;
+            _networkId = networkId;
+            _logger = logger;
+            _blockchainApiClient = blockchainApiClient;
+            _enrolledBalanceRepository = enrolledBalanceRepository;
+            _blockchainAssets = blockchainAssets;
+            _operationRepository = operationRepository;
+            _eventPublisher = eventPublisher;
+            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
+            _accountRequisitesRepository = accountRequisitesRepository;
+            _depositsDetector = depositsDetector;
+            _withdrawalsDetector = withdrawalsDetector;
+
+            _warningAssets = new HashSet<string>();
+        }
+
+        public async Task ProcessAsync(int batchSize)
+        {
+            var skip = 0;
+            var balancesFromDatabase = new List<EnrolledBalance>();
+            do
+            {
+                var received = await _enrolledBalanceRepository.GetAllForBlockchainAsync(_blockchainId, skip, 100);
+
+                if (received == null || !received.Any())
+                    break;
+
+                balancesFromDatabase.AddRange(received);
+
+                skip += received.Count;
+
+                if (received.Count < 100)
+                    break;
+
+            } while (true);
+
+            var balancesFromApi = new Dictionary<(string AssetId, string Address),WalletBalance>();
+            await _blockchainApiClient.EnumerateWalletBalanceBatchesAsync(
+                batchSize,
+                assetId => GetAssetAccuracy(assetId, batchSize),
+                batch =>
+                {
+                    if (batch != null && batch.Any())
+                    {
+                        foreach (var item in batch)
+                        {
+                            balancesFromApi[(item.AssetId, item.Address.ToLower(CultureInfo.InvariantCulture))] = item;
+                        }
+                    }
+
+                    return Task.FromResult(true);
+                });
+
+            await ProcessBalancesBatchAsync(balancesFromApi, balancesFromDatabase);
+        }
+
+        private async Task ProcessBalancesBatchAsync(IDictionary<(string AssetId, string Address), WalletBalance> fromApi, 
+            List<EnrolledBalance> fromDatabase)
+        {
+            foreach (var balance in fromDatabase)
+            {
+                await ProcessBalance(balance, fromApi);
+            }
+        }
+
+        private async Task ProcessBalance(
+            EnrolledBalance enrolledBalance,
+            IDictionary<(string AssetId, string Address), WalletBalance> depositWallets)
+        {
+            var key = enrolledBalance.Key;
+
+            if (!_blockchainAssets.TryGetValue(key.BlockchainAssetId, out var blockchainAsset))
+            {
+                _logger.LogWarning("Blockchain asset is not found {depositWallet}}", enrolledBalance);
+
+                return;
+            }
+
+            depositWallets.TryGetValue(
+                (enrolledBalance.Key.BlockchainAssetId,
+                    enrolledBalance.Key.WalletAddress.ToLower(CultureInfo.InvariantCulture)),
+                out var depositWallet);
+
+
+            var balanceStr = ConverterExtensions.ConvertToString(depositWallet?.Balance ?? 0m, 
+                blockchainAsset.Accuracy, blockchainAsset.Accuracy);
+            var balance = BigInteger.Parse(balanceStr);
+            var balanceBlock = depositWallet?.Block ?? enrolledBalance.Block;
+
+            var cashinCouldBeStarted = CouldBeStarted(
+                balance,
+                balanceBlock,
+                enrolledBalance.Balance,
+                enrolledBalance.Block,
+                blockchainAsset.Accuracy,
+                out var operationAmount);
+
+            if (!cashinCouldBeStarted)
+            {
+                return;
+            }
+
+            var operationAmountDecimal = ConverterExtensions.ConvertFromString(operationAmount.ToString(),
+                blockchainAsset.Accuracy, blockchainAsset.Accuracy);
+
+            Operation operation = null;
+            await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(5, (i, c) => TimeSpan.FromMilliseconds(100 * (int) Math.Pow(2, i)), (e, d, c) =>
+                {
+                    _logger.LogWarning(e, "Failed to get balances for blockchain {blockchain}", _blockchainId);
+                })
+                .ExecuteAsync(async () =>
+                {
+                    _assets.TryGetValue(_blockchainId, out var blockchainMapped);
+                    var accountWallet = await _accountRequisitesRepository.GetByAccountAsync(
+                        null,
+                        1,
+                        null,
+                        true,
+                        blockchainMapped.blockchainId,
+                        key.WalletAddress);
+
+                    var brokerAccount = await _brokerAccountRequisitesRepository.SearchAsync(
+                        null,
+                        1,
+                        null,
+                        true,
+                        blockchainMapped.blockchainId,
+                        key.WalletAddress);
+                    
+                    await _enrolledBalanceRepository.SetBalanceAsync(
+                        key,
+                        balance,
+                        balanceBlock);
+
+                    if (operation == null)
+                        operation = await _operationRepository.AddAsync(key, operationAmount, enrolledBalance.Block);
+
+
+                    var detectedTransaction = new TransactionDetected()
+                    {
+                        BlockchainId = blockchainMapped.blockchainId,
+                        BalanceUpdates = new BalanceUpdate[]
+                        {
+                            new BalanceUpdate()
+                            {
+                                Address = key.WalletAddress,
+                                AssetId = blockchainMapped.blockchainAssetId,
+                                Transfers = new List<Transfer>()
+                                {
+                                    new Transfer()
+                                    {
+                                        Amount = operationAmountDecimal,
+                                        TransferId = 0,
+                                        Nonce = 0
+                                    }
+                                }
+                            }, 
+                        },
+                        BlockId = "some block",
+                        BlockNumber = operation.OperationId,
+                        ErrorCode = null,
+                        ErrorMessage = null,
+                        Fees = new Fee[0],
+                        TransactionId = operation.OperationId.ToString(),
+                        TransactionNumber = 0,
+                    };
+
+                    if (operationAmount > 0)
+                    {
+                        _depositsDetector.Detect(detectedTransaction);
+                    }
+                    else
+                    {
+                        _withdrawalsDetector.Detect(detectedTransaction);
+                    }
+                });
+        }
+
+        private static bool CouldBeStarted(
+            BigInteger balanceAmount,
+            BigInteger balanceBlock,
+            BigInteger enrolledBalanceAmount,
+            BigInteger enrolledBalanceBlock,
+            int assetAccuracy,
+            out BigInteger operationAmount)
+        {
+            operationAmount = 0;
+
+            if (balanceBlock < enrolledBalanceBlock)
+            {
+                // This balance was already processed
+                return false;
+            }
+
+            operationAmount = balanceAmount - enrolledBalanceAmount;
+
+            if (operationAmount == 0)
+            {
+                // No visbible changes have happened since the last check
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task<IReadOnlyDictionary<string, EnrolledBalance>> GetEnrolledBalancesAsync(IEnumerable<WalletBalance> balances)
+        {
+            var walletKeys = balances.Select(x => new DepositWalletKey
+            (
+                blockchainAssetId: x.AssetId,
+                blockchainId: _blockchainId,
+                depositWalletAddress: x.Address
+            ));
+
+            return (await _enrolledBalanceRepository.GetAsync(walletKeys))
+                .ToDictionary(
+                    x => GetEnrolledBalancesDictionaryKey(x.Key.WalletAddress, x.Key.BlockchainAssetId),
+                    y => y);
+        }
+
+        private int GetAssetAccuracy(string assetId, int batchSize)
+        {
+            if (!_blockchainAssets.TryGetValue(assetId, out var asset))
+            {
+                // Unknown asset, tries to refresh cached assets
+
+                _blockchainAssets = _blockchainApiClient
+                    .GetAllAssetsAsync(batchSize)
+                    .GetAwaiter()
+                    .GetResult();
+
+                if (!_blockchainAssets.TryGetValue(assetId, out asset))
+                {
+                    throw new InvalidOperationException($"Asset {assetId} not found");
+                }
+            }
+
+            return asset.Accuracy;
+        }
+
+        private string GetEnrolledBalancesDictionaryKey(string address, string assetId)
+        {
+            return $"{address.ToLower(CultureInfo.InvariantCulture)}:{assetId}";
+        }
+    }
+}

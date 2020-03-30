@@ -9,13 +9,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Lykke.Service.BlockchainApi.Client" Version="17.7.0" />
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.2.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="6.2.2" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="4.0.0" />
+    <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="2.1.0" />
     <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Brokerage.Bilv1.DomainServices\Brokerage.Bilv1.DomainServices.csproj" />
+    <ProjectReference Include="..\Brokerage.Bilv1.Domain\Brokerage.Bilv1.Domain.csproj" />
+    <ProjectReference Include="..\Brokerage.Bilv1.Repositories\Brokerage.Bilv1.Repositories.csproj" />
     <ProjectReference Include="..\Brokerage.Common\Brokerage.Common.csproj" />
     <ProjectReference Include="..\Brokerage.MessagingContract\Brokerage.MessagingContract.csproj" />
   </ItemGroup>

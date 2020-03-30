@@ -6,10 +6,12 @@ namespace Brokerage.Common.Persistence
 {
     public interface IBrokerAccountRequisitesRepository
     {
-        Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(long brokerAccountId,
+        Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(long? brokerAccountId,
             int limit,
             long? cursor,
-            bool sortAsc);
+            bool sortAsc,
+            string blockchainId,
+            string address);
 
         Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount);
 

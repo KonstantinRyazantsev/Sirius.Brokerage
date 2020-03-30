@@ -1,4 +1,7 @@
 ﻿using System;
+using Brokerage.Bilv1.DomainServices;
+using Brokerage.Bilv1.Repositories;
+using Brokerage.Bilv1.Repositories.DbContexts;
 using GreenPipes;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +12,7 @@ using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
+using Microsoft.EntityFrameworkCore;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 
@@ -28,8 +32,25 @@ namespace Brokerage.Worker
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
-            services.AddMessageConsumers();
             
+            services.AddRepositories();
+            services.AddDomainServices();
+            services.AddHostedService<BalanceProcessorsHost>();
+            
+            services.AddMessageConsumers();
+
+            services.AddSingleton<DbContextOptionsBuilder<BrokerageBilV1Context>>(x =>
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BrokerageBilV1Context>();
+                optionsBuilder.UseNpgsql(this.Config.Db.ConnectionString,
+                    builder =>
+                        builder.MigrationsHistoryTable(
+                            PostgresBilV1RepositoryConfiguration.MigrationHistoryTable,
+                            PostgresBilV1RepositoryConfiguration.SchemaName));
+
+                return optionsBuilder;
+            });
+
             services.AddMassTransit(x =>
             {
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>

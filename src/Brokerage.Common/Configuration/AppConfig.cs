@@ -5,5 +5,6 @@
         public DbConfig Db { get; set; }
         public RabbitMqConfig RabbitMq { get; set; }
         public VaultAgentConfig VaultAgent { get; set; }
+        public IntegrationsConfig Integrations { get; set; }
     }
 }

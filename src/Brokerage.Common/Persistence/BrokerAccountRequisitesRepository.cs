@@ -20,16 +20,33 @@ namespace Brokerage.Common.Persistence
 
 
         public async Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(
-            long brokerAccountId,
+            long? brokerAccountId,
             int limit,
             long? cursor,
-            bool sortAsc)
+            bool sortAsc,
+            string blockchainId,
+            string address)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var query = context
                 .BrokerAccountsRequisites
-                .Where(x => x.BrokerAccountId == brokerAccountId);
+                .Select(x => x);
+
+            if (brokerAccountId != null)
+            {
+                query = query.Where(x => x.BrokerAccountId == brokerAccountId);
+            }
+
+            if (!string.IsNullOrEmpty(blockchainId))
+            {
+                query = query.Where(x => x.BlockchainId == blockchainId);
+            }
+
+            if (!string.IsNullOrEmpty(address))
+            {
+                query = query.Where(x => x.Address == address);
+            }
 
             if (sortAsc)
             {
