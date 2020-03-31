@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Migrations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Indexer.MessagingContract;
@@ -61,7 +62,7 @@ namespace Brokerage.Common.Domain.Deposits
                 .ToArray();
 
             var accountRequisites = await _accountRequisitesRepository.GetByAddressesAsync(
-                transaction.BlockchainId, 
+                transaction.BlockchainId,
                 incomingTransferAddresses);
 
             var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByAddressesAsync(
@@ -71,6 +72,7 @@ namespace Brokerage.Common.Domain.Deposits
             var incomingTransfersByAddress = incomingTransfers
                 .ToLookup(x => x.Key.Address);
 
+            var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), decimal>();
             var brokerAccountsAddressAmounts = accountRequisites
                 .Select(x => new
                 {
@@ -90,32 +92,36 @@ namespace Brokerage.Common.Domain.Deposits
                             t => t.Key.AssetId,
                             t => t.Value.Amount)
                 })
-                .GroupBy(x => x.BrokerAccountId)
-                .Select(g => new
-                {
-                    BrokerAccountId = g.Key,
-                    AmountByAsset = g.ToDictionary()
-                })
+                .GroupBy(x => x.BrokerAccountId);
 
-            foreach (var brokerAccountAddressAmounts in brokerAccountsAddressAmounts)
+            foreach (var brokerAccountsAddressAmount in brokerAccountsAddressAmounts)
             {
-                foreach (var incomingAsset in brokerAccountAddressAmounts.)
+                var brokerAccountId = brokerAccountsAddressAmount.Key;
+                foreach (var addressAmount in brokerAccountsAddressAmount)
                 {
-                    var addressAsset = new
+                    foreach (var amountByAsset in addressAmount.AmountByAsset)
                     {
-                        Address = brokerAccountAddress.Address,
-                        AssetId = incomingAsset.Key.AssetId
-                    };
-                    var pendingBalanceChange = incomingTransfers[addressAsset].Amount;
+                        transferDict.TryGetValue((brokerAccountId, amountByAsset.Key), out var existing);
 
-                    var balances = await _brokerAccountsBalancesRepository.AddOrGetAsync(BrokerAccountBalances.Create(
-                        brokerAccountAddress.BrokerAccountId,
-                        addressAsset.AssetId));
-
-                    balances.AddPendingBalance(pendingBalanceChange);
-
-                    await _brokerAccountsBalancesRepository.UpdateAsync(balances);
+                        transferDict[(brokerAccountId, amountByAsset.Key)] = existing + amountByAsset.Value;
+                    }
                 }
+            }
+
+
+            foreach (var brokerAccountAddressAmounts in transferDict)
+            {
+                var brokerAccountId = brokerAccountAddressAmounts.Key.BrokerAccountId;
+                var assetId = brokerAccountAddressAmounts.Key.AssetId;
+                var pendingBalanceChange = brokerAccountAddressAmounts.Value;
+
+                var balances = await _brokerAccountsBalancesRepository.AddOrGetAsync(BrokerAccountBalances.Create(
+                    brokerAccountId,
+                    assetId));
+
+                balances.AddPendingBalance(pendingBalanceChange);
+
+                await _brokerAccountsBalancesRepository.UpdateAsync(balances);
             }
         }
     }
