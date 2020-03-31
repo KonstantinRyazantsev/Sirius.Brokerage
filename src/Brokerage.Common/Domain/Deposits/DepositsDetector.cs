@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Migrations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Indexer.MessagingContract;
@@ -99,22 +97,18 @@ namespace Brokerage.Common.Domain.Deposits
                 var brokerAccountId = brokerAccountsAddressAmount.Key;
                 foreach (var addressAmount in brokerAccountsAddressAmount)
                 {
-                    foreach (var amountByAsset in addressAmount.AmountByAsset)
+                    foreach (var (assetId, amount) in addressAmount.AmountByAsset)
                     {
-                        transferDict.TryGetValue((brokerAccountId, amountByAsset.Key), out var existing);
+                        transferDict.TryGetValue((brokerAccountId, assetId), out var existing);
 
-                        transferDict[(brokerAccountId, amountByAsset.Key)] = existing + amountByAsset.Value;
+                        transferDict[(brokerAccountId, assetId)] = existing + amount;
                     }
                 }
             }
 
 
-            foreach (var brokerAccountAddressAmounts in transferDict)
+            foreach (var ((brokerAccountId, assetId), pendingBalanceChange) in transferDict)
             {
-                var brokerAccountId = brokerAccountAddressAmounts.Key.BrokerAccountId;
-                var assetId = brokerAccountAddressAmounts.Key.AssetId;
-                var pendingBalanceChange = brokerAccountAddressAmounts.Value;
-
                 var balances = await _brokerAccountsBalancesRepository.AddOrGetAsync(BrokerAccountBalances.Create(
                     brokerAccountId,
                     assetId));

@@ -30,4 +30,8 @@
     <ProjectReference Include="..\..\src\Brokerage\Brokerage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="UnitTests\" />
+  </ItemGroup>
+
 </Project>
