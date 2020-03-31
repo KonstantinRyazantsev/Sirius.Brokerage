@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Brokerage.Bilv1.Domain\Brokerage.Bilv1.Domain.csproj" />
     <ProjectReference Include="..\Brokerage.MessagingContract\Brokerage.MessagingContract.csproj" />
   </ItemGroup>
 

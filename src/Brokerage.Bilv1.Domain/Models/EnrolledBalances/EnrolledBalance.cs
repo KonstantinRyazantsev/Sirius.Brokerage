@@ -5,12 +5,12 @@ namespace Brokerage.Bilv1.Domain.Models.EnrolledBalances
     public sealed class EnrolledBalance
     {
         public DepositWalletKey Key { get; }
-        public BigInteger Balance { get; set; }
+        public decimal Balance { get; set; }
         public long Block { get; set; }
 
         private EnrolledBalance(
             DepositWalletKey key,
-            BigInteger balance,
+            decimal balance,
             long block)
         {
             Balance = balance;
@@ -18,7 +18,7 @@ namespace Brokerage.Bilv1.Domain.Models.EnrolledBalances
             Block = block;
         }
 
-        public static EnrolledBalance Create(DepositWalletKey key, BigInteger balance, long block)
+        public static EnrolledBalance Create(DepositWalletKey key, decimal balance, long block)
         {
             return new EnrolledBalance(key, balance, block);
         }

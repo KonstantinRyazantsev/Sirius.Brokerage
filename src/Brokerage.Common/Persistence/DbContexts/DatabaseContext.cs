@@ -16,6 +16,9 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
+
+        public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
+
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
@@ -29,8 +32,21 @@ namespace Brokerage.Common.Persistence.DbContexts
             BuildAccount(modelBuilder);
             BuildAccountRequisites(modelBuilder);
             BuildBlockchain(modelBuilder);
-            
+            BuildBrokerAccountBalancesEntity(modelBuilder);
+
             base.OnModelCreating(modelBuilder);
+        }
+
+        private void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<BrokerAccountBalancesEntity>()
+                .ToTable(Tables.BrokerAccountBalances)
+                .HasKey(x => x.BrokerAccountBalancesId);
+
+            modelBuilder.Entity<BrokerAccountBalancesEntity>()
+                .HasOne(x => x.BrokerAccount)
+                .WithOne(x => x.BrokerAccountBalances)
+                .HasForeignKey<BrokerAccountBalancesEntity>(x => x.BrokerAccountId);
         }
 
         private static void BuildBlockchain(ModelBuilder modelBuilder)

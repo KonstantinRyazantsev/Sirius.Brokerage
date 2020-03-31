@@ -2,7 +2,11 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
+using Brokerage.Bilv1.Domain.Repositories;
+using Brokerage.Bilv1.Domain.Services;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Accounts;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
@@ -90,14 +94,16 @@ namespace Brokerage.Common.Domain.Accounts
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
             IAccountRequisitesRepository requisitesRepository,
-            IVaultAgentClient vaultAgentClient)
+            IVaultAgentClient vaultAgentClient,
+            IWalletsService walletsService)
         {
             if (State == AccountState.Creating)
             {
                 await CreateRequisites(logger,
                     blockchainsRepository,
                     requisitesRepository,
-                    vaultAgentClient);
+                    vaultAgentClient,
+                    walletsService);
 
                 Activate();
             }
@@ -135,7 +141,8 @@ namespace Brokerage.Common.Domain.Accounts
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
             IAccountRequisitesRepository requisitesRepository,
-            IVaultAgentClient vaultAgentClient)
+            IVaultAgentClient vaultAgentClient,
+            IWalletsService walletsService)
         {
             BlockchainId cursor = null;
 
@@ -180,6 +187,8 @@ namespace Brokerage.Common.Domain.Accounts
                     }
 
                     requisites.Address = response.Response.Address;
+
+                    await walletsService.ImportWalletAsync(blockchain.BlockchainId, requisites.Address);
 
                     await requisitesRepository.UpdateAsync(requisites);
 

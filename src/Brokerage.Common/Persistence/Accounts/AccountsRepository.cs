@@ -6,7 +6,7 @@ using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Accounts
 {
     public class AccountsRepository : IAccountsRepository
     {

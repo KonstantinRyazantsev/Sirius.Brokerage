@@ -33,7 +33,7 @@ namespace Brokerage.Bilv1.DomainServices
                     Balances = walletsGroup
                         .Select(x =>
                         {
-                            var asset = _assetService.GetAssetForId(blockchainId, networkId, x.Key.BlockchainAssetId);
+                            var asset = _assetService.GetAssetForId(blockchainId, x.Key.BlockchainAssetId);
 
                             if (asset == null)
                                 return null;
@@ -79,7 +79,7 @@ namespace Brokerage.Bilv1.DomainServices
             string walletAddress,
             string assetId)
         {
-            var asset = _assetService.GetAssetForId(blockchainId, networkId, assetId);
+            var asset = _assetService.GetAssetForId(blockchainId, assetId);
 
             var walletBalance = await GetWalletAssetBalance(blockchainId, walletAddress, asset);
 

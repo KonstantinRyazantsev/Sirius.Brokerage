@@ -7,12 +7,12 @@ namespace Brokerage.Bilv1.Domain.Models.Operations
     {
         public long OperationId { get; }
         public DepositWalletKey Key { get; }
-        public BigInteger BalanceChange { get; }
+        public decimal BalanceChange { get; }
         public long Block { get; }
 
         protected Operation(
             DepositWalletKey key,
-            BigInteger balanceChange,
+            decimal balanceChange,
             long block,
             long operationId)
         {
@@ -22,7 +22,7 @@ namespace Brokerage.Bilv1.Domain.Models.Operations
             OperationId = operationId;
         }
 
-        public static Operation Create(DepositWalletKey key, BigInteger balanceChange, long block, long operationId)
+        public static Operation Create(DepositWalletKey key, decimal balanceChange, long block, long operationId)
         {
             return new Operation(key, balanceChange, block, operationId);
         }

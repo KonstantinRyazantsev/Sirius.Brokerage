@@ -28,7 +28,7 @@ namespace Brokerage.Bilv1.DomainServices
             decimal amount,
             string pubKey = null)
         {
-            var asset = _assetService.GetAssetForId(blockchainId, networkId, blockchainAssetId);
+            var asset = _assetService.GetAssetForId(blockchainId, blockchainAssetId);
             var strAmount = ConverterExtensions.ConvertToString(amount, asset.Accuracy, asset.Accuracy);
 
             var blockchainApiClient = _blockchainApiClientProvider.Get(blockchainId);

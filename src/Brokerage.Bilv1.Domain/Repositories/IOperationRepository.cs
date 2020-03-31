@@ -8,7 +8,7 @@ namespace Brokerage.Bilv1.Domain.Repositories
 {
     public interface IOperationRepository
     {
-        Task<Operation> AddAsync(DepositWalletKey key, BigInteger balanceChange, long block);
+        Task<Operation> AddAsync(DepositWalletKey key, decimal balanceChange, long block);
 
         Task<IEnumerable<Operation>> GetAsync(DepositWalletKey key, int skip, int take);
 

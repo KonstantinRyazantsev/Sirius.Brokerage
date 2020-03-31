@@ -9,7 +9,7 @@ namespace Brokerage.Bilv1.Domain.Repositories
     {
         Task<IReadOnlyCollection<EnrolledBalance>> GetAsync(IEnumerable<DepositWalletKey> keys);
 
-        Task SetBalanceAsync(DepositWalletKey key, BigInteger balance, long balanceBlock);
+        Task SetBalanceAsync(DepositWalletKey key, decimal balance, long balanceBlock);
 
         Task ResetBalanceAsync(DepositWalletKey key, long transactionBlock);
 

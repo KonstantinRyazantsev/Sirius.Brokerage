@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Accounts
 {
     public interface IAccountRequisitesRepository
     {

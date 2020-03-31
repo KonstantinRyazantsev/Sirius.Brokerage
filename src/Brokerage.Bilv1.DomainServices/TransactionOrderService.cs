@@ -24,7 +24,7 @@ namespace Brokerage.Bilv1.DomainServices
             var operations = await _operationRepository.GetAllForBlockchainAsync(blockchainId, skip, take);
             return operations.Select(x =>
             {
-                var asset = _assetService.GetAssetForId(blockchainId, networkId, x.Key.BlockchainAssetId);
+                var asset = _assetService.GetAssetForId(blockchainId, x.Key.BlockchainAssetId);
                 var amount = ConverterExtensions.ConvertFromString(x.BalanceChange.ToString(), asset.Accuracy, asset.Accuracy);
 
                 return new TransactionOrder

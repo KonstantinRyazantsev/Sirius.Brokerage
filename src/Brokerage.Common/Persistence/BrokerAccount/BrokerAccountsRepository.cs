@@ -6,7 +6,7 @@ using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.BrokerAccount
 {
     public class BrokerAccountsRepository : IBrokerAccountsRepository
     {
@@ -17,7 +17,7 @@ namespace Brokerage.Common.Persistence
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<BrokerAccount> GetAsync(long brokerAccountId)
+        public async Task<Domain.BrokerAccounts.BrokerAccount> GetAsync(long brokerAccountId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -28,7 +28,7 @@ namespace Brokerage.Common.Persistence
             return MapToDomain(entity);
         }
 
-        public async Task UpdateAsync(BrokerAccount brokerAccount)
+        public async Task UpdateAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             
@@ -39,7 +39,7 @@ namespace Brokerage.Common.Persistence
             await context.SaveChangesAsync();
         }
 
-        public async Task<BrokerAccount> AddOrGetAsync(BrokerAccount brokerAccount)
+        public async Task<Domain.BrokerAccounts.BrokerAccount> AddOrGetAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -66,7 +66,7 @@ namespace Brokerage.Common.Persistence
             }
         }
 
-        private static BrokerAccountEntity MapToEntity(BrokerAccount brokerAccount)
+        private static BrokerAccountEntity MapToEntity(Domain.BrokerAccounts.BrokerAccount brokerAccount)
         {
             var state = brokerAccount.State switch
             {
@@ -91,7 +91,7 @@ namespace Brokerage.Common.Persistence
             return newEntity;
         }
 
-        private static BrokerAccount MapToDomain(BrokerAccountEntity brokerAccountEntity)
+        private static Domain.BrokerAccounts.BrokerAccount MapToDomain(BrokerAccountEntity brokerAccountEntity)
         {
             var state = brokerAccountEntity.State switch
             {
@@ -101,7 +101,7 @@ namespace Brokerage.Common.Persistence
                 _ => throw new ArgumentOutOfRangeException($"{brokerAccountEntity.State} is not processed")
             };
 
-            var brokerAccount = BrokerAccount.Restore(
+            var brokerAccount = Domain.BrokerAccounts.BrokerAccount.Restore(
                 brokerAccountEntity.BrokerAccountId,
                 brokerAccountEntity.Name,
                 brokerAccountEntity.TenantId,

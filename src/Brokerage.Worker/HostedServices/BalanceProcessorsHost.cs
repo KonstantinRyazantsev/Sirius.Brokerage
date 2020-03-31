@@ -6,6 +6,8 @@ using Brokerage.Bilv1.Domain.Repositories;
 using Brokerage.Bilv1.DomainServices;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Worker.BalanceProcessors;
 using MassTransit;
 using Microsoft.Extensions.Hosting;

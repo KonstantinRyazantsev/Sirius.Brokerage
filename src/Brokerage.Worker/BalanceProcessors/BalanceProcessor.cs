@@ -10,6 +10,8 @@ using Brokerage.Bilv1.Domain.Models.Operations;
 using Brokerage.Bilv1.Domain.Repositories;
 using Brokerage.Bilv1.Domain.Utils;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.BrokerAccount;
 using Lykke.Service.BlockchainApi.Client;
 using Lykke.Service.BlockchainApi.Client.Models;
 using MassTransit;
@@ -22,14 +24,12 @@ namespace Brokerage.Worker.BalanceProcessors
     public class BalanceProcessor
     {
         private readonly string _blockchainId;
-        private readonly string _networkId;
         private readonly ILogger<BalanceProcessor> _logger;
         private readonly IBlockchainApiClient _blockchainApiClient;
         private readonly IEnrolledBalanceRepository _enrolledBalanceRepository;
-        private readonly HashSet<string> _warningAssets;
-        private readonly IReadOnlyDictionary<string, (string blockchainId, long blockchainAssetId)> _assets = 
-            new ReadOnlyDictionary<string, (string blockchainId, long blockchainAssetId)>(
-            new Dictionary<string, (string blockchainId, long blockchainAssetId)>()
+        private readonly IReadOnlyDictionary<string, (string BlockchainId, long BlockchainAssetId)> _assets = 
+            new ReadOnlyDictionary<string, (string BlockchainId, long BlockchainAssetId)>(
+            new Dictionary<string, (string BlockchainId, long BlockchainAssetId)>()
             {
                 {"BTC", ("bitcoin-regtest", 100_000)},
                 {"ETH", ("ethereum-ropsten", 100_001)}
@@ -45,7 +45,6 @@ namespace Brokerage.Worker.BalanceProcessors
 
         public BalanceProcessor(
             string blockchainId,
-            string networkId,
             ILogger<BalanceProcessor> logger,
             IBlockchainApiClient blockchainApiClient,
             IEnrolledBalanceRepository enrolledBalanceRepository,
@@ -58,7 +57,6 @@ namespace Brokerage.Worker.BalanceProcessors
             IReadOnlyDictionary<string, BlockchainAsset> blockchainAssets)
         {
             _blockchainId = blockchainId;
-            _networkId = networkId;
             _logger = logger;
             _blockchainApiClient = blockchainApiClient;
             _enrolledBalanceRepository = enrolledBalanceRepository;
@@ -69,8 +67,6 @@ namespace Brokerage.Worker.BalanceProcessors
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
             _withdrawalsDetector = withdrawalsDetector;
-
-            _warningAssets = new HashSet<string>();
         }
 
         public async Task ProcessAsync(int batchSize)
@@ -141,9 +137,7 @@ namespace Brokerage.Worker.BalanceProcessors
                 out var depositWallet);
 
 
-            var balanceStr = ConverterExtensions.ConvertToString(depositWallet?.Balance ?? 0m, 
-                blockchainAsset.Accuracy, blockchainAsset.Accuracy);
-            var balance = BigInteger.Parse(balanceStr);
+            var balance = depositWallet?.Balance ?? 0m;
             var balanceBlock = depositWallet?.Block ?? enrolledBalance.Block;
 
             var cashinCouldBeStarted = CouldBeStarted(
@@ -151,7 +145,6 @@ namespace Brokerage.Worker.BalanceProcessors
                 balanceBlock,
                 enrolledBalance.Balance,
                 enrolledBalance.Block,
-                blockchainAsset.Accuracy,
                 out var operationAmount);
 
             if (!cashinCouldBeStarted)
@@ -177,7 +170,7 @@ namespace Brokerage.Worker.BalanceProcessors
                         1,
                         null,
                         true,
-                        blockchainMapped.blockchainId,
+                        blockchainMapped.BlockchainId,
                         key.WalletAddress);
 
                     var brokerAccount = await _brokerAccountRequisitesRepository.SearchAsync(
@@ -185,7 +178,7 @@ namespace Brokerage.Worker.BalanceProcessors
                         1,
                         null,
                         true,
-                        blockchainMapped.blockchainId,
+                        blockchainMapped.BlockchainId,
                         key.WalletAddress);
                     
                     await _enrolledBalanceRepository.SetBalanceAsync(
@@ -199,13 +192,13 @@ namespace Brokerage.Worker.BalanceProcessors
 
                     var detectedTransaction = new TransactionDetected()
                     {
-                        BlockchainId = blockchainMapped.blockchainId,
+                        BlockchainId = blockchainMapped.BlockchainId,
                         BalanceUpdates = new BalanceUpdate[]
                         {
                             new BalanceUpdate()
                             {
                                 Address = key.WalletAddress,
-                                AssetId = blockchainMapped.blockchainAssetId,
+                                AssetId = blockchainMapped.BlockchainAssetId,
                                 Transfers = new List<Transfer>()
                                 {
                                     new Transfer()
@@ -238,12 +231,11 @@ namespace Brokerage.Worker.BalanceProcessors
         }
 
         private static bool CouldBeStarted(
-            BigInteger balanceAmount,
+            decimal balanceAmount,
             BigInteger balanceBlock,
-            BigInteger enrolledBalanceAmount,
+            decimal enrolledBalanceAmount,
             BigInteger enrolledBalanceBlock,
-            int assetAccuracy,
-            out BigInteger operationAmount)
+            out decimal operationAmount)
         {
             operationAmount = 0;
 

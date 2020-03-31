@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Swisschain.Sirius.Sdk.Primitives;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Accounts
 {
     public class AccountRequisitesRepository : IAccountRequisitesRepository
     {

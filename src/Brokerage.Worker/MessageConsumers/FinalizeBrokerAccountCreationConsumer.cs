@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract;
