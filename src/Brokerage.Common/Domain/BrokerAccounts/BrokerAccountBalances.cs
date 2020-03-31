@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Swisschain.Sirius.Brokerage.MessagingContract;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {
@@ -6,6 +8,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     {
         private BrokerAccountBalances(
             long id,
+            long sequence,
             long version,
             long brokerAccountId,
             long assetId,
@@ -30,10 +33,12 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             AvailableBalanceUpdateDateTime = availableBalanceUpdateDateTime;
             PendingBalanceUpdateDateTime = pendingBalanceUpdateDateTime;
             ReservedBalanceUpdateDateTime = reservedBalanceUpdateDateTime;
+            Sequence = sequence;
         }
 
         public long Id { get; }
         public long Version { get; }
+        public long Sequence { get; set; }
         public long BrokerAccountId { get; }
         public long AssetId { get; }
         public decimal OwnedBalance { get; }
@@ -45,12 +50,15 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public DateTime PendingBalanceUpdateDateTime { get; private set; }
         public DateTime ReservedBalanceUpdateDateTime { get; }
 
+        public List<object> Events { get; private set; } = new List<object>();
+
         public static BrokerAccountBalances Create(
             long brokerAccountId,
             long assetId)
         {
             return new BrokerAccountBalances(
                 default,
+                0,
                 0,
                 brokerAccountId,
                 assetId,
@@ -66,6 +74,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public static BrokerAccountBalances Restore(
             long id,
+            long sequence,
             long version,
             long brokerAccountId,
             long assetId,
@@ -80,6 +89,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             return new BrokerAccountBalances(
                 id,
+                sequence,
                 version,
                 brokerAccountId,
                 assetId,
@@ -97,6 +107,22 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             PendingBalance += amount;
             PendingBalanceUpdateDateTime = DateTime.UtcNow;
+
+            Events.Add(new BrokerAccountBalancesUpdated()
+            {
+                BrokerAccountId = this.BrokerAccountId,
+                AssetId = this.AssetId,
+                Sequence = this.Sequence,
+                ReservedBalanceUpdateDateTime = this.ReservedBalanceUpdateDateTime,
+                AvailableBalance = this.AvailableBalance,
+                OwnedBalance = this.OwnedBalance,
+                OwnedBalanceUpdateDateTime = this.OwnedBalanceUpdateDateTime,
+                AvailableBalanceUpdateDateTime = this.AvailableBalanceUpdateDateTime,
+                ReservedBalance = this.ReservedBalance,
+                PendingBalanceUpdateDateTime = this.PendingBalanceUpdateDateTime,
+                PendingBalance = this.PendingBalance,
+                BrokerAccountBalancesId = this.Id
+            });
         }
     }
 }

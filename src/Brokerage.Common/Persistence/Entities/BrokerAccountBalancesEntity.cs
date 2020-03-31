@@ -11,6 +11,7 @@ namespace Brokerage.Common.Persistence.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long BrokerAccountBalancesId { get; set; }
         public long Version { get; set; }
+        public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }
 
         public BrokerAccountEntity BrokerAccount { get; set; }
@@ -23,5 +24,14 @@ namespace Brokerage.Common.Persistence.Entities
         public DateTimeOffset AvailableBalanceUpdateDateTime { get; set; }
         public DateTimeOffset PendingBalanceUpdateDateTime { get; set; }
         public DateTimeOffset ReservedBalanceUpdateDateTime { get; set; }
+    }
+
+    [Table(name: Tables.BrokerAccountBalancesUpdate)]
+    public class BrokerAccountBalancesUpdateEntity
+    {
+        //string updateId(unique) (broker account balances ID + transaction ID)
+
+        [Key]
+        public string UpdateId { get; set; }
     }
 }

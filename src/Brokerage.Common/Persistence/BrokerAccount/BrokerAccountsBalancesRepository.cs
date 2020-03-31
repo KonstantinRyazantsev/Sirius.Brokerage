@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -27,11 +28,18 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task SaveAsync(BrokerAccountBalances brokerAccountBalances)
+        public async Task SaveAsync(BrokerAccountBalances brokerAccountBalances, string updateId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
+            await using var transaction = context.Database.BeginTransaction();
+
+            brokerAccountBalances.Sequence++;
             var entity = MapToEntity(brokerAccountBalances);
+
+            context.BrokerAccountBalancesUpdate.Add(new BrokerAccountBalancesUpdateEntity()
+            {
+                UpdateId = updateId
+            });
 
             if (brokerAccountBalances.Id == default)
             {
@@ -41,8 +49,16 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             {
                 context.BrokerAccountBalances.Update(entity);
             }
-            
-            await context.SaveChangesAsync();
+
+            try
+            {
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception e)
+            {
+                await transaction.RollbackAsync();
+            }
         }
 
         private static BrokerAccountBalancesEntity MapToEntity(BrokerAccountBalances brokerAccountBalances)
@@ -70,6 +86,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             var brokerAccountBalances = BrokerAccountBalances.Restore(
                 brokerAccountBalancesEntity.BrokerAccountBalancesId,
+                brokerAccountBalancesEntity.Sequence,
                 brokerAccountBalancesEntity.Version,
                 brokerAccountBalancesEntity.BrokerAccountId,
                 brokerAccountBalancesEntity.AssetId,

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
+using MassTransit;
 using Swisschain.Sirius.Indexer.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits
@@ -13,14 +14,17 @@ namespace Brokerage.Common.Domain.Deposits
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
+        private readonly IPublishEndpoint _publishEndpoint;
 
         public DepositsDetector(IAccountRequisitesRepository accountRequisitesRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IPublishEndpoint publishEndpoint)
         {
             _accountRequisitesRepository = accountRequisitesRepository;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task Detect(TransactionDetected transaction)
@@ -182,13 +186,12 @@ namespace Brokerage.Common.Domain.Deposits
                 // to the snapshot.
 
                 balances.AddPendingBalance(pendingBalanceChange);
-
-                await _brokerAccountsBalancesRepository.SaveAsync(balances);
-            }
-
-            foreach (var evt in balances.Events)
-            {
-                await _publisher.PublishAsync(evt);
+                string updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}";
+                await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
+                foreach (var evt in balances.Events)
+                {
+                    await _publishEndpoint.Publish(evt);
+                }
             }
         }
     }

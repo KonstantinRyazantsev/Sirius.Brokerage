@@ -19,6 +19,8 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
 
+        public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
+
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
@@ -39,6 +41,10 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         private static void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<BrokerAccountBalancesUpdateEntity>()
+                .ToTable(Tables.BrokerAccountBalancesUpdate)
+                .HasKey(x => x.UpdateId);
+
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .ToTable(Tables.BrokerAccountBalances)
                 .HasKey(x => x.BrokerAccountBalancesId);
