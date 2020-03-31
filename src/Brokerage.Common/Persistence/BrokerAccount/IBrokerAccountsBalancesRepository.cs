@@ -5,8 +5,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 {
     public interface IBrokerAccountsBalancesRepository
     {
-        Task<BrokerAccountBalances> GetAsync(long brokerAccountId);
-        Task UpdateAsync(BrokerAccountBalances brokerAccountBalances);
-        Task<BrokerAccountBalances> AddOrGetAsync(BrokerAccountBalances brokerAccountBalances);
+        Task<BrokerAccountBalances> GetOrDefaultAsync(long brokerAccountId, long assetId);
+        Task SaveAsync(BrokerAccountBalances brokerAccountBalances);
     }
 }

@@ -49,6 +49,14 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasForeignKey<BrokerAccountBalancesEntity>(x => x.BrokerAccountId);
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
+                .HasIndex(x => new
+                {
+                    x.BrokerAccountId,
+                    x.AssetId
+                })
+                .HasName("IX_BrokerAccountBalances_BrokerAccountId_AssetId");
+
+            modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .Property(p => p.Version)
                 .HasColumnName("xmin")
                 .HasColumnType("xid")

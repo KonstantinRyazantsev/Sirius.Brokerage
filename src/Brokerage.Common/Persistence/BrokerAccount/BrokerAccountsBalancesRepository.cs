@@ -15,53 +15,34 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
-
-        public async Task<BrokerAccountBalances> GetAsync(long brokerAccountId)
+        
+        public async Task<BrokerAccountBalances> GetOrDefaultAsync(long brokerAccountId, long assetId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .BrokerAccountBalances
-                .FirstAsync(x => x.BrokerAccountId == brokerAccountId);
+                .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId && x.AssetId == assetId);
 
-            return MapToDomain(entity);
+            return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task UpdateAsync(BrokerAccountBalances brokerAccountBalances)
+        public async Task SaveAsync(BrokerAccountBalances brokerAccountBalances)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             
             var entity = MapToEntity(brokerAccountBalances);
-            
-            context.BrokerAccountBalances.Update(entity);
+
+            if (brokerAccountBalances.Id == default)
+            {
+                context.BrokerAccountBalances.Add(entity);
+            }
+            else
+            {
+                context.BrokerAccountBalances.Update(entity);
+            }
             
             await context.SaveChangesAsync();
-        }
-
-        public async Task<BrokerAccountBalances> AddOrGetAsync(BrokerAccountBalances brokerAccountBalances)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var newEntity = MapToEntity(brokerAccountBalances);
-
-            context.BrokerAccountBalances.Add(newEntity);
-
-            try
-            {
-                await context.SaveChangesAsync();
-
-                return MapToDomain(newEntity);
-            }
-            catch (DbUpdateException e) //Check that request was already processed (by constraint)
-                when (e.InnerException is PostgresException pgEx &&
-                      pgEx.SqlState == "23505")
-            {
-                var entity = await context
-                    .BrokerAccountBalances
-                    .FirstAsync(x => x.BrokerAccountId == brokerAccountBalances.BrokerAccountId);
-
-                return MapToDomain(entity);
-            }
         }
 
         private static BrokerAccountBalancesEntity MapToEntity(BrokerAccountBalances brokerAccountBalances)
