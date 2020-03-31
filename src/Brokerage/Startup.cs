@@ -8,6 +8,7 @@ using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.ServiceFunctions;
 using Brokerage.GrpcServices;
 using Brokerage.HostedServices;
 using MassTransit;
@@ -35,6 +36,8 @@ namespace Brokerage
                     new Uri("queue:sirius-brokerage-finalize-broker-account-creation"));
                 EndpointConvention.Map<FinalizeAccountCreation>(
                     new Uri("queue:sirius-brokerage-finalize-account-creation"));
+                EndpointConvention.Map<PublishAccountRequisites>(
+                    new Uri("queue:sirius-brokerage-publish-account-requisites"));
 
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {

@@ -120,7 +120,7 @@ namespace Brokerage.Common.Domain.Accounts
 
                     _events.AddRange(requisitesBatch.Select(GetAccountRequisitesAddedEvent));
 
-                    requisitesCursor = requisitesBatch.Last()?.AccountRequisitesId;
+                    requisitesCursor = requisitesBatch.Last().AccountRequisitesId;
 
                 } while (requisitesCursor != null);
 

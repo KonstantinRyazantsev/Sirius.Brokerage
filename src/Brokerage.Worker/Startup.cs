@@ -62,6 +62,11 @@ namespace Brokerage.Worker
                     {
                         e.Consumer(provider.GetRequiredService<FinalizeAccountCreationConsumer>);
                     });
+                    
+                    cfg.ReceiveEndpoint("sirius-brokerage-publish-account-requisites", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<PublishAccountRequisitesConsumer>);
+                    });
                 }));
             
                 services.AddHostedService<BusHost>();
