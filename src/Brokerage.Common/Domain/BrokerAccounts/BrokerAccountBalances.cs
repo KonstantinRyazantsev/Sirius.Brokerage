@@ -38,39 +38,30 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public long AssetId { get; }
         public decimal OwnedBalance { get; }
         public decimal AvailableBalance { get; }
-        public decimal PendingBalance { get; }
+        public decimal PendingBalance { get; private set; }
         public decimal ReservedBalance { get; }
         public DateTime OwnedBalanceUpdateDateTime { get; }
         public DateTime AvailableBalanceUpdateDateTime { get; }
-        public DateTime PendingBalanceUpdateDateTime { get; }
+        public DateTime PendingBalanceUpdateDateTime { get; private set; }
         public DateTime ReservedBalanceUpdateDateTime { get; }
 
         public static BrokerAccountBalances Create(
-            long version,
             long brokerAccountId,
-            long assetId,
-            decimal ownedBalance,
-            decimal availableBalance,
-            decimal pendingBalance,
-            decimal reservedBalance,
-            DateTime ownedBalanceUpdateDateTime,
-            DateTime availableBalanceUpdateDateTime,
-            DateTime pendingBalanceUpdateDateTime,
-            DateTime reservedBalanceUpdateDateTime)
+            long assetId)
         {
             return new BrokerAccountBalances(
                 default,
-             version,
-            brokerAccountId,
-            assetId,
-            ownedBalance,
-            availableBalance,
-            pendingBalance,
-            reservedBalance,
-            ownedBalanceUpdateDateTime,
-            availableBalanceUpdateDateTime,
-            pendingBalanceUpdateDateTime,
-            reservedBalanceUpdateDateTime);
+                0,
+                brokerAccountId,
+                assetId,
+                pendingBalance: 0,
+                ownedBalance: 0,
+                availableBalance: 0,
+                reservedBalance: 0,
+                pendingBalanceUpdateDateTime: DateTime.UtcNow,
+                ownedBalanceUpdateDateTime: DateTime.UtcNow,
+                availableBalanceUpdateDateTime: DateTime.UtcNow,
+                reservedBalanceUpdateDateTime: DateTime.UtcNow);
         }
 
         public static BrokerAccountBalances Restore(
@@ -100,6 +91,12 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 availableBalanceUpdateDateTime,
                 pendingBalanceUpdateDateTime,
                 reservedBalanceUpdateDateTime);
+        }
+
+        public void AddPendingBalance(decimal amount)
+        {
+            PendingBalance += amount;
+            PendingBalanceUpdateDateTime = DateTime.UtcNow;
         }
     }
 }

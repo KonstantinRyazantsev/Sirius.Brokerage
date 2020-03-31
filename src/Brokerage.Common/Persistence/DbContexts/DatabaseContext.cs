@@ -37,7 +37,7 @@ namespace Brokerage.Common.Persistence.DbContexts
             base.OnModelCreating(modelBuilder);
         }
 
-        private void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
+        private static void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .ToTable(Tables.BrokerAccountBalances)
@@ -47,6 +47,13 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasOne(x => x.BrokerAccount)
                 .WithOne(x => x.BrokerAccountBalances)
                 .HasForeignKey<BrokerAccountBalancesEntity>(x => x.BrokerAccountId);
+
+            modelBuilder.Entity<BrokerAccountBalancesEntity>()
+                .Property(p => p.Version)
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
         }
 
         private static void BuildBlockchain(ModelBuilder modelBuilder)
@@ -65,6 +72,14 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasIndex(x => x.RequestId)
                 .IsUnique(true)
                 .HasName("IX_AccountRequisites_RequestId");
+
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .HasIndex(x => new
+                {
+                    x.BlockchainId,
+                    x.Address
+                })
+                .HasName("IX_AccountRequisites_BlockchainId_Address");
 
             modelBuilder.Entity<AccountRequisitesEntity>()
                 .Property(b => b.Id)

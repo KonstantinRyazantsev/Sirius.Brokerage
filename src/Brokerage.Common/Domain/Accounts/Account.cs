@@ -117,9 +117,7 @@ namespace Brokerage.Common.Domain.Accounts
                         AccountId, 
                         100, 
                         requisitesCursor, 
-                        true,
-                        null,
-                        null);
+                        true);
 
                     if (!requisitesBatch.Any())
                     {
@@ -163,6 +161,7 @@ namespace Brokerage.Common.Domain.Accounts
                     var newRequisites = AccountRequisites.Create(
                         requestIdForCreation,
                         AccountId,
+                        BrokerAccountId,
                         blockchain.BlockchainId,
                         null);
 

@@ -106,6 +106,22 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             }
         }
 
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var query = context
+                .BrokerAccountsRequisites
+                .Where(x => x.BlockchainId == blockchainId && addresses.Contains(x.Address));
+            
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task UpdateAsync(BrokerAccountRequisites brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

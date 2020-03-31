@@ -161,14 +161,7 @@ namespace Brokerage.Worker.BalanceProcessors
                 .ExecuteAsync(async () =>
                 {
                     _assets.TryGetValue(_blockchainId, out var blockchainMapped);
-                    var accountWallet = await _accountRequisitesRepository.GetByAccountAsync(
-                        null,
-                        1,
-                        null,
-                        true,
-                        blockchainMapped.BlockchainId,
-                        key.WalletAddress);
-
+                    
                     var brokerAccount = await _brokerAccountRequisitesRepository.SearchAsync(
                         null,
                         1,

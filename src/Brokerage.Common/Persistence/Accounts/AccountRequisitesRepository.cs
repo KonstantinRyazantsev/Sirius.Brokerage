@@ -21,33 +21,16 @@ namespace Brokerage.Common.Persistence.Accounts
         }
 
         public async Task<IReadOnlyCollection<AccountRequisites>> GetByAccountAsync(
-            long? accountId,
+            long accountId,
             int limit,
             long? cursor,
-            bool sortAsc,
-            string blockchainId,
-            string address)
+            bool sortAsc)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var query = context
                 .AccountRequisites
-                .Select(x => x);
-
-            if (accountId != null)
-            {
-                query = query.Where(x => x.AccountId == accountId);
-            }
-
-            if (!string.IsNullOrEmpty(blockchainId))
-            {
-                query = query.Where(x => x.Address == address);
-            }
-
-            if (!string.IsNullOrEmpty(blockchainId))
-            {
-                query = query.Where(x => x.BlockchainId == blockchainId);
-            }
+                .Where(x => x.AccountId == accountId);
 
             if (sortAsc)
             {
@@ -70,6 +53,22 @@ namespace Brokerage.Common.Persistence.Accounts
 
             query = query.Take(limit);
 
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
+        public async Task<IReadOnlyCollection<AccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var query = context
+                .AccountRequisites
+                .Where(x => x.BlockchainId == blockchainId && addresses.Contains(x.Address));
+            
             await query.LoadAsync();
 
             return query
@@ -176,6 +175,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 entity.RequestId,
                 entity.Id,
                 entity.AccountId,
+                entity.BrokerAccountId,
                 entity.BlockchainId,
                 entity.Address,
                 entity.Tag,
