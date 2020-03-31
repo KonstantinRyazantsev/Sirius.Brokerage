@@ -36,7 +36,7 @@ namespace Brokerage.Common.Persistence
             {
                 if (cursor != null)
                 {
-                    query = query.Where(x => x.AccountId > cursor);
+                    query = query.Where(x => x.Id > cursor);
                 }
 
                 query = query.OrderBy(x => x.Id);
@@ -45,7 +45,7 @@ namespace Brokerage.Common.Persistence
             {
                 if (cursor != null)
                 {
-                    query = query.Where(x => x.AccountId < cursor);
+                    query = query.Where(x => x.Id < cursor);
                 }
 
                 query = query.OrderByDescending(x => x.Id);
@@ -97,6 +97,29 @@ namespace Brokerage.Common.Persistence
             context.AccountRequisites.Update(entity);
 
             await context.SaveChangesAsync();
+        }
+
+        public async Task<IReadOnlyCollection<AccountRequisites>> GetAllAsync(long? cursor, int limit)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var query = context.AccountRequisites.AsQueryable();
+
+            if (cursor != null)
+            {
+                query = query.Where(x => x.Id > cursor);
+            }
+
+            query = query.OrderBy(x => x.Id);
+
+            query = query.Take(limit);
+
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
         }
 
         private static AccountRequisitesEntity MapToEntity(AccountRequisites requisites)

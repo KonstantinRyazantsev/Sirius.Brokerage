@@ -9,6 +9,7 @@ namespace Brokerage.Worker.MessageConsumers
             services.AddTransient<BlockchainUpdatesConsumer>();
             services.AddTransient<FinalizeBrokerAccountCreationConsumer>();
             services.AddTransient<FinalizeAccountCreationConsumer>();
+            services.AddTransient<PublishAccountRequisitesConsumer>();
 
             return services;
         }
