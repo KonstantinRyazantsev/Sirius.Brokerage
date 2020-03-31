@@ -1,22 +1,22 @@
-﻿using Brokerage.Bilv1.Domain.Services;
+﻿using System;
+using System.Collections.Generic;
+using Brokerage.Bilv1.Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Brokerage.Bilv1.DomainServices
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddDomainServices(this IServiceCollection services)
+        public static IServiceCollection AddBilV1Services(this IServiceCollection services,
+            Func<IServiceProvider, IReadOnlyDictionary<string, string>> integrationUrls)
         {
             services.AddTransient<IAssetService, AssetService>();
-            services.AddTransient<INetworkService, NetworkService>();
-            services.AddTransient<ITransferService, TransferService>();
-            services.AddTransient<IBalanceService, BalanceService>();
-            services.AddTransient<ITransactionOrderService, TransactionOrderService>();
             services.AddTransient<IWalletsService, WalletsService>();
-            services.AddTransient<IWalletObservationService, WalletObservationService>();
-            services.AddTransient<IBlockchainService, BlockchainService>();
 
-            services.AddSingleton<BlockchainApiClientProvider>();
+            services.AddSingleton<BlockchainApiClientProvider>(c => new BlockchainApiClientProvider(
+                c.GetRequiredService<ILoggerFactory>(),
+                integrationUrls.Invoke(c)));
 
             return services;
         }

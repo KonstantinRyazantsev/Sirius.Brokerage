@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Brokerage.Common.Configuration;
 using Lykke.Service.BlockchainApi.Client;
 using Microsoft.Extensions.Logging;
 
@@ -13,12 +12,11 @@ namespace Brokerage.Bilv1.DomainServices
 
         public BlockchainApiClientProvider(
             ILoggerFactory loggerFactory,
-            IntegrationsConfig integrationsConfig)
+            IReadOnlyDictionary<string, string> integrationUrls)
         {
-            _clients = integrationsConfig.Blockchains
-                .ToDictionary(
-                    blockchain => blockchain.Id, 
-                    blockchain => (IBlockchainApiClient)new BlockchainApiClient(loggerFactory, blockchain.ApiUrl));
+            _clients = integrationUrls.ToDictionary(
+                x => x.Key,
+                x => (IBlockchainApiClient) new BlockchainApiClient(loggerFactory, x.Value));
         }
 
         public IBlockchainApiClient Get(string blockchainType)

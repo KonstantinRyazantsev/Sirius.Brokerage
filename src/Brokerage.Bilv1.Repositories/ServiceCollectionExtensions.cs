@@ -5,9 +5,8 @@ namespace Brokerage.Bilv1.Repositories
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        public static IServiceCollection AddBilV1Repositories(this IServiceCollection services)
         {
-            services.AddTransient<IWalletRepository, WalletRepository>();
             services.AddTransient<IEnrolledBalanceRepository, EnrolledBalanceRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
 

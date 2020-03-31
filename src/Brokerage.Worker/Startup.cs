@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Brokerage.Bilv1.DomainServices;
 using Brokerage.Bilv1.Repositories;
 using Brokerage.Bilv1.Repositories.DbContexts;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Brokerage.Common.Configuration;
+using Brokerage.Common.Domain;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
@@ -32,11 +34,21 @@ namespace Brokerage.Worker
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
-            
-            services.AddRepositories();
-            services.AddDomainServices();
+            services.AddDomain();
+
+            services.AddBilV1Repositories();
+            services.AddBilV1Services(c =>
+            {
+                return c.GetRequiredService<IBlockchainsRepository>()
+                    .GetAllAsync()
+                    .GetAwaiter()
+                    .GetResult()
+                    .ToDictionary(
+                        x => x.BlockchainId,
+                        x => x.IntegrationUrl);
+            });
             services.AddHostedService<BalanceProcessorsHost>();
-            
+
             services.AddMessageConsumers();
 
             services.AddSingleton<DbContextOptionsBuilder<BrokerageBilV1Context>>(x =>

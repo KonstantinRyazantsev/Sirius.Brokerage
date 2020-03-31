@@ -9,6 +9,7 @@ using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
 using Brokerage.Bilv1.Domain.Models.Operations;
 using Brokerage.Bilv1.Domain.Repositories;
 using Brokerage.Bilv1.Domain.Utils;
+using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
@@ -37,11 +38,9 @@ namespace Brokerage.Worker.BalanceProcessors
 
         private IReadOnlyDictionary<string, BlockchainAsset> _blockchainAssets;
         private readonly IOperationRepository _operationRepository;
-        private readonly IPublishEndpoint _eventPublisher;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly DepositsDetector  _depositsDetector;
-        private readonly WithdrawalsDetector _withdrawalsDetector;
 
         public BalanceProcessor(
             string blockchainId,
@@ -53,7 +52,6 @@ namespace Brokerage.Worker.BalanceProcessors
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
             DepositsDetector depositsDetector,
-            WithdrawalsDetector withdrawalsDetector,
             IReadOnlyDictionary<string, BlockchainAsset> blockchainAssets)
         {
             _blockchainId = blockchainId;
@@ -62,11 +60,9 @@ namespace Brokerage.Worker.BalanceProcessors
             _enrolledBalanceRepository = enrolledBalanceRepository;
             _blockchainAssets = blockchainAssets;
             _operationRepository = operationRepository;
-            _eventPublisher = eventPublisher;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
-            _withdrawalsDetector = withdrawalsDetector;
         }
 
         public async Task ProcessAsync(int batchSize)
@@ -225,7 +221,7 @@ namespace Brokerage.Worker.BalanceProcessors
                     }
                     else
                     {
-                        _withdrawalsDetector.Detect(detectedTransaction);
+                        // TODO: Withdrawal
                     }
                 });
         }

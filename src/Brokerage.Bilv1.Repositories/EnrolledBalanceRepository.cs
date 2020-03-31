@@ -43,7 +43,7 @@ namespace Brokerage.Bilv1.Repositories
             return list;
         }
 
-        public async Task SetBalanceAsync(DepositWalletKey key, BigInteger balance, long balanceBlock)
+        public async Task SetBalanceAsync(DepositWalletKey key, decimal balance, long balanceBlock)
         {
             using (var context = new BrokerageBilV1Context(_dbContextOptionsBuilder.Options))
             {
@@ -52,19 +52,19 @@ namespace Brokerage.Bilv1.Repositories
 
                 if (existing != null)
                 {
-                    existing.Balance = balance.ToString();
+                    existing.Balance = balance;
                     existing.BlockNumber = balanceBlock;
 
                     context.Update(existing);
                 }
                 else
                 {
-                    var newEntity = new EnrolledBalanceEntity()
+                    var newEntity = new EnrolledBalanceEntity
                     {
                         BlockchianId = key.BlockchainId,
                         BlockchainAssetId = key.BlockchainAssetId,
                         WalletAddress = key.WalletAddress.ToLower(CultureInfo.InvariantCulture),
-                        Balance = balance.ToString(),
+                        Balance = balance,
                         BlockNumber = balanceBlock,
                         OriginalWalletAddress = key.WalletAddress
                     };
@@ -89,12 +89,12 @@ namespace Brokerage.Bilv1.Repositories
                 }
                 else
                 {
-                    var newEntity = new EnrolledBalanceEntity()
+                    var newEntity = new EnrolledBalanceEntity
                     {
                         BlockchianId = key.BlockchainId,
                         BlockchainAssetId = key.BlockchainAssetId,
                         WalletAddress = key.WalletAddress.ToLower(CultureInfo.InvariantCulture),
-                        Balance = "0",
+                        Balance = 0,
                         BlockNumber = transactionBlock,
                         OriginalWalletAddress = key.WalletAddress
                     };
@@ -168,10 +168,9 @@ namespace Brokerage.Bilv1.Repositories
             if (entity == null)
                 return null;
 
-            BigInteger.TryParse(entity.Balance, out var balance);
             return EnrolledBalance.Create(
                 new DepositWalletKey(entity.BlockchainAssetId, entity.BlockchianId, entity.OriginalWalletAddress),
-                balance,
+                entity.Balance,
                 entity.BlockNumber);
         }
     }

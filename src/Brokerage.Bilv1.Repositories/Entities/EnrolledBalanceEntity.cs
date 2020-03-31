@@ -20,6 +20,6 @@ namespace Brokerage.Bilv1.Repositories.Entities
         [Required]
         public long BlockNumber { get; set; }
 
-        public string Balance { get; set; }
+        public decimal Balance { get; set; }
     }
 }

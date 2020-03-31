@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
 using Brokerage.Bilv1.Domain.Models.Operations;
@@ -21,7 +20,7 @@ namespace Brokerage.Bilv1.Repositories
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<Operation> AddAsync(DepositWalletKey key, BigInteger balanceChange, long block)
+        public async Task<Operation> AddAsync(DepositWalletKey key, decimal balanceChange, long block)
         {
             using (var context = new BrokerageBilV1Context(_dbContextOptionsBuilder.Options))
             {
@@ -29,7 +28,7 @@ namespace Brokerage.Bilv1.Repositories
                 {
                     BlockchainAssetId = key.BlockchainAssetId,
                     BlockchianId = key.BlockchainId,
-                    BalanceChange = balanceChange.ToString(),
+                    BalanceChange = balanceChange,
                     BlockNumber = block,
                     WalletAddress = key.WalletAddress.ToLower(CultureInfo.InvariantCulture),
                     OriginalWalletAddress = key.WalletAddress
@@ -95,12 +94,10 @@ namespace Brokerage.Bilv1.Repositories
 
         private static Operation MapFromOperationEntity(OperationEntity operation)
         {
-            BigInteger.TryParse(operation.BalanceChange, out var balanceChange);
-
             return Operation.Create(
                 new DepositWalletKey(operation.BlockchainAssetId, operation.BlockchianId, 
                     operation.OriginalWalletAddress),
-                balanceChange,
+                operation.BalanceChange,
                 operation.BlockNumber,
                 operation.OperationId);
         }

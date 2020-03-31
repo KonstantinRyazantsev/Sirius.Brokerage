@@ -22,16 +22,17 @@ namespace Brokerage.Worker.MessageConsumers
 
         public async Task Consume(ConsumeContext<BlockchainAdded> context)
         {
-            var @event = context.Message;
+            var evt = context.Message;
 
             var model = new Blockchain
             {
-                BlockchainId = context.Message.BlockchainId
+                BlockchainId = evt.BlockchainId,
+                IntegrationUrl = evt.IntegrationUrl.ToString()
             };
 
             await blockchainsRepository.AddOrReplaceAsync(model);
 
-            _logger.LogInformation("BlockchainAdded command has been processed {@context}", @event);
+            _logger.LogInformation("BlockchainAdded command has been processed {@context}", evt);
 
             await Task.CompletedTask;
         }

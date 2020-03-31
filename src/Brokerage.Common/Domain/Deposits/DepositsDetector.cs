@@ -1,6 +1,6 @@
 ﻿using Swisschain.Sirius.Indexer.MessagingContract;
 
-namespace Brokerage.Worker.BalanceProcessors
+namespace Brokerage.Common.Domain.Deposits
 {
     public class DepositsDetector
     {
