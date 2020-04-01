@@ -58,6 +58,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             catch (Exception e)
             {
                 await transaction.RollbackAsync();
+                throw e;
             }
         }
 
@@ -76,7 +77,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 PendingBalanceUpdateDateTime = brokerAccountBalances.PendingBalanceUpdateDateTime,
                 ReservedBalance = brokerAccountBalances.ReservedBalance,
                 ReservedBalanceUpdateDateTime = brokerAccountBalances.ReservedBalanceUpdateDateTime,
-                Version = brokerAccountBalances.Version
+                Version = brokerAccountBalances.Version,
+                Sequence = brokerAccountBalances.Sequence
             };
 
             return newEntity;

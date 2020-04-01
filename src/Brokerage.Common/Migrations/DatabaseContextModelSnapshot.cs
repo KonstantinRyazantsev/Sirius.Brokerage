@@ -149,7 +149,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnName("version")
+                        .HasColumnName("xmin")
                         .HasColumnType("xid");
 
                     b.HasKey("BrokerAccountBalancesId");

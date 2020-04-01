@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -111,7 +111,7 @@ namespace Brokerage.Common.Migrations
                 {
                     BrokerAccountBalancesId = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    version = table.Column<uint>(type: "xid", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", nullable: false),
                     Sequence = table.Column<long>(nullable: false),
                     BrokerAccountId = table.Column<long>(nullable: false),
                     AssetId = table.Column<long>(nullable: false),

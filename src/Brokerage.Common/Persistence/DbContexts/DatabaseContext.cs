@@ -28,7 +28,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema(SchemaName);
-            
+
             BuildBrokerAccount(modelBuilder);
             BuildBrokerAccountRequisites(modelBuilder);
             BuildAccount(modelBuilder);
@@ -62,12 +62,14 @@ namespace Brokerage.Common.Persistence.DbContexts
                 })
                 .HasName("IX_BrokerAccountBalances_BrokerAccountId_AssetId");
 
-            modelBuilder.Entity<BrokerAccountBalancesEntity>()
-                .Property(p => p.Version)
-                .HasColumnName("version")
-                .HasColumnType("xid")
-                .ValueGeneratedOnAddOrUpdate()
-                .IsConcurrencyToken();
+            modelBuilder.Entity<BrokerAccountBalancesEntity>(e =>
+            {
+                e.Property(p => p.Version)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
         }
 
         private static void BuildBlockchain(ModelBuilder modelBuilder)
@@ -80,7 +82,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         private static void BuildAccountRequisites(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountRequisitesEntity>()
-                .HasKey(c => new {c.Id});
+                .HasKey(c => new { c.Id });
 
             modelBuilder.Entity<AccountRequisitesEntity>()
                 .HasIndex(x => x.RequestId)
@@ -108,7 +110,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         private static void BuildAccount(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()
-                .HasKey(c => new {Id = c.AccountId});
+                .HasKey(c => new { Id = c.AccountId });
 
             modelBuilder.Entity<AccountEntity>()
                 .HasIndex(x => x.RequestId)
@@ -129,7 +131,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         private static void BuildBrokerAccountRequisites(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasKey(c => new {c.Id});
+                .HasKey(c => new { c.Id });
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .HasIndex(x => x.RequestId)
@@ -150,7 +152,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         private static void BuildBrokerAccount(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountEntity>()
-                .HasKey(c => new {c.BrokerAccountId});
+                .HasKey(c => new { c.BrokerAccountId });
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasIndex(x => x.RequestId)

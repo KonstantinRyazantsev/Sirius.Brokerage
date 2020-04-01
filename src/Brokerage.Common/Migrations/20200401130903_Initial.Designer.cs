@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200401101208_Init")]
-    partial class Init
+    [Migration("20200401130903_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -151,7 +151,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnName("version")
+                        .HasColumnName("xmin")
                         .HasColumnType("xid");
 
                     b.HasKey("BrokerAccountBalancesId");

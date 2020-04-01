@@ -9,7 +9,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         private BrokerAccountBalances(
             long id,
             long sequence,
-            long version,
+            uint version,
             long brokerAccountId,
             long assetId,
             decimal ownedBalance,
@@ -37,7 +37,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         }
 
         public long Id { get; }
-        public long Version { get; }
+        public uint Version { get; }
         public long Sequence { get; set; }
         public long BrokerAccountId { get; }
         public long AssetId { get; }
@@ -59,7 +59,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             return new BrokerAccountBalances(
                 default,
                 0,
-                0,
+                1,
                 brokerAccountId,
                 assetId,
                 pendingBalance: 0,
@@ -75,7 +75,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public static BrokerAccountBalances Restore(
             long id,
             long sequence,
-            long version,
+            uint version,
             long brokerAccountId,
             long assetId,
             decimal ownedBalance,
