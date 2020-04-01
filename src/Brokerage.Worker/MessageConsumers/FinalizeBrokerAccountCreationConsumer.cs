@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Bilv1.Domain.Services;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract;
@@ -20,19 +22,22 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IVaultAgentClient _vaultAgentClient;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsRepository brokerAccountsRepository;
+        private readonly IWalletsService walletsService;
 
         public FinalizeBrokerAccountCreationConsumer(
             ILogger<FinalizeBrokerAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IBrokerAccountsRepository brokerAccountsRepository)
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IWalletsService walletsService)
         {
             _logger = logger;
             this.blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             this.brokerAccountsRepository = brokerAccountsRepository;
+            this.walletsService = walletsService;
         }
 
         public async Task Consume(ConsumeContext<FinalizeBrokerAccountCreation> context)
@@ -86,6 +91,9 @@ namespace Brokerage.Worker.MessageConsumers
                         }
 
                         requisites.Address = response.Response.Address;
+
+                        await walletsService.ImportWalletAsync(blockchain.BlockchainId, requisites.Address);
+
                         await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
 
                         brokerAccountRequisites.Add(requisites);
@@ -105,7 +113,13 @@ namespace Brokerage.Worker.MessageConsumers
                 do
                 {
                     var result = await
-                        _brokerAccountRequisitesRepository.SearchAsync(brokerAccount.BrokerAccountId, 100, requisitesCursor, true);
+                        _brokerAccountRequisitesRepository.GetAllAsync(
+                            brokerAccount.BrokerAccountId, 
+                            100, 
+                            requisitesCursor, 
+                            true,
+                            null,
+                            null);
 
                     if (!result.Any())
                         break;

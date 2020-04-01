@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Accounts;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MassTransit;

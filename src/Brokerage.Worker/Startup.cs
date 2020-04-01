@@ -1,16 +1,22 @@
 ﻿using System;
+using System.Linq;
+using Brokerage.Bilv1.Repositories;
+using Brokerage.Bilv1.Repositories.DbContexts;
 using GreenPipes;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Brokerage.Common.Configuration;
+using Brokerage.Common.Domain;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
+using Microsoft.EntityFrameworkCore;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
+using Brokerage.Common.Bilv1.DomainServices;
 
 namespace Brokerage.Worker
 {
@@ -28,8 +34,26 @@ namespace Brokerage.Worker
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
+            services.AddDomain();
+
+            services.AddBilV1Repositories();
+            services.AddBilV1Services();
+            services.AddHostedService<BalanceProcessorsHost>();
+
             services.AddMessageConsumers();
-            
+
+            services.AddSingleton<DbContextOptionsBuilder<BrokerageBilV1Context>>(x =>
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BrokerageBilV1Context>();
+                optionsBuilder.UseNpgsql(this.Config.Db.ConnectionString,
+                    builder =>
+                        builder.MigrationsHistoryTable(
+                            PostgresBilV1RepositoryConfiguration.MigrationHistoryTable,
+                            PostgresBilV1RepositoryConfiguration.SchemaName));
+
+                return optionsBuilder;
+            });
+
             services.AddMassTransit(x =>
             {
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>

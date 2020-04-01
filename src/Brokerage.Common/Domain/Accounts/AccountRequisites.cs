@@ -9,6 +9,7 @@ namespace Brokerage.Common.Domain.Accounts
             string requestId,
             long accountRequisitesId,
             long accountId,
+            long brokerAccountId,
             BlockchainId blockchainId,
             string address,
             DestinationTag tag,
@@ -18,6 +19,7 @@ namespace Brokerage.Common.Domain.Accounts
             RequestId = requestId;
             AccountRequisitesId = accountRequisitesId;
             AccountId = accountId;
+            BrokerAccountId = brokerAccountId;
             BlockchainId = blockchainId;
             Address = address;
             Tag = tag;
@@ -29,6 +31,7 @@ namespace Brokerage.Common.Domain.Accounts
         public string RequestId { get; }
         public long AccountRequisitesId { get; }
         public long AccountId { get; }
+        public long BrokerAccountId { get; }
         public BlockchainId BlockchainId { get; }
         public DestinationTag Tag { get; }
         public DestinationTagType? TagType { get; }
@@ -38,6 +41,7 @@ namespace Brokerage.Common.Domain.Accounts
         public static AccountRequisites Create(
             string requestId,
             long accountId,
+            long brokerAccountId,
             BlockchainId blockchainId,
             string address,
             DestinationTag tag = null,
@@ -47,6 +51,7 @@ namespace Brokerage.Common.Domain.Accounts
                     requestId,
                     default,
                     accountId,
+                    brokerAccountId,
                     blockchainId,
                     address,
                     tag,
@@ -58,6 +63,7 @@ namespace Brokerage.Common.Domain.Accounts
             string requestId,
             long accountRequisitesId,
             long accountId,
+            long brokerAccountId,
             BlockchainId blockchainId,
             string address,
             DestinationTag tag,
@@ -68,6 +74,7 @@ namespace Brokerage.Common.Domain.Accounts
                 requestId,
                 accountRequisitesId,
                 accountId,
+                brokerAccountId,
                 blockchainId,
                 address,
                 tag,
