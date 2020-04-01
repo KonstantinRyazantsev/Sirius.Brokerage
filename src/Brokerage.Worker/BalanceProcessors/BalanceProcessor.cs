@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
 using Brokerage.Bilv1.Domain.Models.Operations;
 using Brokerage.Bilv1.Domain.Repositories;
-using Brokerage.Bilv1.Domain.Utils;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;

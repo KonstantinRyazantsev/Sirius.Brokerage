@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Brokerage.Bilv1.Domain.Models.Wallets;
+﻿using System.Threading.Tasks;
 
 namespace Brokerage.Bilv1.Domain.Services
 {
