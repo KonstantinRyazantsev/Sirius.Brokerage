@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GreenPipes;
@@ -8,6 +9,7 @@ namespace BrokerageTests.UnitTests
 {
     public class InMemoryPublishEndpoint : IPublishEndpoint
     {
+        public List<object> Events { get; private set; } = new List<object>();
         public ConnectHandle ConnectPublishObserver(IPublishObserver observer)
         {
             throw new NotImplementedException();
@@ -30,7 +32,9 @@ namespace BrokerageTests.UnitTests
 
         public Task Publish(object message, CancellationToken cancellationToken = new CancellationToken())
         {
-            throw new NotImplementedException();
+            Events.Add(message);
+
+            return Task.CompletedTask;
         }
 
         public Task Publish(object message, IPipe<PublishContext> publishPipe, CancellationToken cancellationToken = new CancellationToken())
