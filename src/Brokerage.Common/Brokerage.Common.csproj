@@ -22,6 +22,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.2" />
+    <PackageReference Include="Swisschain.BlockchainApi.Client" Version="18.0.1" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="2.1.0" />
     <PackageReference Include="Swisschain.Sirius.Sdk" Version="2.0.1" />
     <PackageReference Include="Swisschain.Sirius.VaultAgent.ApiClient" Version="1.0.0" />
@@ -29,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Brokerage.Bilv1.Domain\Brokerage.Bilv1.Domain.csproj" />
+    <ProjectReference Include="..\Brokerage.Bilv1.Repositories\Brokerage.Bilv1.Repositories.csproj" />
     <ProjectReference Include="..\Brokerage.MessagingContract\Brokerage.MessagingContract.csproj" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Brokerage.Bilv1.Domain.Repositories;
-using Brokerage.Bilv1.DomainServices;
+using Brokerage.Common.Bilv1.DomainServices;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
@@ -56,7 +56,7 @@ namespace Brokerage.Worker.HostedServices
         {
             foreach (var blockchain in await _blockchainsRepository.GetAllAsync())
             {
-                var blockchainApiClient = _blockchainApiClientProvider.Get(blockchain.BlockchainId);
+                var blockchainApiClient = await _blockchainApiClientProvider.Get(blockchain.BlockchainId);
                 var blockchainAssetsDict = await blockchainApiClient.GetAllAssetsAsync(100);
 
                 var balanceProcessor = new BalanceProcessor(

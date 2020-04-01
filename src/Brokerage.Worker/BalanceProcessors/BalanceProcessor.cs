@@ -210,7 +210,7 @@ namespace Brokerage.Worker.BalanceProcessors
 
                     if (operationAmount > 0)
                     {
-                        _depositsDetector.Detect(detectedTransaction);
+                        await _depositsDetector.Detect(detectedTransaction);
                     }
                     else
                     {

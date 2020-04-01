@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Brokerage.Bilv1.DomainServices;
 using Brokerage.Bilv1.Repositories;
 using Brokerage.Bilv1.Repositories.DbContexts;
 using GreenPipes;
@@ -17,6 +16,7 @@ using Brokerage.Worker.MessageConsumers;
 using Microsoft.EntityFrameworkCore;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
+using Brokerage.Common.Bilv1.DomainServices;
 
 namespace Brokerage.Worker
 {
@@ -37,16 +37,7 @@ namespace Brokerage.Worker
             services.AddDomain();
 
             services.AddBilV1Repositories();
-            services.AddBilV1Services(c =>
-            {
-                return c.GetRequiredService<IBlockchainsRepository>()
-                    .GetAllAsync()
-                    .GetAwaiter()
-                    .GetResult()
-                    .ToDictionary(
-                        x => x.BlockchainId,
-                        x => x.IntegrationUrl);
-            });
+            services.AddBilV1Services();
             services.AddHostedService<BalanceProcessorsHost>();
 
             services.AddMessageConsumers();

@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -16,11 +16,24 @@ namespace Brokerage.Common.Migrations
                 schema: "brokerage",
                 columns: table => new
                 {
-                    BlockchainId = table.Column<string>(nullable: false)
+                    BlockchainId = table.Column<string>(nullable: false),
+                    IntegrationUrl = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_blockchains", x => x.BlockchainId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "broker_account_balances_update",
+                schema: "brokerage",
+                columns: table => new
+                {
+                    UpdateId = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_broker_account_balances_update", x => x.UpdateId);
                 });
 
             migrationBuilder.CreateTable(
@@ -34,7 +47,8 @@ namespace Brokerage.Common.Migrations
                     RequestId = table.Column<string>(nullable: true),
                     BlockchainId = table.Column<string>(nullable: true),
                     BrokerAccountId = table.Column<long>(nullable: false),
-                    Address = table.Column<string>(nullable: true)
+                    Address = table.Column<string>(nullable: true),
+                    CreationDateTime = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,18 +74,6 @@ namespace Brokerage.Common.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_broker_accounts", x => x.BrokerAccountId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "protocols",
-                schema: "brokerage",
-                columns: table => new
-                {
-                    ProtocolId = table.Column<string>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_protocols", x => x.ProtocolId);
                 });
 
             migrationBuilder.CreateTable(
@@ -103,6 +105,38 @@ namespace Brokerage.Common.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "broker_account_balances",
+                schema: "brokerage",
+                columns: table => new
+                {
+                    BrokerAccountBalancesId = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    version = table.Column<uint>(type: "xid", nullable: false),
+                    Sequence = table.Column<long>(nullable: false),
+                    BrokerAccountId = table.Column<long>(nullable: false),
+                    AssetId = table.Column<long>(nullable: false),
+                    OwnedBalance = table.Column<decimal>(nullable: false),
+                    AvailableBalance = table.Column<decimal>(nullable: false),
+                    PendingBalance = table.Column<decimal>(nullable: false),
+                    ReservedBalance = table.Column<decimal>(nullable: false),
+                    OwnedBalanceUpdateDateTime = table.Column<DateTimeOffset>(nullable: false),
+                    AvailableBalanceUpdateDateTime = table.Column<DateTimeOffset>(nullable: false),
+                    PendingBalanceUpdateDateTime = table.Column<DateTimeOffset>(nullable: false),
+                    ReservedBalanceUpdateDateTime = table.Column<DateTimeOffset>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_broker_account_balances", x => x.BrokerAccountBalancesId);
+                    table.ForeignKey(
+                        name: "FK_broker_account_balances_broker_accounts_BrokerAccountId",
+                        column: x => x.BrokerAccountId,
+                        principalSchema: "brokerage",
+                        principalTable: "broker_accounts",
+                        principalColumn: "BrokerAccountId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "account_requisites",
                 schema: "brokerage",
                 columns: table => new
@@ -112,10 +146,12 @@ namespace Brokerage.Common.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     RequestId = table.Column<string>(nullable: true),
                     AccountId = table.Column<long>(nullable: false),
+                    BrokerAccountId = table.Column<long>(nullable: false),
                     BlockchainId = table.Column<string>(nullable: true),
                     Address = table.Column<string>(nullable: true),
                     Tag = table.Column<string>(nullable: true),
-                    TagType = table.Column<int>(nullable: true)
+                    TagType = table.Column<int>(nullable: true),
+                    CreationDateTime = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -143,6 +179,12 @@ namespace Brokerage.Common.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AccountRequisites_BlockchainId_Address",
+                schema: "brokerage",
+                table: "account_requisites",
+                columns: new[] { "BlockchainId", "Address" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_accounts_BrokerAccountId",
                 schema: "brokerage",
                 table: "accounts",
@@ -154,6 +196,25 @@ namespace Brokerage.Common.Migrations
                 table: "accounts",
                 column: "RequestId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_broker_account_balances_BrokerAccountId",
+                schema: "brokerage",
+                table: "broker_account_balances",
+                column: "BrokerAccountId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BrokerAccountBalances_BrokerAccountId_AssetId",
+                schema: "brokerage",
+                table: "broker_account_balances",
+                columns: new[] { "BrokerAccountId", "AssetId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BrokerAccountRequisites_BrokerAccountId",
+                schema: "brokerage",
+                table: "broker_account_requisites",
+                column: "BrokerAccountId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BrokerAccountRequisites_RequestId",
@@ -181,11 +242,15 @@ namespace Brokerage.Common.Migrations
                 schema: "brokerage");
 
             migrationBuilder.DropTable(
-                name: "broker_account_requisites",
+                name: "broker_account_balances",
                 schema: "brokerage");
 
             migrationBuilder.DropTable(
-                name: "protocols",
+                name: "broker_account_balances_update",
+                schema: "brokerage");
+
+            migrationBuilder.DropTable(
+                name: "broker_account_requisites",
                 schema: "brokerage");
 
             migrationBuilder.DropTable(

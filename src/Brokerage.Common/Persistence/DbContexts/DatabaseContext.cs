@@ -64,7 +64,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .Property(p => p.Version)
-                .HasColumnName("xmin")
+                .HasColumnName("version")
                 .HasColumnType("xid")
                 .ValueGeneratedOnAddOrUpdate()
                 .IsConcurrencyToken();

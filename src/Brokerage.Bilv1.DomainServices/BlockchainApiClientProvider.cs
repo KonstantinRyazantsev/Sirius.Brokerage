@@ -12,11 +12,18 @@ namespace Brokerage.Bilv1.DomainServices
 
         public BlockchainApiClientProvider(
             ILoggerFactory loggerFactory,
-            IReadOnlyDictionary<string, string> integrationUrls)
+            IBlockchainsRepository blockchainsRepository)
         {
-            _clients = integrationUrls.ToDictionary(
-                x => x.Key,
-                x => (IBlockchainApiClient) new BlockchainApiClient(loggerFactory, x.Value));
+            _clients = blockchainsRepository
+                .GetAllAsync()
+                .GetAwaiter()
+                .GetResult()
+                .ToDictionary(
+                    x => x.BlockchainId,
+                    x => x.IntegrationUrl)
+                .ToDictionary(
+                    x => x.Key,
+                    x => (IBlockchainApiClient) new BlockchainApiClient(loggerFactory, x.Value));
         }
 
         public IBlockchainApiClient Get(string blockchainType)
