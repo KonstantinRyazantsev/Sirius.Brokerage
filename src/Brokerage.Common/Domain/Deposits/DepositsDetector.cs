@@ -16,7 +16,8 @@ namespace Brokerage.Common.Domain.Deposits
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IPublishEndpoint _publishEndpoint;
 
-        public DepositsDetector(IAccountRequisitesRepository accountRequisitesRepository,
+        public DepositsDetector(
+            IAccountRequisitesRepository accountRequisitesRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IPublishEndpoint publishEndpoint)

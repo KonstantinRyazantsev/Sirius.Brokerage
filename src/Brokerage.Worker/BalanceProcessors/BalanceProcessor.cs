@@ -197,11 +197,11 @@ namespace Brokerage.Worker.BalanceProcessors
 
 
         private static bool CouldBeStarted(
-    decimal balanceAmount,
-    BigInteger balanceBlock,
-    decimal enrolledBalanceAmount,
-    BigInteger enrolledBalanceBlock,
-    out decimal operationAmount)
+            decimal balanceAmount,
+            BigInteger balanceBlock,
+            decimal enrolledBalanceAmount,
+            BigInteger enrolledBalanceBlock,
+            out decimal operationAmount)
         {
             operationAmount = 0;
 
