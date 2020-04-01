@@ -11,7 +11,7 @@ namespace Brokerage.Common.Persistence.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long BrokerAccountBalancesId { get; set; }
         public uint Version { get; set; }
-        public long Sequence { get; set; }
+        public uint Sequence { get; set; }
         public long BrokerAccountId { get; set; }
 
         public BrokerAccountEntity BrokerAccount { get; set; }
