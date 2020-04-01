@@ -113,7 +113,7 @@ namespace Brokerage.Worker.MessageConsumers
                 do
                 {
                     var result = await
-                        _brokerAccountRequisitesRepository.SearchAsync(
+                        _brokerAccountRequisitesRepository.GetAllAsync(
                             brokerAccount.BrokerAccountId, 
                             100, 
                             requisitesCursor, 

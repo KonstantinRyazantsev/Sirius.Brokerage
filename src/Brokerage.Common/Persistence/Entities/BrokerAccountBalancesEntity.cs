@@ -25,13 +25,4 @@ namespace Brokerage.Common.Persistence.Entities
         public DateTimeOffset PendingBalanceUpdateDateTime { get; set; }
         public DateTimeOffset ReservedBalanceUpdateDateTime { get; set; }
     }
-
-    [Table(name: Tables.BrokerAccountBalancesUpdate)]
-    public class BrokerAccountBalancesUpdateEntity
-    {
-        //string updateId(unique) (broker account balances ID + transaction ID)
-
-        [Key]
-        public string UpdateId { get; set; }
-    }
 }

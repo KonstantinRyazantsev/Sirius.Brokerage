@@ -19,7 +19,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         }
 
 
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(
             long? brokerAccountId,
             int limit,
             long? cursor,

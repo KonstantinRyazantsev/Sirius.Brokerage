@@ -6,7 +6,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 {
     public interface IBrokerAccountRequisitesRepository
     {
-        Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(long? brokerAccountId,
+        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(long? brokerAccountId,
             int limit,
             long? cursor,
             bool sortAsc,

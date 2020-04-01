@@ -16,7 +16,7 @@ namespace BrokerageTests.UnitTests
             _storage = new List<BrokerAccountRequisites>(5);
         }
 
-        public Task<IReadOnlyCollection<BrokerAccountRequisites>> SearchAsync(long? brokerAccountId,
+        public Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(long? brokerAccountId,
             int limit,
             long? cursor,
             bool sortAsc,
