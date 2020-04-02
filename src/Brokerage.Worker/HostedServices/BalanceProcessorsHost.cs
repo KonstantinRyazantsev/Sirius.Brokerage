@@ -25,6 +25,7 @@ namespace Brokerage.Worker.HostedServices
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly DepositsDetector _depositsDetector;
+        private readonly DepositsConfirmator _depositsConfirmator;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly List<BalanceProcessorJob> _balanceReaders;
 
@@ -37,6 +38,7 @@ namespace Brokerage.Worker.HostedServices
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
             DepositsDetector depositsDetector,
+            DepositsConfirmator depositsConfirmator,
             IBlockchainsRepository blockchainsRepository)
         {
             _loggerFactory = loggerFactory;
@@ -47,6 +49,7 @@ namespace Brokerage.Worker.HostedServices
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
+            _depositsConfirmator = depositsConfirmator;
             _blockchainsRepository = blockchainsRepository;
 
             _balanceReaders = new List<BalanceProcessorJob>();
@@ -69,6 +72,7 @@ namespace Brokerage.Worker.HostedServices
                     _brokerAccountRequisitesRepository,
                     _accountRequisitesRepository,
                     _depositsDetector,
+                    _depositsConfirmator,
                     blockchainAssetsDict);
 
                 var balanceReader = new BalanceProcessorJob(

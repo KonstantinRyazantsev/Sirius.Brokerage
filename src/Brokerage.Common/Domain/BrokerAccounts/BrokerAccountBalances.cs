@@ -41,11 +41,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public long Sequence { get; set; }
         public long BrokerAccountId { get; }
         public long AssetId { get; }
-        public decimal OwnedBalance { get; }
+        public decimal OwnedBalance { get; private set; }
         public decimal AvailableBalance { get; }
         public decimal PendingBalance { get; private set; }
         public decimal ReservedBalance { get; }
-        public DateTime OwnedBalanceUpdateDateTime { get; }
+        public DateTime OwnedBalanceUpdateDateTime { get; private set; }
         public DateTime AvailableBalanceUpdateDateTime { get; }
         public DateTime PendingBalanceUpdateDateTime { get; private set; }
         public DateTime ReservedBalanceUpdateDateTime { get; }
@@ -107,6 +107,32 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             PendingBalance += amount;
             PendingBalanceUpdateDateTime = DateTime.UtcNow;
+
+            Events.Add(new BrokerAccountBalancesUpdated()
+            {
+                BrokerAccountId = this.BrokerAccountId,
+                AssetId = this.AssetId,
+                Sequence = this.Sequence,
+                ReservedBalanceUpdateDateTime = this.ReservedBalanceUpdateDateTime,
+                AvailableBalance = this.AvailableBalance,
+                OwnedBalance = this.OwnedBalance,
+                OwnedBalanceUpdateDateTime = this.OwnedBalanceUpdateDateTime,
+                AvailableBalanceUpdateDateTime = this.AvailableBalanceUpdateDateTime,
+                ReservedBalance = this.ReservedBalance,
+                PendingBalanceUpdateDateTime = this.PendingBalanceUpdateDateTime,
+                PendingBalance = this.PendingBalance,
+                BrokerAccountBalancesId = this.Id
+            });
+        }
+
+        public void MovePendingBalanceToOwned(decimal ownedBalanceChange)
+        {
+            PendingBalance -= ownedBalanceChange;
+            OwnedBalance += ownedBalanceChange;
+
+            var updateDateTime = DateTime.UtcNow;
+            PendingBalanceUpdateDateTime = updateDateTime;
+            OwnedBalanceUpdateDateTime = updateDateTime;
 
             Events.Add(new BrokerAccountBalancesUpdated()
             {

@@ -17,7 +17,11 @@ using Lykke.Service.BlockchainApi.Client.Models;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Swisschain.Sirius.Confirmator.MessagingContract;
 using Swisschain.Sirius.Indexer.MessagingContract;
+using BalanceUpdate = Swisschain.Sirius.Indexer.MessagingContract.BalanceUpdate;
+using Fee = Swisschain.Sirius.Indexer.MessagingContract.Fee;
+using Transfer = Swisschain.Sirius.Indexer.MessagingContract.Transfer;
 
 namespace Brokerage.Worker.BalanceProcessors
 {
@@ -41,6 +45,7 @@ namespace Brokerage.Worker.BalanceProcessors
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly DepositsDetector _depositsDetector;
+        private readonly DepositsConfirmator _depositsConfirmator;
 
         public BalanceProcessor(string blockchainId,
             ILogger<BalanceProcessor> logger,
@@ -51,6 +56,7 @@ namespace Brokerage.Worker.BalanceProcessors
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
             DepositsDetector depositsDetector,
+            DepositsConfirmator depositsConfirmator,
             IReadOnlyDictionary<string, BlockchainAsset> blockchainAssets)
         {
             _blockchainId = blockchainId;
@@ -62,6 +68,7 @@ namespace Brokerage.Worker.BalanceProcessors
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
+            _depositsConfirmator = depositsConfirmator;
         }
 
         public async Task ProcessAsync(int batchSize)
@@ -172,7 +179,7 @@ namespace Brokerage.Worker.BalanceProcessors
                     },
                 },
                 BlockId = "some block",
-                BlockNumber = operation.OperationId,
+                BlockNumber = balanceBlock,
                 ErrorCode = null,
                 ErrorMessage = null,
                 Fees = new Fee[0],
@@ -180,9 +187,39 @@ namespace Brokerage.Worker.BalanceProcessors
                 TransactionNumber = 0,
             };
 
+            var confirmedTransaction = new TransactionConfirmed()
+            {
+                BlockchainId = blockchainMapped.BlockchainId,
+                BalanceUpdates = new Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate[]
+                {
+                    new Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate()
+                    {
+                        Address = key.WalletAddress,
+                        AssetId = blockchainMapped.BlockchainAssetId,
+                        Transfers = new List<Swisschain.Sirius.Confirmator.MessagingContract.Transfer>()
+                        {
+                            new Swisschain.Sirius.Confirmator.MessagingContract.Transfer()
+                            {
+                                Amount = operationAmount,
+                                TransferId = 0,
+                                Nonce = 0
+                            }
+                        }
+                    },
+                },
+                BlockId = "some block",
+                BlockNumber = balanceBlock,
+                ErrorCode = null,
+                Fees = new Swisschain.Sirius.Confirmator.MessagingContract.Fee[0],
+                TransactionId = operation.OperationId.ToString(),
+                TransactionNumber = 0,
+            };
+
             if (operationAmount > 0)
             {
                 await _depositsDetector.Detect(detectedTransaction);
+
+                await _depositsConfirmator.Confirm(confirmedTransaction);
             }
             else
             {
