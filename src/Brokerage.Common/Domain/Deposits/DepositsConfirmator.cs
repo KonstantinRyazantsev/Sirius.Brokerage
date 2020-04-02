@@ -122,7 +122,7 @@ namespace Brokerage.Common.Domain.Deposits
                     balances = BrokerAccountBalances.Create(brokerAccountId, assetId);
                 }
 
-                balances.AddOwnedBalance(pendingBalanceChange);
+                balances.MovePendingBalanceToOwned(pendingBalanceChange);
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
                 foreach (var evt in balances.Events)

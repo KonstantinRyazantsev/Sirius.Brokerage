@@ -125,13 +125,14 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             });
         }
 
-        public void AddOwnedBalance(decimal ownedBalanceChange)
+        public void MovePendingBalanceToOwned(decimal ownedBalanceChange)
         {
             PendingBalance -= ownedBalanceChange;
             OwnedBalance += ownedBalanceChange;
 
-            PendingBalanceUpdateDateTime = DateTime.UtcNow;
-            OwnedBalanceUpdateDateTime = DateTime.UtcNow;
+            var updateDateTime = DateTime.UtcNow;
+            PendingBalanceUpdateDateTime = updateDateTime;
+            OwnedBalanceUpdateDateTime = updateDateTime;
 
             Events.Add(new BrokerAccountBalancesUpdated()
             {
