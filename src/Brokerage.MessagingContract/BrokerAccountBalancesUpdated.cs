@@ -5,7 +5,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
     public class BrokerAccountBalancesUpdated
     {
         public long BrokerAccountBalancesId { get; set; }
-        public uint Sequence { get; set; }
+        public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }
         public long AssetId { get; set; }
         public decimal OwnedBalance { get; set; }

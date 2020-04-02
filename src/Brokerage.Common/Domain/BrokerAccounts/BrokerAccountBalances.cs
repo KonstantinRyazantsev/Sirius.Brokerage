@@ -8,7 +8,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     {
         private BrokerAccountBalances(
             long id,
-            uint sequence,
+            long sequence,
             uint version,
             long brokerAccountId,
             long assetId,
@@ -38,7 +38,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public long Id { get; }
         public uint Version { get; }
-        public uint Sequence { get; set; }
+        public long Sequence { get; set; }
         public long BrokerAccountId { get; }
         public long AssetId { get; }
         public decimal OwnedBalance { get; }
@@ -74,7 +74,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public static BrokerAccountBalances Restore(
             long id,
-            uint sequence,
+            long sequence,
             uint version,
             long brokerAccountId,
             long assetId,
