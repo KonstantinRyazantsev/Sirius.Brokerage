@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200401162618_Sequence")]
-    partial class Sequence
+    [Migration("20200402215210_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
