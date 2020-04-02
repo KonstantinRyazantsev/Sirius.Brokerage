@@ -6,18 +6,18 @@ using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Entities;
 using MassTransit;
-using Swisschain.Sirius.Indexer.MessagingContract;
+using Swisschain.Sirius.Confirmator.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits
 {
-    public class DepositsDetector
+    public class DepositsConfirmator
     {
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IPublishEndpoint _publishEndpoint;
 
-        public DepositsDetector(
+        public DepositsConfirmator(
             IAccountRequisitesRepository accountRequisitesRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
@@ -29,7 +29,7 @@ namespace Brokerage.Common.Domain.Deposits
             _publishEndpoint = publishEndpoint;
         }
 
-        public async Task Detect(TransactionDetected transaction)
+        public async Task Confirm(TransactionConfirmed transaction)
         {
             var incomingTransfers = transaction
                 .BalanceUpdates
@@ -122,73 +122,8 @@ namespace Brokerage.Common.Domain.Deposits
                     balances = BrokerAccountBalances.Create(brokerAccountId, assetId);
                 }
 
-                // Balance:
-                //  balance change:
-                //      id (tx.Id + broker account balances ID)
-                //      broker account balances ID
-                //      version
-                //      balance type (pending, owned, available, reserved)
-                //      broker account requisites id
-                //      amount
-                //      date time
-                
-                // Option1: events sourcing
-
-                // Events:
-                //string changeId
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalanceChange,
-                //decimal availableBalanceChange,
-                //decimal pendingBalanceChange,
-                //decimal reservedBalanceChange,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Snapshot:
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalance,
-                //decimal availableBalance,
-                //decimal pendingBalance,
-                //decimal reservedBalance,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Option 2: transactions
-                
-                // Snapshot:
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalance,
-                //decimal availableBalance,
-                //decimal pendingBalance,
-                //decimal reservedBalance,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Updates:
-                // string updateId (unique) (broker account balances ID + transaction ID)
-                // 
-                
-                // Update of the snapshot and insert of the change are executed in the single DB transaction
-                // if change is already in the DB, then tx will be rolled back and no changes will be applied
-                // to the snapshot.
-
-                balances.AddPendingBalance(pendingBalanceChange);
-                string updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
+                balances.AddOwnedBalance(pendingBalanceChange);
+                var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
                 foreach (var evt in balances.Events)
                 {
