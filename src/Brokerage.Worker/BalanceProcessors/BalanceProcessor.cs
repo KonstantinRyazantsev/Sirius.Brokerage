@@ -219,7 +219,7 @@ namespace Brokerage.Worker.BalanceProcessors
             {
                 await _depositsDetector.Detect(detectedTransaction);
 
-                await _depositsConfirmator.Confirm(confirmedTransaction);
+                //await _depositsConfirmator.Confirm(confirmedTransaction);
             }
             else
             {

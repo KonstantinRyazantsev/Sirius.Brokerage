@@ -154,6 +154,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 Address = requisites.Address,
                 Id = requisites.AccountRequisitesId,
                 AccountId = requisites.AccountId,
+                BrokerAccountId = requisites.BrokerAccountId,
                 BlockchainId = requisites.BlockchainId,
                 Tag = requisites.Tag,
                 TagType = tagType,
