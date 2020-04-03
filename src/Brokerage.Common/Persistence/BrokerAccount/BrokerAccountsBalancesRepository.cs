@@ -4,7 +4,6 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Brokerage.Common.Persistence.BrokerAccount
 {
@@ -26,6 +25,13 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId && x.AssetId == assetId);
 
             return entity != null ? MapToDomain(entity) : null;
+        }
+
+        public async Task<long> GetNextIdAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            return await context.GetNextId(Tables.BrokerAccountBalances,  nameof(BrokerAccountBalancesEntity.BrokerAccountBalancesId));
         }
 
         public async Task SaveAsync(BrokerAccountBalances brokerAccountBalances, string updateId)

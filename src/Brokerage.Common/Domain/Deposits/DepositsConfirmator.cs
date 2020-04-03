@@ -111,20 +111,23 @@ namespace Brokerage.Common.Domain.Deposits
                     }
                 }
             }
-
-
+            
             foreach (var ((brokerAccountId, assetId), pendingBalanceChange) in transferDict)
             {
                 var balances = await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccountId, assetId);
 
                 if (balances == default)
                 {
-                    balances = BrokerAccountBalances.Create(brokerAccountId, assetId);
+                    var id = await _brokerAccountsBalancesRepository.GetNextIdAsync();
+
+                    balances = BrokerAccountBalances.Create(id, brokerAccountId, assetId);
                 }
 
                 balances.MovePendingBalanceToOwned(pendingBalanceChange);
+                
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
+                
                 foreach (var evt in balances.Events)
                 {
                     await _publishEndpoint.Publish(evt);

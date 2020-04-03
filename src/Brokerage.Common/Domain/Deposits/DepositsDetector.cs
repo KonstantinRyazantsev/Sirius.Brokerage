@@ -119,77 +119,16 @@ namespace Brokerage.Common.Domain.Deposits
 
                 if (balances == default)
                 {
-                    balances = BrokerAccountBalances.Create(brokerAccountId, assetId);
+                    var id = await _brokerAccountsBalancesRepository.GetNextIdAsync();
+
+                    balances = BrokerAccountBalances.Create(id, brokerAccountId, assetId);
                 }
 
-                // Balance:
-                //  balance change:
-                //      id (tx.Id + broker account balances ID)
-                //      broker account balances ID
-                //      version
-                //      balance type (pending, owned, available, reserved)
-                //      broker account requisites id
-                //      amount
-                //      date time
-                
-                // Option1: events sourcing
-
-                // Events:
-                //string changeId
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalanceChange,
-                //decimal availableBalanceChange,
-                //decimal pendingBalanceChange,
-                //decimal reservedBalanceChange,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Snapshot:
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalance,
-                //decimal availableBalance,
-                //decimal pendingBalance,
-                //decimal reservedBalance,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Option 2: transactions
-                
-                // Snapshot:
-                //long id,
-                //long version,
-                //long brokerAccountId,
-                //long assetId,
-                //decimal ownedBalance,
-                //decimal availableBalance,
-                //decimal pendingBalance,
-                //decimal reservedBalance,
-                //DateTime ownedBalanceUpdateDateTime,
-                //DateTime availableBalanceUpdateDateTime,
-                //DateTime pendingBalanceUpdateDateTime,
-                //DateTime reservedBalanceUpdateDateTime
-
-                // Updates:
-                // string updateId (unique) (broker account balances ID + transaction ID)
-                // 
-                
-                // Update of the snapshot and insert of the change are executed in the single DB transaction
-                // if change is already in the DB, then tx will be rolled back and no changes will be applied
-                // to the snapshot.
-
                 balances.AddPendingBalance(pendingBalanceChange);
-                string updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
+                
+                var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
+                
                 foreach (var evt in balances.Events)
                 {
                     await _publishEndpoint.Publish(evt);

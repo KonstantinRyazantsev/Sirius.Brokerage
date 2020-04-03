@@ -53,11 +53,12 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public List<object> Events { get; private set; } = new List<object>();
 
         public static BrokerAccountBalances Create(
+            long id,
             long brokerAccountId,
             long assetId)
         {
             return new BrokerAccountBalances(
-                default,
+                id,
                 0,
                 1,
                 brokerAccountId,
