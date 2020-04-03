@@ -50,11 +50,6 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => x.BrokerAccountBalancesId);
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
-                .HasOne(x => x.BrokerAccount)
-                .WithOne(x => x.BrokerAccountBalances)
-                .HasForeignKey<BrokerAccountBalancesEntity>(x => x.BrokerAccountId);
-
-            modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .HasIndex(x => new
                 {
                     x.BrokerAccountId,

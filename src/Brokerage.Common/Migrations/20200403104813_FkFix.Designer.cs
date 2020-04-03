@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200403104813_FkFix")]
+    partial class FkFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,7 +279,7 @@ namespace Brokerage.Common.Migrations
             modelBuilder.Entity("Brokerage.Common.Persistence.Entities.BrokerAccountBalancesEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Entities.BrokerAccountEntity", "BrokerAccount")
-                        .WithMany()
+                        .WithMany("Balances")
                         .HasForeignKey("BrokerAccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

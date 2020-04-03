@@ -31,7 +31,5 @@ namespace Brokerage.Common.Persistence.Entities
         public DateTimeOffset? BlockingDateTime { get; set; }
 
         public ICollection<AccountEntity> Accounts { get; set; }
-
-        public BrokerAccountBalancesEntity BrokerAccountBalances { get; set; }
     }
 }
