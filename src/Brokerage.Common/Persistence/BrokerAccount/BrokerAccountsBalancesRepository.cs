@@ -47,7 +47,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 UpdateId = updateId
             });
 
-            if (brokerAccountBalances.Id == default)
+            if (brokerAccountBalances.Version == default)
             {
                 context.BrokerAccountBalances.Add(entity);
             }

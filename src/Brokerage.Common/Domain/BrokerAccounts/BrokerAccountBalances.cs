@@ -60,7 +60,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             return new BrokerAccountBalances(
                 id,
                 0,
-                1,
+                0,
                 brokerAccountId,
                 assetId,
                 pendingBalance: 0,
