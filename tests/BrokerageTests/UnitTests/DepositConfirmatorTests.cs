@@ -7,14 +7,17 @@ using Brokerage.Common.Domain.Deposits;
 using BrokerageTests.Repositories;
 using Shouldly;
 using Swisschain.Sirius.Brokerage.MessagingContract;
-using Swisschain.Sirius.Indexer.MessagingContract;
+using Swisschain.Sirius.Confirmator.MessagingContract;
 using Xunit;
+using BalanceUpdate = Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate;
+using Fee = Swisschain.Sirius.Confirmator.MessagingContract.Fee;
+using Transfer = Swisschain.Sirius.Confirmator.MessagingContract.Transfer;
 
 namespace BrokerageTests.UnitTests
 {
-    public class DepositDetectorTests
+    public class DepositConfirmatorTests
     {
-        public DepositDetectorTests()
+        public DepositConfirmatorTests()
         {
 
         }
@@ -27,7 +30,7 @@ namespace BrokerageTests.UnitTests
             var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
             var publishEndpoint = new InMemoryPublishEndpoint();
 
-            var depositDetector = new DepositsDetector(
+            var depositDetector = new DepositsConfirmator(
                 accountRequisitesRepository,
                 brokerAccountRequisitesRepository,
                 brokerAccountsBalancesRepository,
@@ -40,12 +43,12 @@ namespace BrokerageTests.UnitTests
             var operationAmount = 15m;
             await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
             var assetId = 100_000;
-            var detectedTransaction = new TransactionDetected()
+            var detectedTransaction = new TransactionConfirmed()
             {
                 BlockchainId = bitcoinRegtest,
-                BalanceUpdates = new BalanceUpdate[]
+                BalanceUpdates = new Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate[]
                 {
-                    new BalanceUpdate()
+                    new Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate()
                     {
                         Address = brokerAccountRequisistes.Address,
                         AssetId = assetId,
@@ -69,16 +72,22 @@ namespace BrokerageTests.UnitTests
                 TransactionNumber = 0,
             };
 
-            await depositDetector.Detect(detectedTransaction);
+            await depositDetector.Confirm(detectedTransaction);
 
             var brokerAccountBalancesUpdated = publishEndpoint.Events.First() as BrokerAccountBalancesUpdated;
             var balance = await brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccountId, assetId);
 
             brokerAccountBalancesUpdated.ShouldNotBeNull();
-            balance.PendingBalance.ShouldBe(brokerAccountBalancesUpdated.PendingBalance);
+            brokerAccountBalancesUpdated.OwnedBalance.ShouldBeGreaterThan(0m);
+            brokerAccountBalancesUpdated.AvailableBalance.ShouldBeGreaterThan(0m);
+            balance.OwnedBalance.ShouldBe(brokerAccountBalancesUpdated.OwnedBalance);
+            balance.PendingBalance.ShouldBeLessThan(balance.OwnedBalance);
+            balance.AvailableBalance.ShouldBe(brokerAccountBalancesUpdated.AvailableBalance);
             balance.AssetId.ShouldBe(brokerAccountBalancesUpdated.AssetId);
             balance.Sequence.ShouldBe(brokerAccountBalancesUpdated.Sequence);
             balance.PendingBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdateDateTime);
+            balance.OwnedBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.OwnedBalanceUpdateDateTime);
+            balance.AvailableBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.AvailableBalanceUpdateDateTime);
         }
 
         [Fact]
@@ -89,7 +98,7 @@ namespace BrokerageTests.UnitTests
             var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
             var publishEndpoint = new InMemoryPublishEndpoint();
 
-            var depositDetector = new DepositsDetector(
+            var depositDetector = new DepositsConfirmator(
                 accountRequisitesRepository,
                 brokerAccountRequisitesRepository,
                 brokerAccountsBalancesRepository,
@@ -98,7 +107,6 @@ namespace BrokerageTests.UnitTests
             var bitcoinRegtest = "bitcoin-regtest";
             var brokerAccountId = 100_000;
             var accountId = 100_000;
-            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
             var address2 = "address2";
             var accountRequisistes = AccountRequisites.Create(
                 "request-1", 
@@ -106,6 +114,7 @@ namespace BrokerageTests.UnitTests
                 brokerAccountId, 
                 bitcoinRegtest, 
                 address2);
+            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
             brokerAccountRequisistes.Address = "address";
             var operationAmount = 15m;
             brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
@@ -113,7 +122,7 @@ namespace BrokerageTests.UnitTests
 
             var assetId = 100_000;
             var assetId2 = 200_000;
-            var detectedTransaction = new TransactionDetected()
+            var detectedTransaction = new TransactionConfirmed()
             {
                 BlockchainId = bitcoinRegtest,
                 BalanceUpdates = new BalanceUpdate[]
@@ -184,7 +193,7 @@ namespace BrokerageTests.UnitTests
                 TransactionNumber = 0,
             };
 
-            await depositDetector.Detect(detectedTransaction);
+            await depositDetector.Confirm(detectedTransaction);
 
             var brokerAccountBalancesUpdates = publishEndpoint
                 .Events
@@ -192,17 +201,37 @@ namespace BrokerageTests.UnitTests
                 .ToArray();
 
             brokerAccountBalancesUpdates.ShouldNotBeNull();
+            brokerAccountBalancesUpdates.Length.ShouldBe(2);
 
-            foreach (var item in brokerAccountBalancesUpdates)
             {
+                var item = brokerAccountBalancesUpdates[0];
                 var balance = await brokerAccountsBalancesRepository.GetOrDefaultAsync(item.BrokerAccountId, item.AssetId);
 
                 brokerAccountBalancesUpdates.ShouldNotBeNull();
-                balance.PendingBalance.ShouldBe(item.PendingBalance);
+                item.OwnedBalance.ShouldBeGreaterThan(0m);
+                item.AvailableBalance.ShouldBeGreaterThan(0m);
+                balance.OwnedBalance.ShouldBe(item.OwnedBalance);
+                balance.AvailableBalance.ShouldBe(item.AvailableBalance);
                 balance.AssetId.ShouldBe(item.AssetId);
                 balance.Sequence.ShouldBe(item.Sequence);
                 balance.PendingBalanceUpdateDateTime.ShouldBe(item.PendingBalanceUpdateDateTime);
+                balance.OwnedBalanceUpdateDateTime.ShouldBe(item.OwnedBalanceUpdateDateTime);
+                balance.AvailableBalanceUpdateDateTime.ShouldBe(item.AvailableBalanceUpdateDateTime);
+            }
+
+            {
+                var item = brokerAccountBalancesUpdates[1];
+                var balance = await brokerAccountsBalancesRepository.GetOrDefaultAsync(item.BrokerAccountId, item.AssetId);
+
+                brokerAccountBalancesUpdates.ShouldNotBeNull();
+                item.OwnedBalance.ShouldBeGreaterThan(0m);
+                balance.OwnedBalance.ShouldBe(item.OwnedBalance);
+                balance.AssetId.ShouldBe(item.AssetId);
+                balance.Sequence.ShouldBe(item.Sequence);
+                balance.PendingBalanceUpdateDateTime.ShouldBe(item.PendingBalanceUpdateDateTime);
+                balance.OwnedBalanceUpdateDateTime.ShouldBe(item.OwnedBalanceUpdateDateTime);
             }
         }
     }
 }
+

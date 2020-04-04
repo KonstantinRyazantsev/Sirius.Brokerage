@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence.Accounts;
 
-namespace BrokerageTests.UnitTests
+namespace BrokerageTests.Repositories
 {
     public class InMemoryAccountRequisitesRepository : IAccountRequisitesRepository
     {
@@ -33,7 +33,19 @@ namespace BrokerageTests.UnitTests
 
         public Task<AccountRequisites> AddOrGetAsync(AccountRequisites requisites)
         {
-            throw new System.NotImplementedException();
+            _idCounter++;
+            _storage.Add(AccountRequisites.Restore(
+                requisites.RequestId,
+                _idCounter,
+                requisites.AccountId,
+                requisites.BrokerAccountId,
+                requisites.BlockchainId,
+                requisites.Address,
+                requisites.Tag,
+                requisites.TagType,
+                requisites.CreationDateTime));
+
+            return Task.FromResult(_storage.Last());
         }
 
         public Task UpdateAsync(AccountRequisites requisites)
