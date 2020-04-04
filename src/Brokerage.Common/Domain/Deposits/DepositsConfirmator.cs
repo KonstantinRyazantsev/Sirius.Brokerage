@@ -113,8 +113,8 @@ namespace Brokerage.Common.Domain.Deposits
                     {
                         if (!transferDict.TryGetValue((brokerAccountId, assetId), out var existing))
                         {
-                            transferDict[(brokerAccountId, assetId)] = new AddressAmount();
-                            existing = transferDict[(brokerAccountId, assetId)];
+                            existing = new AddressAmount();
+                            transferDict[(brokerAccountId, assetId)] = existing;
                         }
 
                         //Deposit to depositWallet
@@ -154,14 +154,12 @@ namespace Brokerage.Common.Domain.Deposits
                 }
             }
         }
-    }
 
-    internal class AddressAmount
-    {
-        public string Address { get; set; }
+        private class AddressAmount
+        {
+            public decimal AvailabeAmount { get; set; }
 
-        public decimal AvailabeAmount { get; set; }
-
-        public decimal OwnedAmount { get; set; }
+            public decimal OwnedAmount { get; set; }
+        }
     }
 }
