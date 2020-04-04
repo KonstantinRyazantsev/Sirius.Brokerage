@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using GreenPipes;
 using MassTransit;
 
-namespace BrokerageTests.UnitTests
+namespace BrokerageTests.Repositories
 {
     public class InMemoryPublishEndpoint : IPublishEndpoint
     {
