@@ -12,6 +12,7 @@ using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract;
+using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Common.Domain.Accounts
 {
@@ -128,7 +129,7 @@ namespace Brokerage.Common.Domain.Accounts
 
                     requisitesCursor = requisitesBatch.Last().AccountRequisitesId;
 
-                } while (requisitesCursor != null);
+                } while (true);
 
                 // ReSharper disable once PossibleInvalidOperationException
                 _events.Add(GetAccountActivatedEvent(ActivationDateTime.Value));
@@ -172,13 +173,13 @@ namespace Brokerage.Common.Domain.Accounts
 
                     var requestIdForGeneration = $"{AccountId}_{requisites.AccountRequisitesId}";
 
-                    var response = await vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest
+                    var response = await vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
                     {
                         BlockchainId = blockchain.BlockchainId,
                         RequestId = requestIdForGeneration
                     });
 
-                    if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
+                    if (response.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
                     {
                         logger.LogWarning("Wallet generation failed {@context}", response);
 

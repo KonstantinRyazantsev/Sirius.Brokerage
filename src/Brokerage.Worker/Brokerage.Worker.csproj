@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.Service.BlockchainApi.Client" Version="17.7.0" />
-    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.2.2" />
-    <PackageReference Include="MassTransit.RabbitMQ" Version="6.2.2" />
-    <PackageReference Include="Swisschain.Sdk.Server" Version="4.0.0" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.2.4" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="6.2.4" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="5.0.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="2.1.0" />
-    <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="2.0.0" />
+    <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>

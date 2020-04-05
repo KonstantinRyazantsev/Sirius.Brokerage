@@ -12,6 +12,7 @@ using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract;
+using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Worker.MessageConsumers
 {
@@ -74,14 +75,14 @@ namespace Brokerage.Worker.MessageConsumers
 
                         var requestIdForGeneration = $"{message.RequestId}_{requisites.Id}";
 
-                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateRequest
+                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
                         {
                             BlockchainId = blockchain.BlockchainId,
                             TenantId = message.TenantId,
                             RequestId = requestIdForGeneration
                         });
 
-                        if (response.BodyCase == GenerateResponse.BodyOneofCase.Error)
+                        if (response.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
                         {
                             _logger.LogWarning("FinalizeBrokerAccountCreation command has been failed {@message}" +
                                                "error response from vault agent {@response}", message, response);
