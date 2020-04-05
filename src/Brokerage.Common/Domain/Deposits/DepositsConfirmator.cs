@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
@@ -73,10 +74,14 @@ namespace Brokerage.Common.Domain.Deposits
                 transaction.BlockchainId,
                 incomingTransferAddresses);
 
+            var brokerAccountRequisitesHashSet = brokerAccountRequisites
+                .Select(x => x.Address)
+                .ToHashSet();
+
             var incomingTransfersByAddress = incomingTransfers
                 .ToLookup(x => x.Key.Address);
 
-            var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), decimal>();
+            var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), AddressAmount>();
             var brokerAccountsAddressAmounts = accountRequisites
                 .Select(x => new
                 {
@@ -90,6 +95,7 @@ namespace Brokerage.Common.Domain.Deposits
                 }))
                 .Select(x => new
                 {
+                    x.Address,
                     x.BrokerAccountId,
                     AmountByAsset = incomingTransfersByAddress[x.Address]
                         .ToDictionary(
@@ -105,14 +111,28 @@ namespace Brokerage.Common.Domain.Deposits
                 {
                     foreach (var (assetId, amount) in addressAmount.AmountByAsset)
                     {
-                        transferDict.TryGetValue((brokerAccountId, assetId), out var existing);
+                        if (!transferDict.TryGetValue((brokerAccountId, assetId), out var existing))
+                        {
+                            existing = new AddressAmount();
+                            transferDict[(brokerAccountId, assetId)] = existing;
+                        }
 
-                        transferDict[(brokerAccountId, assetId)] = existing + amount;
+                        //Deposit to depositWallet
+                        if (!brokerAccountRequisitesHashSet.Contains(addressAmount.Address))
+                        {
+                            existing.OwnedAmount += amount;
+                        }
+                        //Deposit to hotWallet
+                        else
+                        {
+                            existing.OwnedAmount += amount;
+                            existing.AvailabeAmount += amount;
+                        }
                     }
                 }
             }
-            
-            foreach (var ((brokerAccountId, assetId), pendingBalanceChange) in transferDict)
+
+            foreach (var ((brokerAccountId, assetId), balanceChange) in transferDict)
             {
                 var balances = await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccountId, assetId);
 
@@ -123,16 +143,23 @@ namespace Brokerage.Common.Domain.Deposits
                     balances = BrokerAccountBalances.Create(id, brokerAccountId, assetId);
                 }
 
-                balances.MovePendingBalanceToOwned(pendingBalanceChange);
-                
+                balances.MovePendingBalanceToAvailableAndOwned(balanceChange.OwnedAmount, balanceChange.AvailabeAmount);
+
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
-                
+
                 foreach (var evt in balances.Events)
                 {
                     await _publishEndpoint.Publish(evt);
                 }
             }
+        }
+
+        private class AddressAmount
+        {
+            public decimal AvailabeAmount { get; set; }
+
+            public decimal OwnedAmount { get; set; }
         }
     }
 }
