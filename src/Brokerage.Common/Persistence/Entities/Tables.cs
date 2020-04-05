@@ -9,5 +9,8 @@
         public const string Blockchains = "blockchains";
         public const string BrokerAccountBalances = "broker_account_balances";
         public const string BrokerAccountBalancesUpdate = "broker_account_balances_update";
+        public const string Deposits = "deposits";
+        public const string DepositSources = "deposit_sources";
+        public const string DepositFees = "deposit_fees";
     }
 }

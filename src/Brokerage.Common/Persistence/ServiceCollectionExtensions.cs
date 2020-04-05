@@ -1,6 +1,7 @@
 ﻿using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.DbContexts;
+using Brokerage.Common.Persistence.Deposits;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,7 @@ namespace Brokerage.Common.Persistence
             services.AddTransient<IAccountsRepository, AccountsRepository>();
             services.AddTransient<IAccountRequisitesRepository, AccountRequisitesRepository>();
             services.AddTransient<IBlockchainsRepository, BlockchainsRepository>();
+            services.AddTransient<IDepositsRepository, DepositsRepository>();
 
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {

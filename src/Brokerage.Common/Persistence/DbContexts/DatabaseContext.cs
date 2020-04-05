@@ -1,4 +1,5 @@
 ﻿using Brokerage.Common.Persistence.Entities;
+using Brokerage.Common.Persistence.Entities.Deposits;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,12 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
 
         public DbSet<AccountEntity> Accounts { get; set; }
+
+        public DbSet<DepositEntity> Deposits { get; set; }
+
+        public DbSet<DepositSourceEntity> DepositSources { get; set; }
+        public DbSet<DepositFeeEntity> Fees { get; set; }
+
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
 
@@ -35,8 +42,56 @@ namespace Brokerage.Common.Persistence.DbContexts
             BuildAccountRequisites(modelBuilder);
             BuildBlockchain(modelBuilder);
             BuildBrokerAccountBalancesEntity(modelBuilder);
+            BuildDepositsEntity(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void BuildDepositsEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DepositEntity>()
+                .ToTable(Tables.Deposits)
+                .HasKey(x => x.Id);
+
+            modelBuilder.Entity<DepositSourceEntity>()
+                .ToTable(Tables.DepositSources);
+
+            modelBuilder.Entity<DepositFeeEntity>()
+                .ToTable(Tables.DepositFees);
+
+            modelBuilder.Entity<DepositEntity>()
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 100_000);
+
+            modelBuilder.Entity<DepositEntity>(e =>
+            {
+                e.Property(p => p.Version)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
+
+            modelBuilder.Entity<DepositEntity>()
+                .HasIndex(x => new
+                {
+                    x.TransactionId,
+                    x.AssetId,
+                    x.BrokerAccountRequisitesId,
+                    x.AccountRequisitesId
+                })
+                .IsUnique(true)
+                .HasName("IX_Deposit_NaturalId");
+
+            modelBuilder.Entity<DepositEntity>()
+                .HasMany(x => x.Fees)
+                .WithOne(x => x.DepositEntity)
+                .HasForeignKey(x => x.DepositId);
+
+            modelBuilder.Entity<DepositEntity>()
+                .HasMany(x => x.Sources)
+                .WithOne(x => x.DepositEntity)
+                .HasForeignKey(x => x.DepositId);
         }
 
         private static void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
