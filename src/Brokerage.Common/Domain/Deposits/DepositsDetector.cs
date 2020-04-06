@@ -188,11 +188,8 @@ namespace Brokerage.Common.Domain.Deposits
                     accountRequisitesVal?.AccountRequisitesId,
                     assetId,
                     depositBalance,
-                    new DepositFee[0],
                     transactionInfo,
-                    null,
-                    sources,
-                    address);
+                    sources);
 
                 try
                 {
@@ -203,16 +200,9 @@ namespace Brokerage.Common.Domain.Deposits
                         await _publishEndpoint.Publish(evt);
                     }
                 }
-                //Catch optimistic concurrency exception
+                //TODO: Catch optimistic concurrency exception
                 catch (Exception e)
                 {
-                    //Get
-                    deposit = await _depositsRepository.GetOrDefaultAsync(
-                        transaction.TransactionId,
-                        assetId,
-                        requisites.Id,
-                        accountRequisitesVal?.AccountRequisitesId);
-
                 }
             }
         }

@@ -57,6 +57,7 @@ namespace Brokerage.Common.Persistence.Deposits
             }
             else
             {
+                // TODO: Research how to do it better
                 context.Deposits.Update(entity);
                 context.Entry(entity).State = EntityState.Modified;
             }
@@ -98,22 +99,23 @@ namespace Brokerage.Common.Persistence.Deposits
                 Sequence = deposit.Sequence,
                 Version = deposit.Version,
                 AssetId = deposit.AssetId,
-                Address = deposit.Address,
                 Amount = deposit.Amount,
                 BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
-                Fees = deposit.Fees?.Select(x => new DepositFeeEntity()
+                Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity()
                 {
                     AssetId = x.AssetId,
                     Amount = x.Amount,
-                    DepositId = deposit.Id
+                    DepositId = deposit.Id,
+                    TransferId = index
                 }).ToArray(),
                 ErrorMessage = deposit.Error?.Message,
                 ErrorCode = errorCode,
-                Sources = deposit.Sources.Select(x => new DepositSourceEntity()
+                Sources = deposit.Sources.Select((x, index) => new DepositSourceEntity()
                 {
                     Address = x.Address,
                     Amount = x.Amount,
                     DepositId = deposit.Id,
+                    TransferId = index
                 }).ToArray(),
                 AccountRequisitesId = deposit.AccountRequisitesId,
                 DepositState = depositState,
@@ -179,7 +181,6 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.Sources?
                     .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray(),
-                depositEntity.Address,
                 depositEntity.DetectedDateTime.UtcDateTime,
                 depositEntity.ConfirmedDateTime?.UtcDateTime,
                 depositEntity.CompletedDateTime?.UtcDateTime,

@@ -50,7 +50,6 @@ namespace BrokerageTests.Repositories
                 deposit.Error,
                 deposit.DepositState,
                 deposit.Sources,
-                deposit.Address,
                 deposit.DetectedDateTime,
                 deposit.ConfirmedDateTime,
                 deposit.CompletedDateTime,

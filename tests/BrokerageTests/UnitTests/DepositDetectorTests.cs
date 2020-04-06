@@ -82,7 +82,7 @@ namespace BrokerageTests.UnitTests
                 BlockNumber = 1,
                 ErrorCode = null,
                 ErrorMessage = null,
-                Fees = new Fee[0],
+                Fees = new Swisschain.Sirius.Indexer.MessagingContract.Fee[0],
                 TransactionId = "TransactionId#1",
                 TransactionNumber = 0,
             };
@@ -222,7 +222,7 @@ namespace BrokerageTests.UnitTests
                 BlockNumber = 1,
                 ErrorCode = null,
                 ErrorMessage = null,
-                Fees = new Fee[0],
+                Fees = new Swisschain.Sirius.Indexer.MessagingContract.Fee[0],
                 TransactionId = "TransactionId#1",
                 TransactionNumber = 0,
             };

@@ -54,10 +54,20 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => x.Id);
 
             modelBuilder.Entity<DepositSourceEntity>()
-                .ToTable(Tables.DepositSources);
+                .ToTable(Tables.DepositSources)
+                .HasKey(x => new
+                {
+                     x.DepositId,
+                     x.TransferId
+                });
 
             modelBuilder.Entity<DepositFeeEntity>()
-                .ToTable(Tables.DepositFees);
+                .ToTable(Tables.DepositFees)
+                .HasKey(x => new
+                {
+                    x.DepositId,
+                    x.TransferId
+                });
 
             modelBuilder.Entity<DepositEntity>()
                 .Property(b => b.Id)
