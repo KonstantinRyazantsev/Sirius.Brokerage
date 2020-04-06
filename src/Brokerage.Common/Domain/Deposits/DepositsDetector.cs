@@ -156,20 +156,13 @@ namespace Brokerage.Common.Domain.Deposits
                 balances.AddPendingBalance(pendingBalanceChange);
 
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
-                //Optimistic concurrency excpetion (Update failed - ignore), Add failed
-
-                //try
-                //{
+                
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
 
                 foreach (var evt in balances.Events)
                 {
                     await _publishEndpoint.Publish(evt);
                 }
-                //}
-                //catch (OptimisticConcurrencyException e) when (e.Reason == OptimisticConcurrencyReason.UpdateFailed)
-                //{
-                //}
             }
 
             foreach (var ((brokerAccountId, assetId, address), depositBalance) in depositsDict)
@@ -185,7 +178,7 @@ namespace Brokerage.Common.Domain.Deposits
                     DateTime.UtcNow);
 
                 var sources = outgoingTransfers[assetId]
-                    .Select(x => new DepositSource(x.Address, x.Amount))
+                    .Select(x => new DepositSource(x.Address, Math.Abs(x.Amount)))
                     .ToArray();
 
                 var id = await _depositsRepository.GetNextIdAsync();

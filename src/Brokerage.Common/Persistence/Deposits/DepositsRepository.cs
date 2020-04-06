@@ -18,7 +18,11 @@ namespace Brokerage.Common.Persistence.Deposits
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<Deposit> GetOrDefaultAsync(string transactionId)
+        public async Task<Deposit> GetOrDefaultAsync(
+            string transactionId,
+            long assetId,
+            long brokerAccountRequisitesId,
+            long? accountRequisitesId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -26,7 +30,10 @@ namespace Brokerage.Common.Persistence.Deposits
                 .Deposits
                 .Include(x => x.Sources)
                 .Include(x => x.Fees)
-                .FirstOrDefaultAsync(x => x.TransactionId == transactionId);
+                .FirstOrDefaultAsync(x => x.TransactionId == transactionId &&
+                                          x.AssetId == assetId &&
+                                          x.BrokerAccountRequisitesId == brokerAccountRequisitesId && 
+                                          x.AccountRequisitesId == accountRequisitesId);
 
             return entity != null ? MapToDomain(entity) : null;
         }
@@ -43,7 +50,6 @@ namespace Brokerage.Common.Persistence.Deposits
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = MapToEntity(deposit);
-
 
             if (entity.Version == default)
             {

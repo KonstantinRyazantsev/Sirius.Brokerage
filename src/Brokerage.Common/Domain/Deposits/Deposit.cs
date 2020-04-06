@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Swisschain.Sirius.Brokerage.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits
 {
@@ -44,6 +46,48 @@ namespace Brokerage.Common.Domain.Deposits
             CompletedDateTime = completedDateTime;
             FailedDateTime = failedDateTime;
             CancelledDateTime = cancelledDateTime;
+
+            Events.Add(new DepositUpdated()
+            {
+                DepositId = this.Id,
+                Sequence = this.Sequence,
+                AssetId = this.AssetId,
+                BrokerAccountRequisitesId = this.BrokerAccountRequisitesId,
+                Sources = this.Sources
+                    .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.DepositSource()
+                    {
+                        Amount = x.Amount,
+                        Address = x.Address
+                    })
+                    .ToArray(),
+                AccountRequisitesId = this.AccountRequisitesId,
+                Fees = this.Fees
+                    .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.DepositFee()
+                    {
+                        Amount = x.Amount,
+                        AssetId = x.AssetId
+                    })
+                    .ToArray(),
+                TransactionInfo = new Swisschain.Sirius.Brokerage.MessagingContract.DepositTransactionInfo()
+                {
+                    TransactionId = this.TransactionInfo.TransactionId,
+                    TransactionBlock = this.TransactionInfo.TransactionBlock,
+                    DateTime = this.TransactionInfo.DateTime,
+                    RequiredConfirmationsCount = this.TransactionInfo.RequiredConfirmationsCount
+                },
+                Error = this.Error == null ? null : new Swisschain.Sirius.Brokerage.MessagingContract.DepositError()
+                {
+                    // TODO: Map here all possible tech issues
+                    Code = Swisschain.Sirius.Brokerage.MessagingContract.DepositError.DepositErrorCode.TechnicalProblem,
+                    Message = this.Error.Message
+                },
+                ConfirmedDateTime = this.ConfirmedDateTime,
+                DetectedDateTime = this.DetectedDateTime,
+                CompletedDateTime = this.CompletedDateTime,
+                FailedDateTime = this.FailedDateTime,
+                CancelledDateTime = this.CancelledDateTime,
+                Amount = this.Amount
+            });
         }
         public long Id { get; }
         public uint Version { get; }
