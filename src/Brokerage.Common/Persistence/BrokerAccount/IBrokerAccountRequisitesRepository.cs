@@ -18,5 +18,6 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses);
 
         Task UpdateAsync(BrokerAccountRequisites brokerAccount);
+        Task<BrokerAccountRequisites> GetByIdAsync(long depositBrokerAccountRequisitesId);
     }
 }

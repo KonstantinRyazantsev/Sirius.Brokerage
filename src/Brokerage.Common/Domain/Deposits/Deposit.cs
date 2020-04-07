@@ -48,7 +48,7 @@ namespace Brokerage.Common.Domain.Deposits
 
         public long Id { get; }
         public uint Version { get; }
-        public long Sequence { get; }
+        public long Sequence { get; private set; }
         public long BrokerAccountRequisitesId { get; }
         public long? AccountRequisitesId { get; }
         public long AssetId { get; }
@@ -56,11 +56,11 @@ namespace Brokerage.Common.Domain.Deposits
         public IReadOnlyCollection<Fee> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
         public DepositError Error { get; }
-        public DepositState DepositState { get; }
+        public DepositState DepositState { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
         public DateTime DetectedDateTime { get; }
-        public DateTime? ConfirmedDateTime { get; }
-        public DateTime? CompletedDateTime { get; }
+        public DateTime? ConfirmedDateTime { get; private set; }
+        public DateTime? CompletedDateTime { get; private set; }
         public DateTime? FailedDateTime { get; }
         public DateTime? CancelledDateTime { get; }
 
@@ -83,7 +83,7 @@ namespace Brokerage.Common.Domain.Deposits
                 accountRequisitesId,
                 assetId,
                 amount,
-                Array.Empty<Fee>(), 
+                Array.Empty<Fee>(),
                 transactionInfo,
                 null,
                 DepositState.Detected,
@@ -140,6 +140,7 @@ namespace Brokerage.Common.Domain.Deposits
 
         private void AddDepositUpdatedEvent()
         {
+            this.Sequence++;
             Events.Add(new DepositUpdated()
             {
                 DepositId = this.Id,
@@ -181,8 +182,38 @@ namespace Brokerage.Common.Domain.Deposits
                 CompletedDateTime = this.CompletedDateTime,
                 FailedDateTime = this.FailedDateTime,
                 CancelledDateTime = this.CancelledDateTime,
-                Amount = this.Amount
+                Amount = this.Amount,
+                State = this.DepositState switch
+                {
+                    DepositState.Detected => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Detected,
+                    DepositState.Confirmed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Confirmed,
+                    DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Completed,
+                    DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Failed,
+                    DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Cancelled,
+                    _ => throw new ArgumentOutOfRangeException(nameof(this.DepositState), this.DepositState, null)
+                }
             });
+        }
+
+        public bool IsBrokerDeposit => this.AccountRequisitesId == null;
+
+        public void Confirm()
+        {
+            var date = DateTime.UtcNow;
+
+            if (!IsBrokerDeposit)
+            {
+                this.DepositState = DepositState.Confirmed;
+                this.ConfirmedDateTime = date;
+            }
+            else
+            {
+                this.DepositState = DepositState.Completed;
+                this.ConfirmedDateTime = date;
+                this.CompletedDateTime = date;
+            }
+
+            this.AddDepositUpdatedEvent();
         }
     }
 }

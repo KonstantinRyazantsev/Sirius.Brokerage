@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.Deposits;
 
 namespace Brokerage.Common.Persistence.Deposits
@@ -13,5 +14,7 @@ namespace Brokerage.Common.Persistence.Deposits
 
         Task<long> GetNextIdAsync();
         Task SaveAsync(Deposit deposit);
+
+        Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId);
     }
 }
