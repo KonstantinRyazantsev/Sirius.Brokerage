@@ -104,7 +104,7 @@ namespace BrokerageTests.UnitTests
             balance.PendingBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdateDateTime);
 
             deposit.ShouldNotBeNull();
-            var depositUpdated = deposit.Events.First() as DepositUpdated;
+            var depositUpdated = publishEndpoint.Events.First(x => x is DepositUpdated) as DepositUpdated;
 
             depositUpdated.ShouldNotBeNull();
             depositUpdated.AssetId.ShouldBe(assetId);

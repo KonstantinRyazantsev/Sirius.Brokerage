@@ -44,8 +44,6 @@ namespace Brokerage.Common.Domain.Deposits
             CompletedDateTime = completedDateTime;
             FailedDateTime = failedDateTime;
             CancelledDateTime = cancelledDateTime;
-
-            AddDepositUpdatedEvent();
         }
 
         public long Id { get; }
@@ -77,7 +75,7 @@ namespace Brokerage.Common.Domain.Deposits
             TransactionInfo transactionInfo,
             IReadOnlyCollection<DepositSource> sources)
         {
-            return new Deposit(
+            var deposit = new Deposit(
                 id,
                 default,
                 0,
@@ -95,6 +93,10 @@ namespace Brokerage.Common.Domain.Deposits
                 null,
                 null,
                 null);
+
+            deposit.AddDepositUpdatedEvent();
+
+            return deposit;
         }
 
         public static Deposit Restore(
