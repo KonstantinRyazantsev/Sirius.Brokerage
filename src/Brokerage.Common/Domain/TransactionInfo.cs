@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Brokerage.Common.Domain.Deposits
+namespace Brokerage.Common.Domain
 {
     public class TransactionInfo
     {

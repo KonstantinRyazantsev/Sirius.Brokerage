@@ -7,8 +7,6 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
     {
         public long DepositId { get; set; }
 
-        public long TransferId { get; set; }
-
         public DepositEntity DepositEntity { get; set; }
 
         public long AssetId { get; set; }

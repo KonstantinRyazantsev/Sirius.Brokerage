@@ -58,7 +58,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => new
                 {
                      x.DepositId,
-                     x.TransferId
+                     x.Address
                 });
 
             modelBuilder.Entity<DepositFeeEntity>()
@@ -66,7 +66,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => new
                 {
                     x.DepositId,
-                    x.TransferId
+                    x.AssetId
                 });
 
             modelBuilder.Entity<DepositEntity>()

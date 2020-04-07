@@ -6,8 +6,6 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
     public class DepositSourceEntity
     {
         public long DepositId { get; set; }
-        
-        public long TransferId { get; set; }
 
         public DepositEntity DepositEntity { get; set; }
 

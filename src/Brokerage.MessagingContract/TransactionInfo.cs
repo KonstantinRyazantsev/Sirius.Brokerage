@@ -2,7 +2,7 @@
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
-    public class DepositTransactionInfo
+    public class TransactionInfo
     {
         public string TransactionId { get; set; }
         public long TransactionBlock { get; set; }

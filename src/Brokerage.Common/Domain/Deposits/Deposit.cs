@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
-            IReadOnlyCollection<DepositFee> fees,
+            IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
             DepositState depositState,
@@ -55,7 +55,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long? AccountRequisitesId { get; }
         public long AssetId { get; }
         public decimal Amount { get; }
-        public IReadOnlyCollection<DepositFee> Fees { get; }
+        public IReadOnlyCollection<Fee> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
         public DepositError Error { get; }
         public DepositState DepositState { get; }
@@ -85,7 +85,7 @@ namespace Brokerage.Common.Domain.Deposits
                 accountRequisitesId,
                 assetId,
                 amount,
-                new DepositFee[0], 
+                Array.Empty<Fee>(), 
                 transactionInfo,
                 null,
                 DepositState.Detected,
@@ -105,7 +105,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
-            IReadOnlyCollection<DepositFee> fees,
+            IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
             DepositState depositState,
@@ -159,7 +159,7 @@ namespace Brokerage.Common.Domain.Deposits
                         AssetId = x.AssetId
                     })
                     .ToArray(),
-                TransactionInfo = new Swisschain.Sirius.Brokerage.MessagingContract.DepositTransactionInfo()
+                TransactionInfo = new Swisschain.Sirius.Brokerage.MessagingContract.TransactionInfo()
                 {
                     TransactionId = this.TransactionInfo.TransactionId,
                     TransactionBlock = this.TransactionInfo.TransactionBlock,

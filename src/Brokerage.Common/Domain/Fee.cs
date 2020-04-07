@@ -1,8 +1,8 @@
-﻿namespace Brokerage.Common.Domain.Deposits
+﻿namespace Brokerage.Common.Domain
 {
-    public class DepositFee
+    public class Fee
     {
-        public DepositFee(long assetId, decimal amount)
+        public Fee(long assetId, decimal amount)
         {
             AssetId = assetId;
             Amount = amount;

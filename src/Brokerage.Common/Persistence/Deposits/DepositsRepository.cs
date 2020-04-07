@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
@@ -105,8 +106,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 {
                     AssetId = x.AssetId,
                     Amount = x.Amount,
-                    DepositId = deposit.Id,
-                    TransferId = index
+                    DepositId = deposit.Id
                 }).ToArray(),
                 ErrorMessage = deposit.Error?.Message,
                 ErrorCode = errorCode,
@@ -114,8 +114,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 {
                     Address = x.Address,
                     Amount = x.Amount,
-                    DepositId = deposit.Id,
-                    TransferId = index
+                    DepositId = deposit.Id
                 }).ToArray(),
                 AccountRequisitesId = deposit.AccountRequisitesId,
                 DepositState = depositState,
@@ -169,7 +168,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.AssetId,
                 depositEntity.Amount,
                 depositEntity.Fees?
-                    .Select(x => new DepositFee(x.AssetId, x.Amount))
+                    .Select(x => new Fee(x.AssetId, x.Amount))
                     .ToArray(),
                 new TransactionInfo(
                     depositEntity.TransactionId,

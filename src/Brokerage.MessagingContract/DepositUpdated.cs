@@ -12,7 +12,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public long AssetId { get; set; }
         public decimal Amount { get; set; }
         public IReadOnlyCollection<Fee> Fees { get; set; }
-        public DepositTransactionInfo TransactionInfo { get; set; }
+        public TransactionInfo TransactionInfo { get; set; }
         public DepositError Error { get; set; }
         public IReadOnlyCollection<DepositSource> Sources { get; set; }
 
