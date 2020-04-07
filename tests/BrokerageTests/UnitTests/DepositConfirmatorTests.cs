@@ -19,7 +19,6 @@ namespace BrokerageTests.UnitTests
     {
         public DepositConfirmatorTests()
         {
-
         }
 
         [Fact]
