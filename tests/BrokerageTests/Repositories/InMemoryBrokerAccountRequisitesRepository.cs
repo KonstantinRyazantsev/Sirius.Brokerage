@@ -52,5 +52,17 @@ namespace BrokerageTests.Repositories
         {
             throw new System.NotImplementedException();
         }
+
+        public Task<BrokerAccountRequisites> GetByIdAsync(long brokerAccountRequisitesId)
+        {
+            return Task.FromResult(_storage.First(x => x.Id == brokerAccountRequisitesId));
+        }
+
+        public Task<BrokerAccountRequisites> GetActualByBrokerAccountIdAndBlockchainAsync(long brokerAccountId, string blockchainId)
+        {
+            return Task.FromResult(_storage.OrderByDescending(x => x.Id)
+                .First(x => x.BrokerAccountId == brokerAccountId &&
+                            x.BlockchainId == blockchainId));
+        }
     }
 }

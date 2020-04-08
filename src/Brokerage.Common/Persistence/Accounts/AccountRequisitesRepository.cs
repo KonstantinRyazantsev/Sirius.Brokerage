@@ -68,7 +68,7 @@ namespace Brokerage.Common.Persistence.Accounts
             var query = context
                 .AccountRequisites
                 .Where(x => x.BlockchainId == blockchainId && addresses.Contains(x.Address));
-            
+
             await query.LoadAsync();
 
             return query
@@ -107,9 +107,9 @@ namespace Brokerage.Common.Persistence.Accounts
         public async Task UpdateAsync(AccountRequisites requisites)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
+
             var entity = MapToEntity(requisites);
-            
+
             context.AccountRequisites.Update(entity);
 
             await context.SaveChangesAsync();
@@ -138,13 +138,24 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
+        public async Task<AccountRequisites> GetByIdAsync(long accountRequisitesId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var requisites = await context
+                .AccountRequisites
+                .FirstAsync(x => x.Id == accountRequisitesId);
+
+            return MapToDomain(requisites);
+        }
+
         private static AccountRequisitesEntity MapToEntity(AccountRequisites requisites)
         {
             var tagType = requisites.TagType.HasValue ? (TagTypeEnum?)(requisites.TagType.Value switch
             {
                 DestinationTagType.Number => TagTypeEnum.Number,
                 DestinationTagType.Text => TagTypeEnum.Text,
-                _ => throw  new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType.Value, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType.Value, null)
 
             }) : null;
 

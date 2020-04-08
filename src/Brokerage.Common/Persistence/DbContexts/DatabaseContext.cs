@@ -94,6 +94,11 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasName("IX_Deposit_NaturalId");
 
             modelBuilder.Entity<DepositEntity>()
+                .HasIndex(x => x.TransactionId)
+                .HasName("IX_Deposit_TransactionId");
+
+
+            modelBuilder.Entity<DepositEntity>()
                 .HasMany(x => x.Fees)
                 .WithOne(x => x.DepositEntity)
                 .HasForeignKey(x => x.DepositId);
@@ -206,6 +211,11 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasIndex(x => x.BrokerAccountId)
                 .IsUnique(false)
                 .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.BlockchainId)
+                .IsUnique(false)
+                .HasName("IX_BrokerAccountRequisites_BlockchainId");
             ;
         }
 

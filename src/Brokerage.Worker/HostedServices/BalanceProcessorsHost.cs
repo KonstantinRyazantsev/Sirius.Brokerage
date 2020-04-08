@@ -25,8 +25,9 @@ namespace Brokerage.Worker.HostedServices
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly DepositsDetector _depositsDetector;
-        private readonly DepositsConfirmator _depositsConfirmator;
+        private readonly BalanceUpdateConfirmator _balanceUpdateConfirmator;
         private readonly IBlockchainsRepository _blockchainsRepository;
+        private readonly DepositsConfirmator _depositsConfirmator;
         private readonly List<BalanceProcessorJob> _balanceReaders;
 
         public BalanceProcessorsHost(
@@ -38,8 +39,9 @@ namespace Brokerage.Worker.HostedServices
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
             DepositsDetector depositsDetector,
-            DepositsConfirmator depositsConfirmator,
-            IBlockchainsRepository blockchainsRepository)
+            BalanceUpdateConfirmator balanceUpdateConfirmator,
+            IBlockchainsRepository blockchainsRepository,
+            DepositsConfirmator depositsConfirmator)
         {
             _loggerFactory = loggerFactory;
             _blockchainApiClientProvider = blockchainApiClientProvider;
@@ -49,8 +51,9 @@ namespace Brokerage.Worker.HostedServices
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
-            _depositsConfirmator = depositsConfirmator;
+            _balanceUpdateConfirmator = balanceUpdateConfirmator;
             _blockchainsRepository = blockchainsRepository;
+            _depositsConfirmator = depositsConfirmator;
 
             _balanceReaders = new List<BalanceProcessorJob>();
         }
@@ -68,10 +71,10 @@ namespace Brokerage.Worker.HostedServices
                     blockchainApiClient,
                     _enrolledBalanceRepository,
                     _operationRepository,
-                    _eventPublisher,
                     _brokerAccountRequisitesRepository,
                     _accountRequisitesRepository,
                     _depositsDetector,
+                    _balanceUpdateConfirmator,
                     _depositsConfirmator,
                     blockchainAssetsDict);
 

@@ -37,6 +37,12 @@ namespace BrokerageTests.Repositories
 
         public Task SaveAsync(Deposit deposit)
         {
+            var existing = _storage.FirstOrDefault(x => x.Id == deposit.Id);
+            if (existing != null)
+            {
+                _storage.Remove(existing);
+            }
+
             _storage.Add(Deposit.Restore(
                 _idCounter,
                 deposit.Version,
@@ -57,6 +63,13 @@ namespace BrokerageTests.Repositories
                 deposit.CancelledDateTime));
 
             return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId)
+        {
+            return Task.FromResult<IReadOnlyCollection<Deposit>>(_storage
+                .Where(x => x.TransactionInfo.TransactionId == transactionId)
+                .ToArray());
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Brokerage.Common.Domain
         public static IServiceCollection AddDomain(this IServiceCollection services)
         {
             services.AddTransient<DepositsDetector>();
+            services.AddTransient<BalanceUpdateConfirmator>();
             services.AddTransient<DepositsConfirmator>();
 
             return services;

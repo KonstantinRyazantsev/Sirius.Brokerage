@@ -1,41 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
-using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Entities;
 using MassTransit;
-using Swisschain.Sirius.Indexer.MessagingContract;
+using Swisschain.Sirius.Confirmator.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits
 {
-    public class DepositsDetector
+    public class BalanceUpdateConfirmator
     {
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IPublishEndpoint _publishEndpoint;
-        private readonly IDepositsRepository _depositsRepository;
 
-        public DepositsDetector(
+        public BalanceUpdateConfirmator(
             IAccountRequisitesRepository accountRequisitesRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            IPublishEndpoint publishEndpoint,
-            IDepositsRepository depositsRepository)
+            IPublishEndpoint publishEndpoint)
         {
             _accountRequisitesRepository = accountRequisitesRepository;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _publishEndpoint = publishEndpoint;
-            _depositsRepository = depositsRepository;
         }
 
-        public async Task Detect(TransactionDetected transaction)
+        public async Task Confirm(TransactionConfirmed transaction)
         {
             var incomingTransfers = transaction
                 .BalanceUpdates
@@ -65,19 +60,6 @@ namespace Brokerage.Common.Domain.Deposits
                     x.AssetId
                 });
 
-            var outgoingTransfers = transaction
-                .BalanceUpdates
-                .SelectMany(x =>
-                    x.Transfers
-                        .Where(x => x.Amount < 0)
-                        .Select(t => new
-                        {
-                            Address = x.Address,
-                            AssetId = x.AssetId,
-                            Amount = t.Amount
-                        }))
-                .ToLookup(x => x.AssetId);
-
             // TODO: We need transactions batch here to improve DB performance  
             var incomingTransferAddresses = incomingTransfers.Keys
                 .Select(x => x.Address)
@@ -88,21 +70,18 @@ namespace Brokerage.Common.Domain.Deposits
                 transaction.BlockchainId,
                 incomingTransferAddresses);
 
-            var accountRequisitesByAddressDict = accountRequisites
-                .ToDictionary(x => x.Address);
-
             var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByAddressesAsync(
                 transaction.BlockchainId,
                 incomingTransferAddresses);
 
-            var brokerAccountRequisitesByBrokerAccountIdDict = brokerAccountRequisites
-                .ToDictionary(x => x.BrokerAccountId);
+            var brokerAccountRequisitesHashSet = brokerAccountRequisites
+                .Select(x => x.Address)
+                .ToHashSet();
 
             var incomingTransfersByAddress = incomingTransfers
                 .ToLookup(x => x.Key.Address);
 
-            var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), decimal>();
-            var depositsDict = new Dictionary<(long BrokerAccountId, long AssetId, string address), decimal>();
+            var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), AddressAmount>();
             var brokerAccountsAddressAmounts = accountRequisites
                 .Select(x => new
                 {
@@ -132,16 +111,28 @@ namespace Brokerage.Common.Domain.Deposits
                 {
                     foreach (var (assetId, amount) in addressAmount.AmountByAsset)
                     {
-                        transferDict.TryGetValue((brokerAccountId, assetId), out var existing);
-                        transferDict[(brokerAccountId, assetId)] = existing + amount;
+                        if (!transferDict.TryGetValue((brokerAccountId, assetId), out var existing))
+                        {
+                            existing = new AddressAmount();
+                            transferDict[(brokerAccountId, assetId)] = existing;
+                        }
 
-                        depositsDict.TryGetValue((brokerAccountId, assetId, addressAmount.Address), out var existingDeposit);
-                        depositsDict[(brokerAccountId, assetId, addressAmount.Address)] = existingDeposit + amount;
+                        //Deposit to depositWallet
+                        if (!brokerAccountRequisitesHashSet.Contains(addressAmount.Address))
+                        {
+                            existing.OwnedAmount += amount;
+                        }
+                        //Deposit to hotWallet
+                        else
+                        {
+                            existing.OwnedAmount += amount;
+                            existing.AvailabeAmount += amount;
+                        }
                     }
                 }
             }
 
-            foreach (var ((brokerAccountId, assetId), pendingBalanceChange) in transferDict)
+            foreach (var ((brokerAccountId, assetId), balanceChange) in transferDict)
             {
                 var balances = await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccountId, assetId);
 
@@ -152,10 +143,9 @@ namespace Brokerage.Common.Domain.Deposits
                     balances = BrokerAccountBalances.Create(id, brokerAccountId, assetId);
                 }
 
-                balances.AddPendingBalance(pendingBalanceChange);
+                balances.MovePendingBalanceToAvailableAndOwned(balanceChange.OwnedAmount, balanceChange.AvailabeAmount);
 
-                var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
-
+                var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
 
                 foreach (var evt in balances.Events)
@@ -163,53 +153,13 @@ namespace Brokerage.Common.Domain.Deposits
                     await _publishEndpoint.Publish(evt);
                 }
             }
+        }
 
-            foreach (var ((brokerAccountId, assetId, address), depositBalance) in depositsDict)
-            {
-                if (!brokerAccountRequisitesByBrokerAccountIdDict.TryGetValue(brokerAccountId, out var requisites))
-                {
-                    requisites = await _brokerAccountRequisitesRepository.GetActualByBrokerAccountIdAndBlockchainAsync(
-                        brokerAccountId,
-                        transaction.BlockchainId);
-                }
+        private class AddressAmount
+        {
+            public decimal AvailabeAmount { get; set; }
 
-                accountRequisitesByAddressDict.TryGetValue(address, out var accountRequisitesVal);
-
-                var transactionInfo = new TransactionInfo(
-                    transaction.TransactionId,
-                    transaction.BlockNumber,
-                    // TODO: Take from somewhere
-                    1,
-                    DateTime.UtcNow);
-
-                var sources = outgoingTransfers[assetId]
-                    .Select(x => new DepositSource(x.Address, Math.Abs(x.Amount)))
-                    .ToArray();
-
-                var id = await _depositsRepository.GetNextIdAsync();
-
-                var deposit = Deposit.Create(id,
-                    requisites.Id,
-                    accountRequisitesVal?.AccountRequisitesId,
-                    assetId,
-                    depositBalance,
-                    transactionInfo,
-                    sources);
-
-                try
-                {
-                    await _depositsRepository.SaveAsync(deposit);
-
-                    foreach (var evt in deposit.Events)
-                    {
-                        await _publishEndpoint.Publish(evt);
-                    }
-                }
-                //TODO: Catch optimistic concurrency exception
-                catch (Exception e)
-                {
-                }
-            }
+            public decimal OwnedAmount { get; set; }
         }
     }
 }

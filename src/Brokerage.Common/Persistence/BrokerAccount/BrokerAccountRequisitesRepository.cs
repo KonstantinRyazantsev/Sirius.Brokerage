@@ -122,6 +122,19 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
+        public async Task<BrokerAccountRequisites> GetActualByBrokerAccountIdAndBlockchainAsync(long brokerAccountId, string blockchainId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var result = await context
+                .BrokerAccountsRequisites
+                .OrderByDescending(x => x.Id)
+                .FirstAsync(x => x.BlockchainId == blockchainId && 
+                                 x.BrokerAccountId == brokerAccountId);
+
+            return MapToDomain(result);
+        }
+
         public async Task UpdateAsync(BrokerAccountRequisites brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -130,6 +143,17 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .BrokerAccountsRequisites
                 .Update(entity);
             await context.SaveChangesAsync();
+        }
+
+        public async Task<BrokerAccountRequisites> GetByIdAsync(long brokerAccountRequisitesId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var requisites = await context
+                .BrokerAccountsRequisites
+                .FirstAsync(x => x.Id == brokerAccountRequisitesId);
+
+            return MapToDomain(requisites);
         }
 
         private static BrokerAccountRequisitesEntity MapToEntity(BrokerAccountRequisites requisites)

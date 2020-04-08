@@ -14,7 +14,6 @@ using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Lykke.Service.BlockchainApi.Client;
 using Lykke.Service.BlockchainApi.Client.Models;
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Swisschain.Sirius.Confirmator.MessagingContract;
@@ -45,6 +44,7 @@ namespace Brokerage.Worker.BalanceProcessors
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly DepositsDetector _depositsDetector;
+        private readonly BalanceUpdateConfirmator _balanceUpdateConfirmator;
         private readonly DepositsConfirmator _depositsConfirmator;
 
         public BalanceProcessor(string blockchainId,
@@ -52,10 +52,10 @@ namespace Brokerage.Worker.BalanceProcessors
             IBlockchainApiClient blockchainApiClient,
             IEnrolledBalanceRepository enrolledBalanceRepository,
             IOperationRepository operationRepository,
-            IPublishEndpoint eventPublisher,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
             DepositsDetector depositsDetector,
+            BalanceUpdateConfirmator balanceUpdateConfirmator,
             DepositsConfirmator depositsConfirmator,
             IReadOnlyDictionary<string, BlockchainAsset> blockchainAssets)
         {
@@ -68,6 +68,7 @@ namespace Brokerage.Worker.BalanceProcessors
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
             _depositsDetector = depositsDetector;
+            _balanceUpdateConfirmator = balanceUpdateConfirmator;
             _depositsConfirmator = depositsConfirmator;
         }
 
@@ -218,6 +219,8 @@ namespace Brokerage.Worker.BalanceProcessors
             if (operationAmount > 0)
             {
                 await _depositsDetector.Detect(detectedTransaction);
+
+                await _balanceUpdateConfirmator.Confirm(confirmedTransaction);
 
                 await _depositsConfirmator.Confirm(confirmedTransaction);
             }

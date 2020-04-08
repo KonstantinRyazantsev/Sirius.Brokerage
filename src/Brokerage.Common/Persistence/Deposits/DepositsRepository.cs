@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
@@ -44,6 +45,23 @@ namespace Brokerage.Common.Persistence.Deposits
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             return await context.GetNextId(Tables.Deposits, nameof(DepositEntity.Id));
+        }
+
+        public async Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            var deposits = context
+                .Deposits
+                .Include(x => x.Sources)
+                .Include(x => x.Fees)
+                .Where(x => x.TransactionId == transactionId);
+
+            await deposits.LoadAsync();
+
+            return deposits
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
         }
 
         public async Task SaveAsync(Deposit deposit)

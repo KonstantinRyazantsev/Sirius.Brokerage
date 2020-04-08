@@ -18,5 +18,6 @@ namespace Brokerage.Common.Persistence.Accounts
         Task UpdateAsync(AccountRequisites requisites);
         
         Task<IReadOnlyCollection<AccountRequisites>> GetAllAsync(long? cursor, int limit);
+        Task<AccountRequisites> GetByIdAsync(long accountRequisitesId);
     }
 }
