@@ -37,16 +37,21 @@ namespace BrokerageTests.UnitTests
             var transferClient = executorClient.Transfers as FakeExecutorClient.TestTransfersClient;
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
             IAccountRequisitesRepository accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
+            var brokerAccountRepository = new InMemoryBrokerAccountRepository();
 
             var depositsConfirmator = new DepositsConfirmator(
                 depositRepository,
                 executorClient,
                 brokerAccountRequisitesRepository,
                 accountRequisitesRepository,
+                brokerAccountRepository,
                 publishEndpoint);
 
+            var tenantId = "tenant";
+            var brokerAccount = BrokerAccount.Create("name", tenantId, "request");
+            brokerAccount = await brokerAccountRepository.AddOrGetAsync(brokerAccount);
             var bitcoinRegtest = "bitcoin-regtest";
-            var brokerAccountId = 100_000;
+            var brokerAccountId = brokerAccount.BrokerAccountId;
             var accountId = 100_000;
             var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
             var address2 = "address2";
@@ -129,13 +134,15 @@ namespace BrokerageTests.UnitTests
                 depositUpdate.State.ShouldBe(DepositState.Confirmed);
             }
 
+            // ReSharper disable once PossibleNullReferenceException
             var transfer = transferClient.TransferRequests.First();
+
+            transfer.Operation.TenantId.ShouldBe(tenantId);
             var movement = transfer.Movements.First();
             movement.SourceAddress.ShouldBe(accountRequisistes.Address);
             movement.DestinationAddress.ShouldBe(brokerAccountRequisistes.Address);
-            movement.Unit.AssetId.ShouldBe(assetId);
             BigDecimal transferAmount = operationAmount;
-            movement.Unit.Amount.ShouldBe(transferAmount);
+            movement.Amount.ShouldBe(transferAmount);
         }
     }
 }

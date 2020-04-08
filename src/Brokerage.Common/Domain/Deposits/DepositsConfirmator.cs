@@ -16,6 +16,7 @@ namespace Brokerage.Common.Domain.Deposits
         private readonly IExecutorClient _executorClient;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IPublishEndpoint _publishEndpoint;
 
         public DepositsConfirmator(
@@ -23,12 +24,14 @@ namespace Brokerage.Common.Domain.Deposits
             Swisschain.Sirius.Executor.ApiClient.IExecutorClient executorClient,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository,
+            IBrokerAccountsRepository brokerAccountsRepository,
             IPublishEndpoint publishEndpoint)
         {
             _depositsRepository = depositsRepository;
             _executorClient = executorClient;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
+            _brokerAccountsRepository = brokerAccountsRepository;
             _publishEndpoint = publishEndpoint;
         }
 
@@ -45,6 +48,7 @@ namespace Brokerage.Common.Domain.Deposits
                     // ReSharper disable once PossibleInvalidOperationException
                     var accountRequisites = await _accountRequisitesRepository.GetByIdAsync(deposit.AccountRequisitesId.Value);
                     var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByIdAsync(deposit.BrokerAccountRequisitesId);
+                    var brokerAccount = await _brokerAccountsRepository.GetAsync(brokerAccountRequisites.BrokerAccountId);
 
                     await _executorClient.Transfers.ExecuteAsync(
                         new ExecuteTransferRequest(new ExecuteTransferRequest()
@@ -54,6 +58,7 @@ namespace Brokerage.Common.Domain.Deposits
                                 //TODO: Specify as at block number
                                 RequestId = $"{deposit.Id}",
                                 FeePayerAddress = brokerAccountRequisites.Address,
+                                TenantId = brokerAccount.TenantId
                             },
                             Movements =
                             {
@@ -61,11 +66,7 @@ namespace Brokerage.Common.Domain.Deposits
                                 {
                                     SourceAddress = accountRequisites.Address,
                                     DestinationAddress = brokerAccountRequisites.Address,
-                                    Unit = new Unit()
-                                    {
-                                        Amount = deposit.Amount,
-                                        AssetId = deposit.AssetId
-                                    }
+                                    Amount = deposit.Amount,
                                 }
                             }
                         }));
