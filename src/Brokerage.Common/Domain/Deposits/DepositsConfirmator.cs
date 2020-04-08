@@ -53,12 +53,13 @@ namespace Brokerage.Common.Domain.Deposits
                     await _executorClient.Transfers.ExecuteAsync(
                         new ExecuteTransferRequest(new ExecuteTransferRequest()
                         {
+                            AssetId = deposit.AssetId,
                             Operation = new OperationRequest()
                             {
                                 //TODO: Specify as at block number
                                 RequestId = $"{deposit.Id}",
                                 FeePayerAddress = brokerAccountRequisites.Address,
-                                TenantId = brokerAccount.TenantId
+                                TenantId = brokerAccount.TenantId,
                             },
                             Movements =
                             {
