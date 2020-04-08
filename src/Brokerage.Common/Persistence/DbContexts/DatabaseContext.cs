@@ -211,6 +211,11 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasIndex(x => x.BrokerAccountId)
                 .IsUnique(false)
                 .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.BlockchainId)
+                .IsUnique(false)
+                .HasName("IX_BrokerAccountRequisites_BlockchainId");
             ;
         }
 

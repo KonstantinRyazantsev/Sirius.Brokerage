@@ -57,5 +57,10 @@ namespace BrokerageTests.Repositories
         {
             throw new System.NotImplementedException();
         }
+
+        public Task<AccountRequisites> GetByIdAsync(long accountRequisitesId)
+        {
+            return Task.FromResult(_storage.First(x => x.AccountRequisitesId == accountRequisitesId));
+        }
     }
 }

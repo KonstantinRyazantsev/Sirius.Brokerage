@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Entities;
-using Brokerage.Common.Persistence.Entities.Deposits;
 using MassTransit;
 using Swisschain.Sirius.Indexer.MessagingContract;
 
@@ -141,7 +141,6 @@ namespace Brokerage.Common.Domain.Deposits
                 }
             }
 
-
             foreach (var ((brokerAccountId, assetId), pendingBalanceChange) in transferDict)
             {
                 var balances = await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccountId, assetId);
@@ -156,7 +155,7 @@ namespace Brokerage.Common.Domain.Deposits
                 balances.AddPendingBalance(pendingBalanceChange);
 
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Detected}";
-                
+
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
 
                 foreach (var evt in balances.Events)
@@ -167,7 +166,13 @@ namespace Brokerage.Common.Domain.Deposits
 
             foreach (var ((brokerAccountId, assetId, address), depositBalance) in depositsDict)
             {
-                var requisites = brokerAccountRequisitesByBrokerAccountIdDict[brokerAccountId];
+                if (!brokerAccountRequisitesByBrokerAccountIdDict.TryGetValue(brokerAccountId, out var requisites))
+                {
+                    requisites = await _brokerAccountRequisitesRepository.GetActualByBrokerAccountIdAndBlockchainAsync(
+                        brokerAccountId,
+                        transaction.BlockchainId);
+                }
+
                 accountRequisitesByAddressDict.TryGetValue(address, out var accountRequisitesVal);
 
                 var transactionInfo = new TransactionInfo(

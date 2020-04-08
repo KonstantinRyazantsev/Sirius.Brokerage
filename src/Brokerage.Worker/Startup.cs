@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Brokerage.Common.Bilv1.DomainServices;
+using Swisschain.Sirius.Executor.ApiClient;
 
 namespace Brokerage.Worker
 {
@@ -32,6 +33,7 @@ namespace Brokerage.Worker
 
             services.AddHttpClient();
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
+            services.AddTransient<IExecutorClient>(x => new ExecutorClient(Config.Executor.Url));
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<MigrationHost>();
             services.AddDomain();
