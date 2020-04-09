@@ -23,7 +23,7 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit =  await _depositsRepository.GetByOperationIdAsync(evt.OperationId);
+            var deposit =  await _depositsRepository.GetByConsolidationOperationIdAsync(evt.OperationId);
 
             deposit.Complete();
 

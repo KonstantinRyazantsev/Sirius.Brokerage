@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Brokerage.Common.Domain.Deposits;
 
 namespace Brokerage.Common.Persistence.Entities.Deposits
 {
@@ -31,7 +32,7 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
         public DateTime TransactionDateTime { get; set; }
         public string ErrorMessage { get; set; }
 
-        public DepositErrorCodeEnum? ErrorCode { get; set; }
+        public DepositErrorCode? ErrorCode { get; set; }
         public DepositStateEnum DepositState { get; set; }
         public ICollection<DepositSourceEntity> Sources { get; set; }
         public string Address { get; set; }

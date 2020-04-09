@@ -146,7 +146,6 @@ namespace Brokerage.Common.Domain.Deposits
 
         private void AddDepositUpdatedEvent()
         {
-            this.Sequence++;
             Events.Add(new DepositUpdated()
             {
                 DepositId = this.Id,
@@ -205,22 +204,27 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Confirm()
         {
-            if (this.DepositState != DepositState.Detected)
+            if (this.DepositState != DepositState.Detected && 
+                this.DepositState != DepositState.Confirmed)
                 throw new InvalidOperationException($"Can't confirm deposit with state {this.DepositState}");
 
-            this.Sequence++;
-            var date = DateTime.UtcNow;
+            if (this.DepositState != DepositState.Confirmed)
+            {
+                this.Sequence++;
 
-            if (!IsBrokerDeposit)
-            {
-                this.DepositState = DepositState.Confirmed;
-                this.ConfirmedDateTime = date;
-            }
-            else
-            {
-                this.DepositState = DepositState.Completed;
-                this.ConfirmedDateTime = date;
-                this.CompletedDateTime = date;
+                var date = DateTime.UtcNow;
+
+                if (!IsBrokerDeposit)
+                {
+                    this.DepositState = DepositState.Confirmed;
+                    this.ConfirmedDateTime = date;
+                }
+                else
+                {
+                    this.DepositState = DepositState.Completed;
+                    this.ConfirmedDateTime = date;
+                    this.CompletedDateTime = date;
+                }
             }
 
             this.AddDepositUpdatedEvent();
@@ -233,29 +237,35 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Complete()
         {
-            if (this.DepositState == DepositState.Detected ||
-                this.DepositState == DepositState.Failed ||
-                this.DepositState == DepositState.Cancelled)
+            if (this.DepositState != DepositState.Confirmed &&
+                this.DepositState != DepositState.Completed)
                 throw new InvalidOperationException($"Can't complete deposit with state {this.DepositState}");
 
-            this.Sequence++;
-            this.DepositState = DepositState.Completed;
-            this.CompletedDateTime = DateTime.UtcNow;
+            if (this.DepositState != DepositState.Completed)
+            {
+                this.Sequence++;
+
+                this.DepositState = DepositState.Completed;
+                this.CompletedDateTime = DateTime.UtcNow;
+            }
 
             this.AddDepositUpdatedEvent();
         }
 
         public void Fail(DepositError depositError)
         {
-            if (this.DepositState == DepositState.Detected ||
-                this.DepositState == DepositState.Completed ||
-                this.DepositState == DepositState.Cancelled)
+            if (this.DepositState != DepositState.Confirmed &&
+                this.DepositState != DepositState.Failed)
                 throw new InvalidOperationException($"Can't fail deposit with state {this.DepositState}");
 
-            this.Sequence++;
-            this.DepositState = DepositState.Failed;
-            this.FailedDateTime = DateTime.UtcNow;
-            this.Error = depositError;
+            if (this.DepositState != DepositState.Failed)
+            {
+                this.Sequence++;
+
+                this.DepositState = DepositState.Failed;
+                this.FailedDateTime = DateTime.UtcNow;
+                this.Error = depositError;
+            }
 
             this.AddDepositUpdatedEvent();
         }

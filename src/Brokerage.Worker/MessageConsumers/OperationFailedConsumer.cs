@@ -25,15 +25,15 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit = await _depositsRepository.GetByOperationIdAsync(evt.OperationId);
+            var deposit = await _depositsRepository.GetByConsolidationOperationIdAsync(evt.OperationId);
 
             deposit.Fail(new DepositError(evt.ErrorMessage, evt.ErrorCode switch
             {
-                OperationErrorCode.TechnicalProblem =>          DepositError.DepositErrorCode.TechnicalProblem,
-                OperationErrorCode.NotEnoughBalance =>          DepositError.DepositErrorCode.NotEnoughBalance,
-                OperationErrorCode.InvalidDestinationAddress => DepositError.DepositErrorCode.InvalidDestinationAddress,
-                OperationErrorCode.DestinationTagRequired =>    DepositError.DepositErrorCode.DestinationTagRequired,
-                OperationErrorCode.AmountIsTooSmall =>          DepositError.DepositErrorCode.AmountIsTooSmall,
+                OperationErrorCode.TechnicalProblem =>          DepositErrorCode.TechnicalProblem,
+                OperationErrorCode.NotEnoughBalance =>          DepositErrorCode.TechnicalProblem,
+                OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
+                OperationErrorCode.DestinationTagRequired =>    DepositErrorCode.TechnicalProblem,
+                OperationErrorCode.AmountIsTooSmall =>          DepositErrorCode.TechnicalProblem,
                  
                 _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
             }));

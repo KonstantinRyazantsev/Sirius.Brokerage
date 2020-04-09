@@ -64,7 +64,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
-        public async Task<Deposit> GetByOperationIdAsync(long operationId)
+        public async Task<Deposit> GetByConsolidationOperationIdAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -119,17 +119,6 @@ namespace Brokerage.Common.Persistence.Deposits
                     null)
             };
 
-            var errorCode = deposit.Error?.Code == null ? (DepositErrorCodeEnum?)null : deposit.Error.Code switch
-            {
-                DepositError.DepositErrorCode.TechnicalProblem => DepositErrorCodeEnum.TechnicalProblem,
-                DepositError.DepositErrorCode.NotEnoughBalance => DepositErrorCodeEnum.NotEnoughBalance,
-                DepositError.DepositErrorCode.InvalidDestinationAddress => DepositErrorCodeEnum.InvalidDestinationAddress,
-                DepositError.DepositErrorCode.DestinationTagRequired => DepositErrorCodeEnum.DestinationTagRequired,
-                DepositError.DepositErrorCode.AmountIsTooSmall => DepositErrorCodeEnum.AmountIsTooSmall,
-
-                _ => throw new ArgumentOutOfRangeException(nameof(deposit.Error.Code), deposit.Error?.Code, null)
-            };
-
             var depositEntity = new DepositEntity()
             {
                 Id = deposit.Id,
@@ -146,7 +135,7 @@ namespace Brokerage.Common.Persistence.Deposits
                     DepositId = deposit.Id
                 }).ToArray(),
                 ErrorMessage = deposit.Error?.Message,
-                ErrorCode = errorCode,
+                ErrorCode = deposit.Error?.Code,
                 Sources = deposit.Sources.Select((x, index) => new DepositSourceEntity()
                 {
                     Address = x.Address,
@@ -173,20 +162,7 @@ namespace Brokerage.Common.Persistence.Deposits
         {
             var depositError = depositEntity.ErrorMessage == null && depositEntity.ErrorCode == null
                 ? null
-                : new
-                    DepositError(depositEntity.ErrorMessage,
-                        (depositEntity.ErrorCode.Value switch
-                        {
-                            DepositErrorCodeEnum.TechnicalProblem => DepositError.DepositErrorCode.TechnicalProblem,
-                            DepositErrorCodeEnum.NotEnoughBalance => DepositError.DepositErrorCode.NotEnoughBalance,
-                            DepositErrorCodeEnum.InvalidDestinationAddress => DepositError.DepositErrorCode.InvalidDestinationAddress,
-                            DepositErrorCodeEnum.DestinationTagRequired => DepositError.DepositErrorCode.DestinationTagRequired,
-                            DepositErrorCodeEnum.AmountIsTooSmall => DepositError.DepositErrorCode.AmountIsTooSmall,
-                            
-                            _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.ErrorCode),
-                                depositEntity.ErrorCode,
-                                null)
-                        }));
+                : new DepositError(depositEntity.ErrorMessage, depositEntity.ErrorCode ?? DepositErrorCode.TechnicalProblem);
 
             var depositState = depositEntity.DepositState switch
             {
