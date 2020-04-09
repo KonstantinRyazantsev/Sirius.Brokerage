@@ -233,7 +233,9 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Complete()
         {
-            if (this.DepositState != DepositState.Confirmed)
+            if (this.DepositState == DepositState.Detected ||
+                this.DepositState == DepositState.Failed ||
+                this.DepositState == DepositState.Cancelled)
                 throw new InvalidOperationException($"Can't complete deposit with state {this.DepositState}");
 
             this.Sequence++;
@@ -245,7 +247,9 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Fail(DepositError depositError)
         {
-            if (this.DepositState != DepositState.Confirmed)
+            if (this.DepositState == DepositState.Detected ||
+                this.DepositState == DepositState.Completed ||
+                this.DepositState == DepositState.Cancelled)
                 throw new InvalidOperationException($"Can't fail deposit with state {this.DepositState}");
 
             this.Sequence++;
