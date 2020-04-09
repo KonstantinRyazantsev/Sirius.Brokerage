@@ -72,9 +72,9 @@ namespace Brokerage.Common.Persistence.Deposits
                 .Deposits
                 .Include(x => x.Sources)
                 .Include(x => x.Fees)
-                .FirstAsync(x => x.OperationId == operationId);
+                .FirstAsync(x => x.ConsolidationOperationId == operationId);
 
-            return entity != null ? MapToDomain(entity) : null;
+            return MapToDomain(entity);
         }
 
         public async Task SaveAsync(Deposit deposit)
@@ -122,6 +122,11 @@ namespace Brokerage.Common.Persistence.Deposits
             var errorCode = deposit.Error?.Code == null ? (DepositErrorCodeEnum?)null : deposit.Error.Code switch
             {
                 DepositError.DepositErrorCode.TechnicalProblem => DepositErrorCodeEnum.TechnicalProblem,
+                DepositError.DepositErrorCode.NotEnoughBalance => DepositErrorCodeEnum.NotEnoughBalance,
+                DepositError.DepositErrorCode.InvalidDestinationAddress => DepositErrorCodeEnum.InvalidDestinationAddress,
+                DepositError.DepositErrorCode.DestinationTagRequired => DepositErrorCodeEnum.DestinationTagRequired,
+                DepositError.DepositErrorCode.AmountIsTooSmall => DepositErrorCodeEnum.AmountIsTooSmall,
+
                 _ => throw new ArgumentOutOfRangeException(nameof(deposit.Error.Code), deposit.Error?.Code, null)
             };
 
@@ -132,7 +137,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 Version = deposit.Version,
                 AssetId = deposit.AssetId,
                 Amount = deposit.Amount,
-                OperationId = deposit.OperationId,
+                ConsolidationOperationId = deposit.ConsolidationOperationId,
                 BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
                 Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity()
                 {
@@ -173,6 +178,11 @@ namespace Brokerage.Common.Persistence.Deposits
                         (depositEntity.ErrorCode.Value switch
                         {
                             DepositErrorCodeEnum.TechnicalProblem => DepositError.DepositErrorCode.TechnicalProblem,
+                            DepositErrorCodeEnum.NotEnoughBalance => DepositError.DepositErrorCode.NotEnoughBalance,
+                            DepositErrorCodeEnum.InvalidDestinationAddress => DepositError.DepositErrorCode.InvalidDestinationAddress,
+                            DepositErrorCodeEnum.DestinationTagRequired => DepositError.DepositErrorCode.DestinationTagRequired,
+                            DepositErrorCodeEnum.AmountIsTooSmall => DepositError.DepositErrorCode.AmountIsTooSmall,
+                            
                             _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.ErrorCode),
                                 depositEntity.ErrorCode,
                                 null)
@@ -199,7 +209,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.AccountRequisitesId,
                 depositEntity.AssetId,
                 depositEntity.Amount,
-                depositEntity.OperationId,
+                depositEntity.ConsolidationOperationId,
                 depositEntity.Fees?
                     .Select(x => new Fee(x.AssetId, x.Amount))
                     .ToArray(),

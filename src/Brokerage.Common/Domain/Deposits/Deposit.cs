@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
-            long? operationId,
+            long? consolidationOperationId,
             IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
@@ -45,7 +45,7 @@ namespace Brokerage.Common.Domain.Deposits
             CompletedDateTime = completedDateTime;
             FailedDateTime = failedDateTime;
             CancelledDateTime = cancelledDateTime;
-            OperationId = operationId;
+            ConsolidationOperationId = consolidationOperationId;
         }
 
         public long Id { get; }
@@ -57,7 +57,7 @@ namespace Brokerage.Common.Domain.Deposits
         public decimal Amount { get; }
         public IReadOnlyCollection<Fee> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
-        public DepositError Error { get; }
+        public DepositError Error { get; private set; }
         public DepositState DepositState { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
         public DateTime DetectedDateTime { get; }
@@ -66,7 +66,7 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime? FailedDateTime { get; private set; }
         public DateTime? CancelledDateTime { get; }
 
-        public long? OperationId { get; private set; }
+        public long? ConsolidationOperationId { get; private set; }
         public List<object> Events { get; } = new List<object>();
 
         public static Deposit Create(
@@ -111,7 +111,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
-            long? operationId,
+            long? consolidationOperationId,
             IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
@@ -131,7 +131,7 @@ namespace Brokerage.Common.Domain.Deposits
                 accountRequisitesId,
                 assetId,
                 amount,
-                operationId,
+                consolidationOperationId,
                 fees,
                 transactionInfo,
                 error,
@@ -205,6 +205,9 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Confirm()
         {
+            if (this.DepositState != DepositState.Detected)
+                throw new InvalidOperationException($"Can't confirm deposit with state {this.DepositState}");
+
             this.Sequence++;
             var date = DateTime.UtcNow;
 
@@ -223,13 +226,16 @@ namespace Brokerage.Common.Domain.Deposits
             this.AddDepositUpdatedEvent();
         }
 
-        public void TrackOperation(long operationId)
+        public void TrackConsolidationOperation(long operationId)
         {
-            this.OperationId = operationId;
+            this.ConsolidationOperationId = operationId;
         }
 
         public void Complete()
         {
+            if (this.DepositState != DepositState.Confirmed)
+                throw new InvalidOperationException($"Can't complete deposit with state {this.DepositState}");
+
             this.Sequence++;
             this.DepositState = DepositState.Completed;
             this.CompletedDateTime = DateTime.UtcNow;
@@ -237,11 +243,15 @@ namespace Brokerage.Common.Domain.Deposits
             this.AddDepositUpdatedEvent();
         }
 
-        public void Fail()
+        public void Fail(DepositError depositError)
         {
+            if (this.DepositState != DepositState.Confirmed)
+                throw new InvalidOperationException($"Can't fail deposit with state {this.DepositState}");
+
             this.Sequence++;
             this.DepositState = DepositState.Failed;
             this.FailedDateTime = DateTime.UtcNow;
+            this.Error = depositError;
 
             this.AddDepositUpdatedEvent();
         }

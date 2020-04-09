@@ -13,7 +13,11 @@
 
         public enum DepositErrorCode
         {
-            TechnicalProblem
+            TechnicalProblem = 0,
+            NotEnoughBalance = 1,
+            InvalidDestinationAddress = 2,
+            DestinationTagRequired = 3,
+            AmountIsTooSmall = 4
         }
     }
 }

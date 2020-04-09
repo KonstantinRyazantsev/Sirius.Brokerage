@@ -80,7 +80,7 @@ namespace Brokerage.Common.Domain.Deposits
 
                     var operationId = response.Response.Operation.Id;
 
-                    deposit.TrackOperation(operationId);
+                    deposit.TrackConsolidationOperation(operationId);
                 }
 
                 await _depositsRepository.SaveAsync(deposit);

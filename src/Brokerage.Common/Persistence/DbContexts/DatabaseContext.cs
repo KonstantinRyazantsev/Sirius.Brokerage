@@ -98,8 +98,8 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasName("IX_Deposit_TransactionId");
 
             modelBuilder.Entity<DepositEntity>()
-                .HasIndex(x => x.OperationId)
-                .HasName("IX_Deposit_OperationId");
+                .HasIndex(x => x.ConsolidationOperationId)
+                .HasName("IX_Deposit_ConsolidationOperationId");
 
 
             modelBuilder.Entity<DepositEntity>()

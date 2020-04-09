@@ -51,7 +51,7 @@ namespace BrokerageTests.Repositories
                 deposit.AccountRequisitesId,
                 deposit.AssetId,
                 deposit.Amount,
-                deposit.OperationId,
+                deposit.ConsolidationOperationId,
                 deposit.Fees,
                 deposit.TransactionInfo,
                 deposit.Error,
@@ -75,7 +75,7 @@ namespace BrokerageTests.Repositories
 
         public Task<Deposit> GetByOperationIdAsync(long evtOperationId)
         {
-            return Task.FromResult(_storage.First(x => x.OperationId == evtOperationId));
+            return Task.FromResult(_storage.First(x => x.ConsolidationOperationId == evtOperationId));
         }
     }
 }

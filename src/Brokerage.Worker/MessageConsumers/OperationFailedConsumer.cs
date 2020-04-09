@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence.Deposits;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -25,7 +27,16 @@ namespace Brokerage.Worker.MessageConsumers
 
             var deposit = await _depositsRepository.GetByOperationIdAsync(evt.OperationId);
 
-            deposit.Fail();
+            deposit.Fail(new DepositError(evt.ErrorMessage, evt.ErrorCode switch
+            {
+                OperationErrorCode.TechnicalProblem =>          DepositError.DepositErrorCode.TechnicalProblem,
+                OperationErrorCode.NotEnoughBalance =>          DepositError.DepositErrorCode.NotEnoughBalance,
+                OperationErrorCode.InvalidDestinationAddress => DepositError.DepositErrorCode.InvalidDestinationAddress,
+                OperationErrorCode.DestinationTagRequired =>    DepositError.DepositErrorCode.DestinationTagRequired,
+                OperationErrorCode.AmountIsTooSmall =>          DepositError.DepositErrorCode.AmountIsTooSmall,
+                 
+                _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
+            }));
 
             await _depositsRepository.SaveAsync(deposit);
 
