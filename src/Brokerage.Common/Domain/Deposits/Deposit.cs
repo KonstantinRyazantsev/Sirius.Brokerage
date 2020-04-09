@@ -16,6 +16,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
+            long? operationId,
             IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
@@ -44,6 +45,7 @@ namespace Brokerage.Common.Domain.Deposits
             CompletedDateTime = completedDateTime;
             FailedDateTime = failedDateTime;
             CancelledDateTime = cancelledDateTime;
+            OperationId = operationId;
         }
 
         public long Id { get; }
@@ -61,9 +63,10 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime DetectedDateTime { get; }
         public DateTime? ConfirmedDateTime { get; private set; }
         public DateTime? CompletedDateTime { get; private set; }
-        public DateTime? FailedDateTime { get; }
+        public DateTime? FailedDateTime { get; private set; }
         public DateTime? CancelledDateTime { get; }
 
+        public long? OperationId { get; private set; }
         public List<object> Events { get; } = new List<object>();
 
         public static Deposit Create(
@@ -83,6 +86,7 @@ namespace Brokerage.Common.Domain.Deposits
                 accountRequisitesId,
                 assetId,
                 amount,
+                null,
                 Array.Empty<Fee>(),
                 transactionInfo,
                 null,
@@ -107,6 +111,7 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountRequisitesId,
             long assetId,
             decimal amount,
+            long? operationId,
             IReadOnlyCollection<Fee> fees,
             TransactionInfo transactionInfo,
             DepositError error,
@@ -126,6 +131,7 @@ namespace Brokerage.Common.Domain.Deposits
                 accountRequisitesId,
                 assetId,
                 amount,
+                operationId,
                 fees,
                 transactionInfo,
                 error,
@@ -199,6 +205,7 @@ namespace Brokerage.Common.Domain.Deposits
 
         public void Confirm()
         {
+            this.Sequence++;
             var date = DateTime.UtcNow;
 
             if (!IsBrokerDeposit)
@@ -212,6 +219,29 @@ namespace Brokerage.Common.Domain.Deposits
                 this.ConfirmedDateTime = date;
                 this.CompletedDateTime = date;
             }
+
+            this.AddDepositUpdatedEvent();
+        }
+
+        public void TrackOperation(long operationId)
+        {
+            this.OperationId = operationId;
+        }
+
+        public void Complete()
+        {
+            this.Sequence++;
+            this.DepositState = DepositState.Completed;
+            this.CompletedDateTime = DateTime.UtcNow;
+
+            this.AddDepositUpdatedEvent();
+        }
+
+        public void Fail()
+        {
+            this.Sequence++;
+            this.DepositState = DepositState.Failed;
+            this.FailedDateTime = DateTime.UtcNow;
 
             this.AddDepositUpdatedEvent();
         }

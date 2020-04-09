@@ -23,6 +23,7 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
         public long? AccountRequisitesId { get; set; }
         public long AssetId { get; set; }
         public decimal Amount { get; set; }
+        public long? OperationId { get; set; }
         public ICollection<DepositFeeEntity> Fees { get; set; }
         public string TransactionId { get; set; }
         public long TransactionBlock { get; set; }

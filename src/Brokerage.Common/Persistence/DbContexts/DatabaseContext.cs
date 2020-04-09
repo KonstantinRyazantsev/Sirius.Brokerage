@@ -97,6 +97,10 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasIndex(x => x.TransactionId)
                 .HasName("IX_Deposit_TransactionId");
 
+            modelBuilder.Entity<DepositEntity>()
+                .HasIndex(x => x.OperationId)
+                .HasName("IX_Deposit_OperationId");
+
 
             modelBuilder.Entity<DepositEntity>()
                 .HasMany(x => x.Fees)

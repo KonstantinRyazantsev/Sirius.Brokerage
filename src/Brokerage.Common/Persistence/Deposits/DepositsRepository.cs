@@ -64,6 +64,19 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<Deposit> GetByOperationIdAsync(long operationId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var entity = await context
+                .Deposits
+                .Include(x => x.Sources)
+                .Include(x => x.Fees)
+                .FirstAsync(x => x.OperationId == operationId);
+
+            return entity != null ? MapToDomain(entity) : null;
+        }
+
         public async Task SaveAsync(Deposit deposit)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -119,6 +132,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 Version = deposit.Version,
                 AssetId = deposit.AssetId,
                 Amount = deposit.Amount,
+                OperationId = deposit.OperationId,
                 BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
                 Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity()
                 {
@@ -185,6 +199,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.AccountRequisitesId,
                 depositEntity.AssetId,
                 depositEntity.Amount,
+                depositEntity.OperationId,
                 depositEntity.Fees?
                     .Select(x => new Fee(x.AssetId, x.Amount))
                     .ToArray(),

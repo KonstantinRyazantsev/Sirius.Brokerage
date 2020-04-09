@@ -10,6 +10,8 @@ namespace Brokerage.Worker.MessageConsumers
             services.AddTransient<FinalizeBrokerAccountCreationConsumer>();
             services.AddTransient<FinalizeAccountCreationConsumer>();
             services.AddTransient<PublishAccountRequisitesConsumer>();
+            services.AddTransient<OperationCompletedConsumer>();
+            services.AddTransient<OperationFailedConsumer>();
 
             return services;
         }
