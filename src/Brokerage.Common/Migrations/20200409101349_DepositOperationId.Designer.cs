@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200409101349_DepositOperationId")]
+    partial class DepositOperationId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -278,9 +280,6 @@ namespace Brokerage.Common.Migrations
                     b.Property<DateTimeOffset?>("ConfirmedDateTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("ConsolidationOperationId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("DepositState")
                         .HasColumnType("integer");
 
@@ -295,6 +294,9 @@ namespace Brokerage.Common.Migrations
 
                     b.Property<DateTimeOffset?>("FailedDateTime")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("OperationId")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("Sequence")
                         .HasColumnType("bigint");
@@ -319,8 +321,8 @@ namespace Brokerage.Common.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsolidationOperationId")
-                        .HasName("IX_Deposit_ConsolidationOperationId");
+                    b.HasIndex("OperationId")
+                        .HasName("IX_Deposit_OperationId");
 
                     b.HasIndex("TransactionId")
                         .HasName("IX_Deposit_TransactionId");

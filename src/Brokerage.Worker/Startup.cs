@@ -93,6 +93,16 @@ namespace Brokerage.Worker
                     {
                         e.Consumer(provider.GetRequiredService<PublishAccountRequisitesConsumer>);
                     });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-operation-completion", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<OperationCompletedConsumer>);
+                    });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-operation-failure", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<OperationFailedConsumer>);
+                    });
                 }));
             
                 services.AddHostedService<BusHost>();

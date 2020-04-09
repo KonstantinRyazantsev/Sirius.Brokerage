@@ -16,5 +16,6 @@ namespace Brokerage.Common.Persistence.Deposits
         Task SaveAsync(Deposit deposit);
 
         Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId);
+        Task<Deposit> GetByConsolidationOperationIdAsync(long evtOperationId);
     }
 }

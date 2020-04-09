@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Core.Testing;
+using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Monitoring;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
 
@@ -16,6 +17,7 @@ namespace BrokerageTests.UnitTests
 
         public class TestTransfersClient : Transfers.TransfersClient
         {
+            private long _id = 0;
             public List<ExecuteTransferRequest> TransferRequests { get; } = new List<ExecuteTransferRequest>();
 
             public override ExecuteTransferResponse Execute(ExecuteTransferRequest request,
@@ -36,8 +38,18 @@ namespace BrokerageTests.UnitTests
                 DateTime? deadline = null,
                 CancellationToken cancellationToken = default)
             {
+                _id++;
                 var fakeCall = TestCalls.AsyncUnaryCall<ExecuteTransferResponse>(
-                    Task.FromResult(new ExecuteTransferResponse()), 
+                    Task.FromResult(new ExecuteTransferResponse()
+                    {
+                        Response = new ExecuteTransferResponseBody()
+                        {
+                            Operation = new OperationResponse()
+                            {
+                                Id = _id
+                            }
+                        }
+                    }), 
                     Task.FromResult(new Metadata()), 
                     () => Status.DefaultSuccess, 
                     () => new Metadata(), 
@@ -52,8 +64,18 @@ namespace BrokerageTests.UnitTests
             public override AsyncUnaryCall<ExecuteTransferResponse> ExecuteAsync(ExecuteTransferRequest request,
                 CallOptions options)
             {
+                _id++;
                 var fakeCall = TestCalls.AsyncUnaryCall<ExecuteTransferResponse>(
-                    Task.FromResult(new ExecuteTransferResponse()),
+                    Task.FromResult(new ExecuteTransferResponse()
+                    {
+                        Response = new ExecuteTransferResponseBody()
+                        {
+                            Operation = new OperationResponse()
+                            {
+                                Id = _id
+                            }
+                        }
+                    }),
                     Task.FromResult(new Metadata()),
                     () => Status.DefaultSuccess,
                     () => new Metadata(),

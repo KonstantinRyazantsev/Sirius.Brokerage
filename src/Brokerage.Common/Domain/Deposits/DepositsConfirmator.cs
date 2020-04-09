@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
@@ -50,7 +51,7 @@ namespace Brokerage.Common.Domain.Deposits
                     var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByIdAsync(deposit.BrokerAccountRequisitesId);
                     var brokerAccount = await _brokerAccountsRepository.GetAsync(brokerAccountRequisites.BrokerAccountId);
 
-                    await _executorClient.Transfers.ExecuteAsync(
+                    var response =  await _executorClient.Transfers.ExecuteAsync(
                         new ExecuteTransferRequest(new ExecuteTransferRequest()
                         {
                             AssetId = deposit.AssetId,
@@ -71,6 +72,15 @@ namespace Brokerage.Common.Domain.Deposits
                                 }
                             }
                         }));
+                    
+                    if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
+                    {
+                        throw new InvalidOperationException($"{response.Error.ErrorMessage}_{response.Error.ErrorCode}");
+                    }
+
+                    var operationId = response.Response.Operation.Id;
+
+                    deposit.TrackConsolidationOperation(operationId);
                 }
 
                 await _depositsRepository.SaveAsync(deposit);

@@ -64,6 +64,19 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<Deposit> GetByConsolidationOperationIdAsync(long operationId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var entity = await context
+                .Deposits
+                .Include(x => x.Sources)
+                .Include(x => x.Fees)
+                .FirstAsync(x => x.ConsolidationOperationId == operationId);
+
+            return MapToDomain(entity);
+        }
+
         public async Task SaveAsync(Deposit deposit)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -106,12 +119,6 @@ namespace Brokerage.Common.Persistence.Deposits
                     null)
             };
 
-            var errorCode = deposit.Error?.Code == null ? (DepositErrorCodeEnum?)null : deposit.Error.Code switch
-            {
-                DepositError.DepositErrorCode.TechnicalProblem => DepositErrorCodeEnum.TechnicalProblem,
-                _ => throw new ArgumentOutOfRangeException(nameof(deposit.Error.Code), deposit.Error?.Code, null)
-            };
-
             var depositEntity = new DepositEntity()
             {
                 Id = deposit.Id,
@@ -119,6 +126,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 Version = deposit.Version,
                 AssetId = deposit.AssetId,
                 Amount = deposit.Amount,
+                ConsolidationOperationId = deposit.ConsolidationOperationId,
                 BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
                 Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity()
                 {
@@ -127,7 +135,7 @@ namespace Brokerage.Common.Persistence.Deposits
                     DepositId = deposit.Id
                 }).ToArray(),
                 ErrorMessage = deposit.Error?.Message,
-                ErrorCode = errorCode,
+                ErrorCode = deposit.Error?.Code,
                 Sources = deposit.Sources.Select((x, index) => new DepositSourceEntity()
                 {
                     Address = x.Address,
@@ -154,15 +162,7 @@ namespace Brokerage.Common.Persistence.Deposits
         {
             var depositError = depositEntity.ErrorMessage == null && depositEntity.ErrorCode == null
                 ? null
-                : new
-                    DepositError(depositEntity.ErrorMessage,
-                        (depositEntity.ErrorCode.Value switch
-                        {
-                            DepositErrorCodeEnum.TechnicalProblem => DepositError.DepositErrorCode.TechnicalProblem,
-                            _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.ErrorCode),
-                                depositEntity.ErrorCode,
-                                null)
-                        }));
+                : new DepositError(depositEntity.ErrorMessage, depositEntity.ErrorCode ?? DepositErrorCode.TechnicalProblem);
 
             var depositState = depositEntity.DepositState switch
             {
@@ -185,6 +185,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.AccountRequisitesId,
                 depositEntity.AssetId,
                 depositEntity.Amount,
+                depositEntity.ConsolidationOperationId,
                 depositEntity.Fees?
                     .Select(x => new Fee(x.AssetId, x.Amount))
                     .ToArray(),

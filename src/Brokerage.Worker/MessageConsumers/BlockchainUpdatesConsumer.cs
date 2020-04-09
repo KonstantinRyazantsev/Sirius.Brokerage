@@ -33,8 +33,6 @@ namespace Brokerage.Worker.MessageConsumers
             await blockchainsRepository.AddOrReplaceAsync(model);
 
             _logger.LogInformation("BlockchainAdded command has been processed {@context}", evt);
-
-            await Task.CompletedTask;
         }
     }
 }

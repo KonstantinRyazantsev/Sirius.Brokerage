@@ -10,10 +10,5 @@
         public string Message { get; }
 
         public DepositErrorCode Code { get; }
-
-        public enum DepositErrorCode
-        {
-            TechnicalProblem
-        }
     }
 }
