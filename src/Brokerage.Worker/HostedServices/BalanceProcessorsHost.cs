@@ -4,10 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Brokerage.Bilv1.Domain.Repositories;
 using Brokerage.Common.Bilv1.DomainServices;
-using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Persistence;
-using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Worker.BalanceProcessors;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
@@ -21,13 +18,8 @@ namespace Brokerage.Worker.HostedServices
         private readonly BlockchainApiClientProvider _blockchainApiClientProvider;
         private readonly IEnrolledBalanceRepository _enrolledBalanceRepository;
         private readonly IOperationRepository _operationRepository;
-        private readonly IPublishEndpoint _eventPublisher;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
-        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
-        private readonly DepositsDetector _depositsDetector;
-        private readonly BalanceUpdateConfirmator _balanceUpdateConfirmator;
         private readonly IBlockchainsRepository _blockchainsRepository;
-        private readonly DepositsConfirmator _depositsConfirmator;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly List<BalanceProcessorJob> _balanceReaders;
 
         public BalanceProcessorsHost(
@@ -35,25 +27,15 @@ namespace Brokerage.Worker.HostedServices
             BlockchainApiClientProvider blockchainApiClientProvider,
             IEnrolledBalanceRepository enrolledBalanceRepository,
             IOperationRepository operationRepository,
-            IPublishEndpoint eventPublisher,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IAccountRequisitesRepository accountRequisitesRepository,
-            DepositsDetector depositsDetector,
-            BalanceUpdateConfirmator balanceUpdateConfirmator,
             IBlockchainsRepository blockchainsRepository,
-            DepositsConfirmator depositsConfirmator)
+            IPublishEndpoint publishEndpoint)
         {
             _loggerFactory = loggerFactory;
             _blockchainApiClientProvider = blockchainApiClientProvider;
             _enrolledBalanceRepository = enrolledBalanceRepository;
             _operationRepository = operationRepository;
-            _eventPublisher = eventPublisher;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
-            _accountRequisitesRepository = accountRequisitesRepository;
-            _depositsDetector = depositsDetector;
-            _balanceUpdateConfirmator = balanceUpdateConfirmator;
             _blockchainsRepository = blockchainsRepository;
-            _depositsConfirmator = depositsConfirmator;
+            _publishEndpoint = publishEndpoint;
 
             _balanceReaders = new List<BalanceProcessorJob>();
         }
@@ -71,12 +53,8 @@ namespace Brokerage.Worker.HostedServices
                     blockchainApiClient,
                     _enrolledBalanceRepository,
                     _operationRepository,
-                    _brokerAccountRequisitesRepository,
-                    _accountRequisitesRepository,
-                    _depositsDetector,
-                    _balanceUpdateConfirmator,
-                    _depositsConfirmator,
-                    blockchainAssetsDict);
+                    blockchainAssetsDict,
+                    _publishEndpoint);
 
                 var balanceReader = new BalanceProcessorJob(
                     blockchain.BlockchainId,
