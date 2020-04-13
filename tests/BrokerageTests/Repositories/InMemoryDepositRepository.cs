@@ -57,11 +57,11 @@ namespace BrokerageTests.Repositories
                 deposit.Error,
                 deposit.DepositState,
                 deposit.Sources,
-                deposit.DetectedDateTime,
-                deposit.ConfirmedDateTime,
-                deposit.CompletedDateTime,
-                deposit.FailedDateTime,
-                deposit.CancelledDateTime));
+                deposit.DetectedAt,
+                deposit.ConfirmedAt,
+                deposit.CompletedAt,
+                deposit.FailedAt,
+                deposit.CancelledAt));
 
             return Task.CompletedTask;
         }

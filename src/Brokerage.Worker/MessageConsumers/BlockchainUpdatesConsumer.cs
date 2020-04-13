@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.ReadModels.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -26,7 +26,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             var model = new Blockchain
             {
-                BlockchainId = evt.BlockchainId,
+                Id = evt.BlockchainId,
                 IntegrationUrl = evt.IntegrationUrl.ToString()
             };
 

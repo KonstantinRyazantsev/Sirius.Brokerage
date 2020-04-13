@@ -12,6 +12,10 @@ using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
+using Brokerage.Common.Persistence.DbContexts;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.EfCore;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.Executor.ApiClient;
 
 namespace Brokerage.Worker
@@ -30,6 +34,16 @@ namespace Brokerage.Worker
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddTransient<IExecutorClient>(x => new ExecutorClient(Config.Executor.Url));
             services.AddPersistence(Config.Db.ConnectionString);
+            services.AddOutbox(c =>
+            {
+                c.DispatchWithMassTransit();
+                c.PersistWithEfCore(s =>
+                {
+                    var optionsBuilder = s.GetRequiredService<DbContextOptionsBuilder<DatabaseContext>>();
+
+                    return new DatabaseContext(optionsBuilder.Options);
+                });
+            });
             services.AddHostedService<MigrationHost>();
             services.AddDomain();
 

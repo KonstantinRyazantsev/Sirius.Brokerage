@@ -11,7 +11,6 @@ namespace Brokerage.Common.Persistence.DbContexts
 {
     public class DatabaseContext : DbContext, IDbContextWithOutbox
     {
-        public const long StartingIdentity = 999_999;
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
 
@@ -20,6 +19,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         {
         }
 
+        public DbSet<OutboxEntity> Outbox { get; }
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
@@ -40,7 +40,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         {
             modelBuilder.HasDefaultSchema(SchemaName);
 
-            modelBuilder.BuildOutbox(startAggregateIdFrom: StartingIdentity);
+            modelBuilder.BuildOutbox();
 
             BuildAssets(modelBuilder);
             BuildBrokerAccount(modelBuilder);
@@ -178,7 +178,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .ToTable(Tables.BrokerAccountBalances)
-                .HasKey(x => x.BrokerAccountBalancesId);
+                .HasKey(x => x.Id);
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .HasIndex(x => new
@@ -203,7 +203,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         {
             modelBuilder.Entity<Blockchain>()
                 .ToTable(Tables.Blockchains)
-                .HasKey(x => x.BlockchainId);
+                .HasKey(x => x.Id);
         }
 
         private static void BuildAccountRequisites(ModelBuilder modelBuilder)
@@ -212,17 +212,14 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(c => new { c.Id });
 
             modelBuilder.Entity<AccountRequisitesEntity>()
-                .HasIndex(x => x.RequestId)
-                .IsUnique(true)
-                .HasName("IX_AccountRequisites_RequestId");
-
-            modelBuilder.Entity<AccountRequisitesEntity>()
                 .HasIndex(x => new
                 {
                     x.BlockchainId,
-                    x.Address
+                    x.Address,
+                    x.Tag,
+                    x.TagType
                 })
-                .HasName("IX_AccountRequisites_BlockchainId_Address");
+                .HasName("IX_AccountRequisites_NaturalId");
 
             modelBuilder.Entity<AccountRequisitesEntity>()
                 .Property(b => b.Id)

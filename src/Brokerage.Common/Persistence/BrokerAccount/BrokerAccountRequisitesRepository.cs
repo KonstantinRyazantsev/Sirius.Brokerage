@@ -106,7 +106,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             }
         }
 
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<string> addresses)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -165,7 +165,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 BrokerAccountId = requisites.BrokerAccountId,
                 Address = requisites.Address,
                 Id = requisites.Id,
-                CreationDateTime = requisites.CreationDateTime
+                CreatedAt = requisites.CreatedAt
             };
         }
 
@@ -180,7 +180,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 entity.BrokerAccountId,
                 entity.BlockchainId,
                 entity.Address,
-                entity.CreationDateTime.UtcDateTime
+                entity.CreatedAt.UtcDateTime
             );
 
             return brokerAccount;

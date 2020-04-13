@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.VaultAgent.ApiClient;

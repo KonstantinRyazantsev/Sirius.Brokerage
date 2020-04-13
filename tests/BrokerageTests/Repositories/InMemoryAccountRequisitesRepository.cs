@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence.Accounts;
+using Swisschain.Sirius.Executor.ApiContract.Transfers;
+using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 
 namespace BrokerageTests.Repositories
 {
@@ -23,7 +25,7 @@ namespace BrokerageTests.Repositories
             throw new System.NotImplementedException();
         }
 
-        public Task<IReadOnlyCollection<AccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        public Task<IReadOnlyCollection<AccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<AccountRequisitesId> ids)
         {
             return Task.FromResult<IReadOnlyCollection<AccountRequisites>>(
                 _storage.Where(x => x.BlockchainId == blockchainId &&
@@ -43,7 +45,7 @@ namespace BrokerageTests.Repositories
                 requisites.Address,
                 requisites.Tag,
                 requisites.TagType,
-                requisites.CreationDateTime));
+                requisites.CreatedAt));
 
             return Task.FromResult(_storage.Last());
         }
@@ -58,9 +60,9 @@ namespace BrokerageTests.Repositories
             throw new System.NotImplementedException();
         }
 
-        public Task<AccountRequisites> GetByIdAsync(long accountRequisitesId)
+        public Task<AccountRequisites> GetByIdAsync(long id)
         {
-            return Task.FromResult(_storage.First(x => x.AccountRequisitesId == accountRequisitesId));
+            return Task.FromResult(_storage.First(x => x.Id == id));
         }
     }
 }

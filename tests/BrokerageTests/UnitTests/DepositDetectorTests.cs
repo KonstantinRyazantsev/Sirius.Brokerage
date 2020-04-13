@@ -81,7 +81,7 @@ namespace BrokerageTests.UnitTests
             balance.PendingBalance.ShouldBe(brokerAccountBalancesUpdated.PendingBalance);
             balance.AssetId.ShouldBe(brokerAccountBalancesUpdated.AssetId);
             balance.Sequence.ShouldBe(brokerAccountBalancesUpdated.Sequence);
-            balance.PendingBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdateDateTime);
+            balance.PendingBalanceUpdatedAt.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdatedAt);
 
             deposit.ShouldNotBeNull();
             var depositUpdated = publishEndpoint.Events.First(x => x is DepositUpdated) as DepositUpdated;
@@ -189,7 +189,7 @@ namespace BrokerageTests.UnitTests
                 balance.PendingBalance.ShouldBe(item.PendingBalance);
                 balance.AssetId.ShouldBe(item.AssetId);
                 balance.Sequence.ShouldBe(item.Sequence);
-                balance.PendingBalanceUpdateDateTime.ShouldBe(item.PendingBalanceUpdateDateTime);
+                balance.PendingBalanceUpdatedAt.ShouldBe(item.PendingBalanceUpdatedAt);
             }
 
             var depositUpdates = publishEndpoint
@@ -213,7 +213,7 @@ namespace BrokerageTests.UnitTests
                 depositUpdate.BrokerAccountRequisitesId.ShouldBe(depositUpdateFromStorage.BrokerAccountRequisitesId);
                 depositUpdate.State.ShouldBe(DepositState.Detected);
                 depositUpdate.Amount.ShouldBe(depositUpdateFromStorage.Amount);
-                depositUpdate.DetectedDateTime.ShouldBe(depositUpdateFromStorage.DetectedDateTime);
+                depositUpdate.DetectedAt.ShouldBe(depositUpdateFromStorage.DetectedAt);
                 depositUpdate.TransactionInfo.TransactionId.ShouldBe(depositUpdateFromStorage.TransactionInfo.TransactionId);
                 depositUpdate.TransactionInfo.TransactionBlock.ShouldBe(depositUpdateFromStorage.TransactionInfo.TransactionBlock);
                 depositUpdate.TransactionInfo.RequiredConfirmationsCount.ShouldBe(depositUpdateFromStorage.TransactionInfo.RequiredConfirmationsCount);

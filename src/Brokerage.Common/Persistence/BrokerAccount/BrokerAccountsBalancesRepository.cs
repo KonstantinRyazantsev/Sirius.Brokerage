@@ -87,14 +87,14 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 BrokerAccountId = brokerAccountBalances.BrokerAccountId,
                 AssetId = brokerAccountBalances.AssetId,
                 AvailableBalance = brokerAccountBalances.AvailableBalance,
-                AvailableBalanceUpdateDateTime = brokerAccountBalances.AvailableBalanceUpdateDateTime,
-                BrokerAccountBalancesId = brokerAccountBalances.Id,
+                AvailableBalanceUpdatedAt = brokerAccountBalances.AvailableBalanceUpdatedAt,
+                Id = brokerAccountBalances.Id,
                 OwnedBalance = brokerAccountBalances.OwnedBalance,
-                OwnedBalanceUpdateDateTime = brokerAccountBalances.OwnedBalanceUpdateDateTime,
+                OwnedBalanceUpdatedAt = brokerAccountBalances.OwnedBalanceUpdatedAt,
                 PendingBalance = brokerAccountBalances.PendingBalance,
-                PendingBalanceUpdateDateTime = brokerAccountBalances.PendingBalanceUpdateDateTime,
+                PendingBalanceUpdatedAt = brokerAccountBalances.PendingBalanceUpdatedAt,
                 ReservedBalance = brokerAccountBalances.ReservedBalance,
-                ReservedBalanceUpdateDateTime = brokerAccountBalances.ReservedBalanceUpdateDateTime,
+                ReservedBalanceUpdateDatedAt = brokerAccountBalances.ReservedBalanceUpdatedAt,
                 Version = brokerAccountBalances.Version,
                 Sequence = brokerAccountBalances.Sequence
             };
@@ -105,7 +105,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         private static BrokerAccountBalances MapToDomain(BrokerAccountBalancesEntity brokerAccountBalancesEntity)
         {
             var brokerAccountBalances = BrokerAccountBalances.Restore(
-                brokerAccountBalancesEntity.BrokerAccountBalancesId,
+                brokerAccountBalancesEntity.Id,
                 brokerAccountBalancesEntity.Sequence,
                 brokerAccountBalancesEntity.Version,
                 brokerAccountBalancesEntity.BrokerAccountId,
@@ -114,10 +114,10 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountBalancesEntity.AvailableBalance,
                 brokerAccountBalancesEntity.PendingBalance,
                 brokerAccountBalancesEntity.ReservedBalance,
-                brokerAccountBalancesEntity.OwnedBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.AvailableBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.PendingBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.ReservedBalanceUpdateDateTime.UtcDateTime
+                brokerAccountBalancesEntity.OwnedBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.AvailableBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.PendingBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.ReservedBalanceUpdateDatedAt.UtcDateTime
                 );
 
             return brokerAccountBalances;

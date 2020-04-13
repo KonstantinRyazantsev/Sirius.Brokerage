@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.ReadModels.Blockchains;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Blockchains
 {
     public static class BlockchainsRepositoryExtensions
     {
@@ -21,7 +21,7 @@ namespace Brokerage.Common.Persistence
                     break;
                 }
 
-                cursor = page.Last().BlockchainId;
+                cursor = page.Last().Id;
 
                 result.AddRange(page);
             } while (true);

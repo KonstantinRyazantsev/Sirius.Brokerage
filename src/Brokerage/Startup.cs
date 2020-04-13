@@ -47,6 +47,16 @@ namespace Brokerage
 
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<DbSchemaValidationHost>();
+            services.AddOutbox(c =>
+            {
+                c.DispatchWithMassTransit();
+                c.PersistWithEfCore(s =>
+                {
+                    var optionsBuilder = s.GetRequiredService<DbContextOptionsBuilder<DatabaseContext>>();
+
+                    return new DatabaseContext(optionsBuilder.Options);
+                });
+            });
             services.AddMassTransit(x =>
             {
                 EndpointConvention.Map<FinalizeBrokerAccountCreation>(

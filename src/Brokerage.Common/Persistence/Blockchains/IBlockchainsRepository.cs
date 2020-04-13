@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.ReadModels.Blockchains;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Blockchains
 {
     public interface IBlockchainsRepository
     {

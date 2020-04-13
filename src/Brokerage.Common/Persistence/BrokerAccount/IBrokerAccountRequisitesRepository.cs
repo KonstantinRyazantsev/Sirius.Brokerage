@@ -12,14 +12,10 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             bool sortAsc,
             string blockchainId,
             string address);
-
         Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount);
-
-        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses);
-
+        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(ISet<BrokerAccountRequisitesId> ids);
         Task UpdateAsync(BrokerAccountRequisites brokerAccount);
         Task<BrokerAccountRequisites> GetByIdAsync(long brokerAccountRequisitesId);
-
         Task<BrokerAccountRequisites> GetActualByBrokerAccountIdAndBlockchainAsync(long brokerAccountId, string blockchainId);
     }
 }

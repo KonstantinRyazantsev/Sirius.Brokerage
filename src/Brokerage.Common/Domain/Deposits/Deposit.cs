@@ -6,6 +6,7 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits
 {
+    // TODO: Natural ID
     public class Deposit
     {
         private Deposit(
@@ -14,37 +15,35 @@ namespace Brokerage.Common.Domain.Deposits
             long sequence,
             long brokerAccountRequisitesId,
             long? accountRequisitesId,
-            long assetId,
-            decimal amount,
+            Unit unit,
             long? consolidationOperationId,
             IReadOnlyCollection<Unit> fees,
             TransactionInfo transactionInfo,
             DepositError error,
             DepositState depositState,
             IReadOnlyCollection<DepositSource> sources,
-            DateTime detectedDateTime,
-            DateTime? confirmedDateTime,
-            DateTime? completedDateTime,
-            DateTime? failedDateTime,
-            DateTime? cancelledDateTime)
+            DateTime detectedAt,
+            DateTime? confirmedAt,
+            DateTime? completedAt,
+            DateTime? failedAt,
+            DateTime? cancelledAt)
         {
             Id = id;
             Version = version;
             Sequence = sequence;
             BrokerAccountRequisitesId = brokerAccountRequisitesId;
             AccountRequisitesId = accountRequisitesId;
-            AssetId = assetId;
-            Amount = amount;
+            Unit = unit;
             Fees = fees;
             TransactionInfo = transactionInfo;
             Error = error;
             DepositState = depositState;
             Sources = sources;
-            DetectedDateTime = detectedDateTime;
-            ConfirmedDateTime = confirmedDateTime;
-            CompletedDateTime = completedDateTime;
-            FailedDateTime = failedDateTime;
-            CancelledDateTime = cancelledDateTime;
+            DetectedAt = detectedAt;
+            ConfirmedAt = confirmedAt;
+            CompletedAt = completedAt;
+            FailedAt = failedAt;
+            CancelledAt = cancelledAt;
             ConsolidationOperationId = consolidationOperationId;
         }
 
@@ -53,18 +52,17 @@ namespace Brokerage.Common.Domain.Deposits
         public long Sequence { get; private set; }
         public long BrokerAccountRequisitesId { get; }
         public long? AccountRequisitesId { get; }
-        public long AssetId { get; }
-        public decimal Amount { get; }
+        public Unit Unit { get; }
         public IReadOnlyCollection<Unit> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
         public DepositError Error { get; private set; }
         public DepositState DepositState { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
-        public DateTime DetectedDateTime { get; }
-        public DateTime? ConfirmedDateTime { get; private set; }
-        public DateTime? CompletedDateTime { get; private set; }
-        public DateTime? FailedDateTime { get; private set; }
-        public DateTime? CancelledDateTime { get; }
+        public DateTime DetectedAt { get; }
+        public DateTime? ConfirmedAt { get; private set; }
+        public DateTime? CompletedAt { get; private set; }
+        public DateTime? FailedAt { get; private set; }
+        public DateTime? CancelledAt { get; }
 
         public long? ConsolidationOperationId { get; private set; }
         public List<object> Events { get; } = new List<object>();
@@ -73,8 +71,7 @@ namespace Brokerage.Common.Domain.Deposits
             long id,
             long brokerAccountRequisitesId,
             long? accountRequisitesId,
-            long assetId,
-            decimal amount,
+            Unit unit,
             TransactionInfo transactionInfo,
             IReadOnlyCollection<DepositSource> sources)
         {
@@ -84,8 +81,7 @@ namespace Brokerage.Common.Domain.Deposits
                 0,
                 brokerAccountRequisitesId,
                 accountRequisitesId,
-                assetId,
-                amount,
+                unit,
                 null,
                 Array.Empty<Unit>(),
                 transactionInfo,
@@ -109,8 +105,7 @@ namespace Brokerage.Common.Domain.Deposits
             long sequence,
             long brokerAccountRequisitesId,
             long? accountRequisitesId,
-            long assetId,
-            decimal amount,
+            Unit unit,
             long? consolidationOperationId,
             IReadOnlyCollection<Unit> fees,
             TransactionInfo transactionInfo,
@@ -129,8 +124,7 @@ namespace Brokerage.Common.Domain.Deposits
                 sequence,
                 brokerAccountRequisitesId,
                 accountRequisitesId,
-                assetId,
-                amount,
+                unit,
                 consolidationOperationId,
                 fees,
                 transactionInfo,
@@ -146,11 +140,11 @@ namespace Brokerage.Common.Domain.Deposits
 
         private void AddDepositUpdatedEvent()
         {
-            Events.Add(new DepositUpdated()
+            Events.Add(new DepositUpdated
             {
                 DepositId = this.Id,
                 Sequence = this.Sequence,
-                AssetId = this.AssetId,
+                Unit = this.Unit,
                 BrokerAccountRequisitesId = this.BrokerAccountRequisitesId,
                 Sources = this.Sources
                     .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.DepositSource()
@@ -172,16 +166,14 @@ namespace Brokerage.Common.Domain.Deposits
                     ? null
                     : new Swisschain.Sirius.Brokerage.MessagingContract.DepositError()
                     {
-                        // TODO: Map here all possible tech issues
                         Code = Swisschain.Sirius.Brokerage.MessagingContract.DepositError.DepositErrorCode.TechnicalProblem,
                         Message = this.Error.Message
                     },
-                ConfirmedDateTime = this.ConfirmedDateTime,
-                DetectedDateTime = this.DetectedDateTime,
-                CompletedDateTime = this.CompletedDateTime,
-                FailedDateTime = this.FailedDateTime,
-                CancelledDateTime = this.CancelledDateTime,
-                Amount = this.Amount,
+                ConfirmedAt = this.ConfirmedAt,
+                DetectedAt = this.DetectedAt,
+                CompletedAt = this.CompletedAt,
+                FailedAt = this.FailedAt,
+                CancelledAt = this.CancelledAt,
                 State = this.DepositState switch
                 {
                     DepositState.Detected => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Detected,
@@ -211,13 +203,13 @@ namespace Brokerage.Common.Domain.Deposits
                 if (!IsBrokerDeposit)
                 {
                     this.DepositState = DepositState.Confirmed;
-                    this.ConfirmedDateTime = date;
+                    this.ConfirmedAt = date;
                 }
                 else
                 {
                     this.DepositState = DepositState.Completed;
-                    this.ConfirmedDateTime = date;
-                    this.CompletedDateTime = date;
+                    this.ConfirmedAt = date;
+                    this.CompletedAt = date;
                 }
             }
 
@@ -240,7 +232,7 @@ namespace Brokerage.Common.Domain.Deposits
                 this.Sequence++;
 
                 this.DepositState = DepositState.Completed;
-                this.CompletedDateTime = DateTime.UtcNow;
+                this.CompletedAt = DateTime.UtcNow;
             }
 
             this.AddDepositUpdatedEvent();
@@ -257,7 +249,7 @@ namespace Brokerage.Common.Domain.Deposits
                 this.Sequence++;
 
                 this.DepositState = DepositState.Failed;
-                this.FailedDateTime = DateTime.UtcNow;
+                this.FailedAt = DateTime.UtcNow;
                 this.Error = depositError;
             }
 

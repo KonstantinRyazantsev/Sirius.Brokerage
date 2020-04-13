@@ -6,7 +6,7 @@ using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace Brokerage.Common.Persistence
+namespace Brokerage.Common.Persistence.Blockchains
 {
     public class BlockchainsRepository : IBlockchainsRepository
     {
@@ -26,11 +26,11 @@ namespace Brokerage.Common.Persistence
             if (cursor != null)
             {
                 // ReSharper disable once StringCompareToIsCultureSpecific
-                query = query.Where(x => x.BlockchainId.CompareTo(cursor) > 1);
+                query = query.Where(x => x.Id.CompareTo(cursor) > 1);
             }
 
             return await query
-                .OrderBy(x => x.BlockchainId)
+                .OrderBy(x => x.Id)
                 .Take(limit)
                 .ToListAsync();
         }

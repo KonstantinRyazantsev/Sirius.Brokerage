@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.BrokerAccount;
@@ -16,11 +15,6 @@ namespace BrokerageTests.Repositories
         public InMemoryBrokerAccountsBalancesRepository()
         {
             _storage = new List<BrokerAccountBalances>();
-        }
-
-        public Task<long> GetNextIdAsync()
-        {
-            return Task.FromResult(Interlocked.Increment(ref _id));
         }
 
         public Task<BrokerAccountBalances> GetOrDefaultAsync(long brokerAccountId, long assetId)
@@ -54,10 +48,10 @@ namespace BrokerageTests.Repositories
                 brokerAccountBalances.AvailableBalance,
                 brokerAccountBalances.PendingBalance,
                 brokerAccountBalances.ReservedBalance,
-                brokerAccountBalances.OwnedBalanceUpdateDateTime,
-                brokerAccountBalances.AvailableBalanceUpdateDateTime,
-                brokerAccountBalances.PendingBalanceUpdateDateTime,
-                brokerAccountBalances.ReservedBalanceUpdateDateTime));
+                brokerAccountBalances.OwnedBalanceUpdatedAt,
+                brokerAccountBalances.AvailableBalanceUpdatedAt,
+                brokerAccountBalances.PendingBalanceUpdatedAt,
+                brokerAccountBalances.ReservedBalanceUpdatedAt));
 
             return Task.CompletedTask;
         }

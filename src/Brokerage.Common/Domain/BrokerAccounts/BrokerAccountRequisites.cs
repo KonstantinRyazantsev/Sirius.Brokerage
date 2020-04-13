@@ -6,44 +6,35 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     {
         private BrokerAccountRequisites(
             long id,
+            BrokerAccountRequisitesId naturalId,
             long brokerAccountId,
-            string blockchainId,
-            string address, 
-            string requestId,
-            DateTime creationDateTime)
+            DateTime createdAt)
         {
             Id = id;
+            NaturalId = naturalId;
             BrokerAccountId = brokerAccountId;
-            BlockchainId = blockchainId;
-            Address = address;
-            RequestId = requestId;
-            CreationDateTime = creationDateTime;
+
+            CreatedAt = createdAt;
         }
 
         public long Id { get; }
+        public BrokerAccountRequisitesId NaturalId { get; }
         public long BrokerAccountId { get; }
-        // TODO: This is here only because of EF - we can't update DB record without having entire entity
-        public string RequestId { get; }
-        public string BlockchainId { get; }
-        public DateTime CreationDateTime { get; }
-        public string Address { get; set; }
+        public DateTime CreatedAt { get; }
         
-        public static BrokerAccountRequisites Create(
-            string requestId,
-            long brokerAccountId,
-            string blockchainId)
+        public static BrokerAccountRequisites Create(long id,
+            BrokerAccountRequisitesId naturalId,
+            long brokerAccountId)
         {
-            return new BrokerAccountRequisites(default, brokerAccountId, blockchainId, null, requestId, DateTime.UtcNow);
+            return new BrokerAccountRequisites(id, naturalId, brokerAccountId, DateTime.UtcNow);
         }
 
-        public static BrokerAccountRequisites Restore(string requestId,
-            long id, 
+        public static BrokerAccountRequisites Restore(long id, 
+            BrokerAccountRequisitesId naturalId,
             long brokerAccountId, 
-            string blockchainId, 
-            string address,
-            DateTime creationDateTime)
+            DateTime createdAt)
         {
-            return new BrokerAccountRequisites(id, brokerAccountId, blockchainId, address, requestId, creationDateTime);
+            return new BrokerAccountRequisites(id, naturalId, brokerAccountId, createdAt);
         }
     }
 }

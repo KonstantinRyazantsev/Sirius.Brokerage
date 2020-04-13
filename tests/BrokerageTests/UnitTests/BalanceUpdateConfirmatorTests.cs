@@ -68,9 +68,9 @@ namespace BrokerageTests.UnitTests
             balance.AvailableBalance.ShouldBe(brokerAccountBalancesUpdated.AvailableBalance);
             balance.AssetId.ShouldBe(brokerAccountBalancesUpdated.AssetId);
             balance.Sequence.ShouldBe(brokerAccountBalancesUpdated.Sequence);
-            balance.PendingBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdateDateTime);
-            balance.OwnedBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.OwnedBalanceUpdateDateTime);
-            balance.AvailableBalanceUpdateDateTime.ShouldBe(brokerAccountBalancesUpdated.AvailableBalanceUpdateDateTime);
+            balance.PendingBalanceUpdatedAt.ShouldBe(brokerAccountBalancesUpdated.PendingBalanceUpdatedAt);
+            balance.OwnedBalanceUpdatedAt.ShouldBe(brokerAccountBalancesUpdated.OwnedBalanceUpdatedAt);
+            balance.AvailableBalanceUpdatedAt.ShouldBe(brokerAccountBalancesUpdated.AvailableBalanceUpdatedAt);
         }
 
         [Fact]
@@ -160,9 +160,9 @@ namespace BrokerageTests.UnitTests
                 balance.AvailableBalance.ShouldBe(item.AvailableBalance);
                 balance.AssetId.ShouldBe(item.AssetId);
                 balance.Sequence.ShouldBe(item.Sequence);
-                balance.PendingBalanceUpdateDateTime.ShouldBe(item.PendingBalanceUpdateDateTime);
-                balance.OwnedBalanceUpdateDateTime.ShouldBe(item.OwnedBalanceUpdateDateTime);
-                balance.AvailableBalanceUpdateDateTime.ShouldBe(item.AvailableBalanceUpdateDateTime);
+                balance.PendingBalanceUpdatedAt.ShouldBe(item.PendingBalanceUpdatedAt);
+                balance.OwnedBalanceUpdatedAt.ShouldBe(item.OwnedBalanceUpdatedAt);
+                balance.AvailableBalanceUpdatedAt.ShouldBe(item.AvailableBalanceUpdatedAt);
             }
 
             {
@@ -174,8 +174,8 @@ namespace BrokerageTests.UnitTests
                 balance.OwnedBalance.ShouldBe(item.OwnedBalance);
                 balance.AssetId.ShouldBe(item.AssetId);
                 balance.Sequence.ShouldBe(item.Sequence);
-                balance.PendingBalanceUpdateDateTime.ShouldBe(item.PendingBalanceUpdateDateTime);
-                balance.OwnedBalanceUpdateDateTime.ShouldBe(item.OwnedBalanceUpdateDateTime);
+                balance.PendingBalanceUpdatedAt.ShouldBe(item.PendingBalanceUpdatedAt);
+                balance.OwnedBalanceUpdatedAt.ShouldBe(item.OwnedBalanceUpdatedAt);
             }
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -52,15 +52,15 @@ namespace Brokerage.Worker.MessageConsumers
                     if (!blockchains.Any())
                         break;
 
-                    cursor = blockchains.Last().BlockchainId;
+                    cursor = blockchains.Last().Id;
 
                     foreach (var blockchain in blockchains)
                     {
-                        var requestIdForCreation = $"{message.RequestId}_{blockchain.BlockchainId}";
+                        var requestIdForCreation = $"{message.RequestId}_{blockchain.Id}";
                         var newRequisites = BrokerAccountRequisites.Create(
                             requestIdForCreation,
                             message.BrokerAccountId,
-                            blockchain.BlockchainId);
+                            blockchain.Id);
 
                         var requisites = await _brokerAccountRequisitesRepository.AddOrGetAsync(newRequisites);
 
@@ -71,7 +71,7 @@ namespace Brokerage.Worker.MessageConsumers
 
                         var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
                         {
-                            BlockchainId = blockchain.BlockchainId,
+                            BlockchainId = blockchain.Id,
                             TenantId = message.TenantId,
                             RequestId = requestIdForGeneration
                         });
@@ -127,7 +127,7 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(new BrokerAccountRequisitesAdded
                 {
-                    CreationDateTime = requisites.CreationDateTime,
+                    CreatedAt = requisites.CreatedAt,
                     Address = requisites.Address,
                     BlockchainId = requisites.BlockchainId,
                     BrokerAccountId = requisites.BrokerAccountId,
@@ -138,7 +138,7 @@ namespace Brokerage.Worker.MessageConsumers
             await context.Publish(new BrokerAccountActivated
             {
                 // ReSharper disable once PossibleInvalidOperationException
-                ActivationDate = brokerAccount.ActivationDateTime.Value,
+                ActivatedAt = brokerAccount.ActivationDateTime.Value,
                 BrokerAccountId = brokerAccount.BrokerAccountId
             });
 

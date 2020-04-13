@@ -149,11 +149,11 @@ namespace Brokerage.Common.Persistence.Deposits
                 TransactionBlock = deposit.TransactionInfo.TransactionBlock,
                 TransactionRequiredConfirmationsCount = deposit.TransactionInfo.RequiredConfirmationsCount,
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
-                DetectedDateTime = deposit.DetectedDateTime,
-                ConfirmedDateTime = deposit.ConfirmedDateTime,
-                CompletedDateTime = deposit.CompletedDateTime,
-                CancelledDateTime = deposit.CancelledDateTime,
-                FailedDateTime = deposit.FailedDateTime,
+                DetectedDateTime = deposit.DetectedAt,
+                ConfirmedDateTime = deposit.ConfirmedAt,
+                CompletedDateTime = deposit.CompletedAt,
+                CancelledDateTime = deposit.CancelledAt,
+                FailedDateTime = deposit.FailedAt,
             };
 
             return depositEntity;

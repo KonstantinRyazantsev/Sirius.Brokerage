@@ -18,6 +18,23 @@ namespace Brokerage.Common.Persistence.Accounts
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
+        public async Task AddOrIgnoreAsync(AccountRequisites requisites)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var entity = MapToEntity(requisites);
+
+            context.AccountRequisites.Add(entity);
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+            }
+        }
+
         public async Task<IReadOnlyCollection<AccountRequisites>> GetByAccountAsync(
             long accountId,
             int limit,
@@ -59,7 +76,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        public async Task<IReadOnlyCollection<AccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<AccountRequisitesId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -73,44 +90,6 @@ namespace Brokerage.Common.Persistence.Accounts
                 .AsEnumerable()
                 .Select(MapToDomain)
                 .ToArray();
-        }
-
-        public async Task<AccountRequisites> AddOrGetAsync(AccountRequisites requisites)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var newEntity = MapToEntity(requisites);
-
-            context.AccountRequisites.Add(newEntity);
-
-            try
-            {
-                await context.SaveChangesAsync();
-
-                return MapToDomain(newEntity);
-            }
-            catch (DbUpdateException e) //Check that request was already processed (by constraint)
-                when (e.InnerException is PostgresException pgEx &&
-                      pgEx.SqlState == "23505" &&
-                      pgEx.ConstraintName == "IX_BrokerAccountRequisites_RequestId")
-            {
-                var entity = await context
-                    .AccountRequisites
-                    .FirstAsync(x => x.RequestId == requisites.RequestId);
-
-                return MapToDomain(entity);
-            }
-        }
-
-        public async Task UpdateAsync(AccountRequisites requisites)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = MapToEntity(requisites);
-
-            context.AccountRequisites.Update(entity);
-
-            await context.SaveChangesAsync();
         }
 
         public async Task<IReadOnlyCollection<AccountRequisites>> GetAllAsync(long? cursor, int limit)
@@ -136,13 +115,13 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<AccountRequisites> GetByIdAsync(long accountRequisitesId)
+        public async Task<AccountRequisites> GetByIdAsync(long id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var requisites = await context
                 .AccountRequisites
-                .FirstAsync(x => x.Id == accountRequisitesId);
+                .FirstAsync(x => x.Id == id);
 
             return MapToDomain(requisites);
         }
@@ -151,30 +130,28 @@ namespace Brokerage.Common.Persistence.Accounts
         {
             return new AccountRequisitesEntity
             {
-                RequestId = requisites.RequestId,
-                Address = requisites.Address,
-                Id = requisites.AccountRequisitesId,
+                Address = requisites.NaturalId.Address,
+                Id = requisites.Id,
                 AccountId = requisites.AccountId,
                 BrokerAccountId = requisites.BrokerAccountId,
-                BlockchainId = requisites.BlockchainId,
-                Tag = requisites.Tag,
-                TagType = requisites.TagType,
-                CreationDateTime = requisites.CreationDateTime
+                BlockchainId = requisites.NaturalId.BlockchainId,
+                Tag = requisites.NaturalId.Tag,
+                TagType = requisites.NaturalId.TagType,
+                CreatedAt = requisites.CreatedAt
             };
         }
 
         private static AccountRequisites MapToDomain(AccountRequisitesEntity entity)
         {
             var brokerAccount = AccountRequisites.Restore(
-                entity.RequestId,
                 entity.Id,
+                new AccountRequisitesId(entity.BlockchainId,
+                    entity.Address,
+                    entity.Tag,
+                    entity.TagType),
                 entity.AccountId,
                 entity.BrokerAccountId,
-                entity.BlockchainId,
-                entity.Address,
-                entity.Tag,
-                entity.TagType,
-                entity.CreationDateTime.UtcDateTime);
+                entity.CreatedAt.UtcDateTime);
 
             return brokerAccount;
         }

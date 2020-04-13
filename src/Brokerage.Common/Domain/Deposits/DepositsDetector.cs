@@ -77,7 +77,7 @@ namespace Brokerage.Common.Domain.Deposits
                 .Distinct()
                 .ToArray();
 
-            var accountRequisites = await _accountRequisitesRepository.GetByAddressesAsync(
+            var accountRequisites = await _accountRequisitesRepository.GetAnyOfAsync(
                 transaction.BlockchainId,
                 incomingTransferAddresses);
 
@@ -183,7 +183,7 @@ namespace Brokerage.Common.Domain.Deposits
 
                 var deposit = Deposit.Create(id,
                     requisites.Id,
-                    accountRequisitesVal?.AccountRequisitesId,
+                    accountRequisitesVal?.Id,
                     assetId,
                     depositBalance,
                     transactionInfo,

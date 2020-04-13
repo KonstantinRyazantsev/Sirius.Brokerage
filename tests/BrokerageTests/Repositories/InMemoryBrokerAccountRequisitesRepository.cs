@@ -35,12 +35,12 @@ namespace BrokerageTests.Repositories
                 brokerAccountRequisites.BrokerAccountId,
                 brokerAccountRequisites.BlockchainId,
                 brokerAccountRequisites.Address,
-                brokerAccountRequisites.CreationDateTime));
+                brokerAccountRequisites.CreatedAt));
 
             return Task.FromResult(_storage.Last());
         }
 
-        public Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+        public Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<string> addresses)
         {
             return Task.FromResult<IReadOnlyCollection<BrokerAccountRequisites>>(
                 _storage.Where(x => x.BlockchainId == blockchainId &&

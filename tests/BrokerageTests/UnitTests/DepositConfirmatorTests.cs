@@ -92,7 +92,7 @@ namespace BrokerageTests.UnitTests
             var depositCreate = Deposit.Create(
                 await depositRepository.GetNextIdAsync(),
                 brokerAccountRequisistes.Id,
-                accountRequisistes.AccountRequisitesId,
+                accountRequisistes.Id,
                 assetId,
                 operationAmount,
                 new TransactionInfo("TransactionId#1", 1, 1, DateTime.UtcNow),
@@ -108,7 +108,7 @@ namespace BrokerageTests.UnitTests
             foreach (var depositUpdate in depositsUpdated)
             {
                 depositUpdate.ShouldNotBeNull();
-                depositUpdate.ConfirmedDateTime.ShouldNotBeNull();
+                depositUpdate.ConfirmedAt.ShouldNotBeNull();
                 depositUpdate.State.ShouldBe(DepositState.Confirmed);
             }
 
