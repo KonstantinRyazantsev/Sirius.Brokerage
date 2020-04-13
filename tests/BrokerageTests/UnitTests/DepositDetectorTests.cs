@@ -167,6 +167,7 @@ namespace BrokerageTests.UnitTests
                         Unit = new Unit(assetId2, 2 * operationAmount)
                     }
                 },
+                Destinations = Array.Empty<TransferDestination>(),
                 BlockId = "BlockId#1",
                 BlockNumber = 1,
                 Error = null,
