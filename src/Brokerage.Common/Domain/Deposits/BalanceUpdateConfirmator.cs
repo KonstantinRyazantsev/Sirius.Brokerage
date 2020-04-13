@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
@@ -33,16 +32,13 @@ namespace Brokerage.Common.Domain.Deposits
         public async Task Confirm(TransactionConfirmed transaction)
         {
             var incomingTransfers = transaction
-                .BalanceUpdates
-                .SelectMany(x =>
-                    x.Transfers
-                        .Where(x => x.Amount > 0)
-                        .Select(t => new
-                        {
-                            Address = x.Address,
-                            AssetId = x.AssetId,
-                            Amount = t.Amount
-                        }))
+                .Sources
+                .Select(x => new
+                {
+                    Address = x.Address,
+                    AssetId = x.Unit.AssetId,
+                    Amount = x.Unit.Amount
+                })
                 .GroupBy(x => new
                 {
                     x.Address,

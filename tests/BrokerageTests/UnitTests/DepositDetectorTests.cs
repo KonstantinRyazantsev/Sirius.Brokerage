@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
@@ -8,6 +8,7 @@ using BrokerageTests.Repositories;
 using Shouldly;
 using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Indexer.MessagingContract;
+using Swisschain.Sirius.Sdk.Primitives;
 using Xunit;
 using DepositState = Swisschain.Sirius.Brokerage.MessagingContract.DepositState;
 
@@ -47,42 +48,26 @@ namespace BrokerageTests.UnitTests
             var detectedTransaction = new TransactionDetected()
             {
                 BlockchainId = bitcoinRegtest,
-                BalanceUpdates = new BalanceUpdate[]
+                Sources = new []
                 {
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = brokerAccountRequisistes.Address,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
-                    },
-                    new BalanceUpdate()
+                        Unit = new Unit(assetId, operationAmount)
+                    }
+                },
+                Destinations = new []
+                {
+                    new TransferDestination
                     {
                         Address = senderAddress,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = -operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId, operationAmount)
                     }
                 },
                 BlockId = "BlockId#1",
                 BlockNumber = 1,
-                ErrorCode = null,
-                ErrorMessage = null,
-                Fees = new Swisschain.Sirius.Indexer.MessagingContract.Fee[0],
+                Error = null,
+                Fees = Array.Empty<Unit>(),
                 TransactionId = "TransactionId#1",
                 TransactionNumber = 0,
             };
@@ -159,70 +144,33 @@ namespace BrokerageTests.UnitTests
             var detectedTransaction = new TransactionDetected()
             {
                 BlockchainId = bitcoinRegtest,
-                BalanceUpdates = new BalanceUpdate[]
+                Sources = new []
                 {
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = brokerAccountRequisistes.Address,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId, operationAmount)
                     },
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = brokerAccountRequisistes.Address,
-                        AssetId = assetId2,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = 2 * operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId2, 2 * operationAmount)
                     },
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = accountRequisistes.Address,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId, operationAmount)
                     },
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = accountRequisistes.Address,
-                        AssetId = assetId2,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = 2 * operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
-                    },
+                        Unit = new Unit(assetId2, 2 * operationAmount)
+                    }
                 },
                 BlockId = "BlockId#1",
                 BlockNumber = 1,
-                ErrorCode = null,
-                ErrorMessage = null,
-                Fees = new Swisschain.Sirius.Indexer.MessagingContract.Fee[0],
+                Error = null,
+                Fees = Array.Empty<Unit>(),
                 TransactionId = "TransactionId#1",
                 TransactionNumber = 0,
             };

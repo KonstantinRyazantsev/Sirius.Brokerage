@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
@@ -13,12 +12,10 @@ using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Swisschain.Sirius.Executor.ApiContract.Common;
 using Xunit;
-using BalanceUpdate = Swisschain.Sirius.Confirmator.MessagingContract.BalanceUpdate;
 using DepositSource = Brokerage.Common.Domain.Deposits.DepositSource;
 using DepositState = Swisschain.Sirius.Brokerage.MessagingContract.DepositState;
-using Fee = Swisschain.Sirius.Confirmator.MessagingContract.Fee;
 using TransactionInfo = Brokerage.Common.Domain.TransactionInfo;
-using Transfer = Swisschain.Sirius.Confirmator.MessagingContract.Transfer;
+using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace BrokerageTests.UnitTests
 {
@@ -67,45 +64,26 @@ namespace BrokerageTests.UnitTests
             accountRequisistes = await accountRequisitesRepository.AddOrGetAsync(accountRequisistes);
 
             var assetId = 100_000;
-            var detectedTransaction = new TransactionConfirmed()
+            var detectedTransaction = new TransactionConfirmed
             {
                 BlockchainId = bitcoinRegtest,
-                BalanceUpdates = new BalanceUpdate[]
+                Sources = new []
                 {
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = brokerAccountRequisistes.Address,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId, operationAmount)
                     },
-                    new BalanceUpdate()
+                    new TransferSource
                     {
                         Address = accountRequisistes.Address,
-                        AssetId = assetId,
-                        Transfers = new List<Transfer>()
-                        {
-                            new Transfer()
-                            {
-                                Amount = operationAmount,
-                                TransferId = 0,
-                                Nonce = 0
-                            }
-                        }
+                        Unit = new Unit(assetId, operationAmount),
                     }
                 },
                 BlockId = "BlockId#1",
                 BlockNumber = 1,
-                ErrorCode = null,
-                ErrorMessage = null,
-                Fees = new Fee[0],
+                Error = null,
+                Fees = Array.Empty<Unit>(),
                 TransactionId = "TransactionId#1",
                 TransactionNumber = 0,
                 RequiredConfirmationsCount = 20

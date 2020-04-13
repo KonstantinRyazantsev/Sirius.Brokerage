@@ -10,9 +10,9 @@ namespace Brokerage.Common.Domain.Accounts
             long accountRequisitesId,
             long accountId,
             long brokerAccountId,
-            BlockchainId blockchainId,
+            string blockchainId,
             string address,
-            DestinationTag tag,
+            string tag,
             DestinationTagType? tagType,
             DateTime creationDate)
         {
@@ -32,8 +32,8 @@ namespace Brokerage.Common.Domain.Accounts
         public long AccountRequisitesId { get; }
         public long AccountId { get; }
         public long BrokerAccountId { get; }
-        public BlockchainId BlockchainId { get; }
-        public DestinationTag Tag { get; }
+        public string BlockchainId { get; }
+        public string Tag { get; }
         public DestinationTagType? TagType { get; }
         public DateTime CreationDateTime { get; }
         public string Address { get; set; }
@@ -42,9 +42,9 @@ namespace Brokerage.Common.Domain.Accounts
             string requestId,
             long accountId,
             long brokerAccountId,
-            BlockchainId blockchainId,
+            string blockchainId,
             string address,
-            DestinationTag tag = null,
+            string tag = null,
             DestinationTagType? tagType = null)
         {
             return new AccountRequisites(
@@ -64,9 +64,9 @@ namespace Brokerage.Common.Domain.Accounts
             long accountRequisitesId,
             long accountId,
             long brokerAccountId,
-            BlockchainId blockchainId,
+            string blockchainId,
             string address,
-            DestinationTag tag,
+            string tag,
             DestinationTagType? tagType,
             DateTime creationDateTime)
         {

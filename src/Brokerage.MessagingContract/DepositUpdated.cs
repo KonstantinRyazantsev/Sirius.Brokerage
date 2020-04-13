@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
@@ -11,7 +12,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public long? AccountRequisitesId { get; set; }
         public long AssetId { get; set; }
         public decimal Amount { get; set; }
-        public IReadOnlyCollection<Fee> Fees { get; set; }
+        public IReadOnlyCollection<Unit> Fees { get; set; }
         public TransactionInfo TransactionInfo { get; set; }
         public DepositError Error { get; set; }
         public IReadOnlyCollection<DepositSource> Sources { get; set; }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits
 {
@@ -17,7 +17,7 @@ namespace Brokerage.Common.Domain.Deposits
             long assetId,
             decimal amount,
             long? consolidationOperationId,
-            IReadOnlyCollection<Fee> fees,
+            IReadOnlyCollection<Unit> fees,
             TransactionInfo transactionInfo,
             DepositError error,
             DepositState depositState,
@@ -55,7 +55,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long? AccountRequisitesId { get; }
         public long AssetId { get; }
         public decimal Amount { get; }
-        public IReadOnlyCollection<Fee> Fees { get; }
+        public IReadOnlyCollection<Unit> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
         public DepositError Error { get; private set; }
         public DepositState DepositState { get; private set; }
@@ -87,7 +87,7 @@ namespace Brokerage.Common.Domain.Deposits
                 assetId,
                 amount,
                 null,
-                Array.Empty<Fee>(),
+                Array.Empty<Unit>(),
                 transactionInfo,
                 null,
                 DepositState.Detected,
@@ -112,7 +112,7 @@ namespace Brokerage.Common.Domain.Deposits
             long assetId,
             decimal amount,
             long? consolidationOperationId,
-            IReadOnlyCollection<Fee> fees,
+            IReadOnlyCollection<Unit> fees,
             TransactionInfo transactionInfo,
             DepositError error,
             DepositState depositState,
@@ -160,13 +160,7 @@ namespace Brokerage.Common.Domain.Deposits
                     })
                     .ToArray(),
                 AccountRequisitesId = this.AccountRequisitesId,
-                Fees = this.Fees
-                    .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.Fee()
-                    {
-                        Amount = x.Amount,
-                        AssetId = x.AssetId
-                    })
-                    .ToArray(),
+                Fees = this.Fees,
                 TransactionInfo = new Swisschain.Sirius.Brokerage.MessagingContract.TransactionInfo()
                 {
                     TransactionId = this.TransactionInfo.TransactionId,
