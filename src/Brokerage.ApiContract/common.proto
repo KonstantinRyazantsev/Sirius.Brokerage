@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.common";
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.Common";
+
+import "google/protobuf/wrappers.proto";
 
 package common;
 
@@ -14,4 +16,25 @@ message ErrorResponseBody {
 
   ErrorCode errorCode = 1;
   string errorMessage = 2;
+}
+
+message BigDecimal {
+  string value = 1;
+}
+
+message Unit {
+  int64 assetId = 1;
+  BigDecimal amount = 2;
+}
+
+enum DestinationTagType {
+  TEXT = 0;
+  NUMBER = 1;
+}
+
+message NullableDestinationTagType {
+  oneof kind {
+    google.protobuf.NullValue null = 1;
+    DestinationTagType value = 2;
+  }
 }
