@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Linq;
-using Brokerage.Bilv1.Repositories;
-using Brokerage.Bilv1.Repositories.DbContexts;
 using GreenPipes;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
@@ -13,10 +10,8 @@ using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
-using Microsoft.EntityFrameworkCore;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Brokerage.Common.Bilv1.DomainServices;
 using Swisschain.Sirius.Executor.ApiClient;
 
 namespace Brokerage.Worker
@@ -38,23 +33,7 @@ namespace Brokerage.Worker
             services.AddHostedService<MigrationHost>();
             services.AddDomain();
 
-            services.AddBilV1Repositories();
-            services.AddBilV1Services();
-            services.AddHostedService<BalanceProcessorsHost>();
-
             services.AddMessageConsumers();
-
-            services.AddSingleton<DbContextOptionsBuilder<BrokerageBilV1Context>>(x =>
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<BrokerageBilV1Context>();
-                optionsBuilder.UseNpgsql(this.Config.Db.ConnectionString,
-                    builder =>
-                        builder.MigrationsHistoryTable(
-                            PostgresBilV1RepositoryConfiguration.MigrationHistoryTable,
-                            PostgresBilV1RepositoryConfiguration.SchemaName));
-
-                return optionsBuilder;
-            });
 
             services.AddMassTransit(x =>
             {

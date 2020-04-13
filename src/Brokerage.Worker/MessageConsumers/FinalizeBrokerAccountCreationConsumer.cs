@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Bilv1.Domain.Services;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract;
-using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Swisschain.Sirius.VaultAgent.ApiContract;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Worker.MessageConsumers
@@ -19,41 +16,38 @@ namespace Brokerage.Worker.MessageConsumers
     public class FinalizeBrokerAccountCreationConsumer : IConsumer<FinalizeBrokerAccountCreation>
     {
         private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
-        private readonly IBlockchainsRepository blockchainsRepository;
+        private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
-        private readonly IBrokerAccountsRepository brokerAccountsRepository;
-        private readonly IWalletsService walletsService;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
 
         public FinalizeBrokerAccountCreationConsumer(
             ILogger<FinalizeBrokerAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IWalletsService walletsService)
+            IBrokerAccountsRepository brokerAccountsRepository)
         {
             _logger = logger;
-            this.blockchainsRepository = blockchainsRepository;
+            _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
-            this.brokerAccountsRepository = brokerAccountsRepository;
-            this.walletsService = walletsService;
+            _brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Consume(ConsumeContext<FinalizeBrokerAccountCreation> context)
         {
             var message = context.Message;
-            var brokerAccount = await brokerAccountsRepository.GetAsync(message.BrokerAccountId);
+            var brokerAccount = await _brokerAccountsRepository.GetAsync(message.BrokerAccountId);
             var brokerAccountRequisites = new List<BrokerAccountRequisites>(20);
 
             if (brokerAccount.State == BrokerAccountState.Creating)
             {
-                BlockchainId cursor = null;
+                string cursor = null;
 
                 do
                 {
-                    var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
+                    var blockchains = await _blockchainsRepository.GetAllAsync(cursor, 100);
 
                     if (!blockchains.Any())
                         break;
@@ -93,8 +87,6 @@ namespace Brokerage.Worker.MessageConsumers
 
                         requisites.Address = response.Response.Address;
 
-                        await walletsService.ImportWalletAsync(blockchain.BlockchainId, requisites.Address);
-
                         await _brokerAccountRequisitesRepository.UpdateAsync(requisites);
 
                         brokerAccountRequisites.Add(requisites);
@@ -104,7 +96,7 @@ namespace Brokerage.Worker.MessageConsumers
 
                 brokerAccount.Activate();
 
-                await brokerAccountsRepository.UpdateAsync(brokerAccount);
+                await _brokerAccountsRepository.UpdateAsync(brokerAccount);
             }
 
             if (brokerAccountRequisites.Count == 0)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
@@ -38,16 +37,13 @@ namespace Brokerage.Common.Domain.Deposits
         public async Task Detect(TransactionDetected transaction)
         {
             var incomingTransfers = transaction
-                .BalanceUpdates
-                .SelectMany(x =>
-                    x.Transfers
-                        .Where(x => x.Amount > 0)
-                        .Select(t => new
-                        {
-                            Address = x.Address,
-                            AssetId = x.AssetId,
-                            Amount = t.Amount
-                        }))
+                .Sources
+                .Select(x => new
+                {
+                    Address = x.Address,
+                    AssetId = x.Unit.AssetId,
+                    Amount = x.Unit.Amount
+                })
                 .GroupBy(x => new
                 {
                     x.Address,
@@ -66,16 +62,13 @@ namespace Brokerage.Common.Domain.Deposits
                 });
 
             var outgoingTransfers = transaction
-                .BalanceUpdates
-                .SelectMany(x =>
-                    x.Transfers
-                        .Where(x => x.Amount < 0)
-                        .Select(t => new
-                        {
-                            Address = x.Address,
-                            AssetId = x.AssetId,
-                            Amount = t.Amount
-                        }))
+                .Destinations
+                .Select(x => new
+                {
+                    Address = x.Address,
+                    AssetId = x.Unit.AssetId,
+                    Amount = x.Unit.Amount
+                })
                 .ToLookup(x => x.AssetId);
 
             // TODO: We need transactions batch here to improve DB performance  

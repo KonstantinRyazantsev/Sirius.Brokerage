@@ -2,16 +2,11 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Brokerage.Bilv1.Domain.Models.EnrolledBalances;
-using Brokerage.Bilv1.Domain.Repositories;
-using Brokerage.Bilv1.Domain.Services;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract;
-using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Swisschain.Sirius.VaultAgent.ApiContract;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Common.Domain.Accounts
@@ -95,16 +90,14 @@ namespace Brokerage.Common.Domain.Accounts
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
             IAccountRequisitesRepository requisitesRepository,
-            IVaultAgentClient vaultAgentClient,
-            IWalletsService walletsService)
+            IVaultAgentClient vaultAgentClient)
         {
             if (State == AccountState.Creating)
             {
                 await CreateRequisites(logger,
                     blockchainsRepository,
                     requisitesRepository,
-                    vaultAgentClient,
-                    walletsService);
+                    vaultAgentClient);
 
                 Activate();
             }
@@ -140,10 +133,9 @@ namespace Brokerage.Common.Domain.Accounts
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
             IAccountRequisitesRepository requisitesRepository,
-            IVaultAgentClient vaultAgentClient,
-            IWalletsService walletsService)
+            IVaultAgentClient vaultAgentClient)
         {
-            BlockchainId cursor = null;
+            string cursor = null;
 
             do
             {
@@ -188,8 +180,6 @@ namespace Brokerage.Common.Domain.Accounts
 
                     requisites.Address = response.Response.Address;
 
-                    await walletsService.ImportWalletAsync(blockchain.BlockchainId, requisites.Address);
-
                     await requisitesRepository.UpdateAsync(requisites);
 
                     _events.Add(GetAccountRequisitesAddedEvent(requisites));
@@ -223,16 +213,7 @@ namespace Brokerage.Common.Domain.Accounts
                 Address = requisites.Address,
                 BlockchainId = requisites.BlockchainId,
                 Tag = requisites.Tag,
-                TagType = requisites.TagType.HasValue
-                    ? requisites.TagType.Value switch
-                    {
-                        DestinationTagType.Number => TagType.Number,
-                        DestinationTagType.Text => TagType.Text,
-                        _ => throw new ArgumentOutOfRangeException(nameof(requisites.TagType),
-                            requisites.TagType,
-                            null)
-                    }
-                    : (TagType?) null,
+                TagType = requisites.TagType,
                 AccountId = requisites.AccountId,
                 AccountRequisitesId = requisites.AccountRequisitesId
             };

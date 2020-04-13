@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
@@ -7,7 +6,6 @@ using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
@@ -151,14 +149,6 @@ namespace Brokerage.Common.Persistence.Accounts
 
         private static AccountRequisitesEntity MapToEntity(AccountRequisites requisites)
         {
-            var tagType = requisites.TagType.HasValue ? (TagTypeEnum?)(requisites.TagType.Value switch
-            {
-                DestinationTagType.Number => TagTypeEnum.Number,
-                DestinationTagType.Text => TagTypeEnum.Text,
-                _ => throw new ArgumentOutOfRangeException(nameof(requisites.TagType), requisites.TagType.Value, null)
-
-            }) : null;
-
             return new AccountRequisitesEntity
             {
                 RequestId = requisites.RequestId,
@@ -168,21 +158,13 @@ namespace Brokerage.Common.Persistence.Accounts
                 BrokerAccountId = requisites.BrokerAccountId,
                 BlockchainId = requisites.BlockchainId,
                 Tag = requisites.Tag,
-                TagType = tagType,
+                TagType = requisites.TagType,
                 CreationDateTime = requisites.CreationDateTime
             };
         }
 
         private static AccountRequisites MapToDomain(AccountRequisitesEntity entity)
         {
-            var tagType = entity.TagType.HasValue ? (DestinationTagType?)(entity.TagType.Value switch
-            {
-                TagTypeEnum.Number => DestinationTagType.Number,
-                TagTypeEnum.Text => DestinationTagType.Text,
-                _ => throw new ArgumentOutOfRangeException(nameof(entity.TagType), entity.TagType.Value, null)
-
-            }) : null;
-
             var brokerAccount = AccountRequisites.Restore(
                 entity.RequestId,
                 entity.Id,
@@ -191,7 +173,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 entity.BlockchainId,
                 entity.Address,
                 entity.Tag,
-                tagType,
+                entity.TagType,
                 entity.CreationDateTime.UtcDateTime);
 
             return brokerAccount;

@@ -1,4 +1,5 @@
 ﻿using System;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
@@ -10,6 +11,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public string Address { get; set; }
         public DateTime CreationDateTime { get; set; }
         public string Tag { get; set; }
-        public TagType? TagType { get; set; }
+        public DestinationTagType? TagType { get; set; }
     }
 }

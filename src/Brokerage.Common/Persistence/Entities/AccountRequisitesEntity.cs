@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Entities
 {
@@ -17,7 +18,7 @@ namespace Brokerage.Common.Persistence.Entities
         public string BlockchainId { get; set; }
         public string Address { get; set; }
         public string Tag { get; set; }
-        public TagTypeEnum? TagType { get; set; }
+        public DestinationTagType? TagType { get; set; }
         public DateTimeOffset CreationDateTime { get; set; }
         
     }

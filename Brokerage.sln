@@ -76,12 +76,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "product-name", "product-nam
 		deployment\settings\product-name\service-name.json = deployment\settings\product-name\service-name.json
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Bilv1.Domain", "src\Brokerage.Bilv1.Domain\Brokerage.Bilv1.Domain.csproj", "{863B340D-1FFB-4269-BFB8-E05181FDB76C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brokerage.Bilv1.Repositories", "src\Brokerage.Bilv1.Repositories\Brokerage.Bilv1.Repositories.csproj", "{757F0828-53B6-4CE8-888A-CB78115767F8}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BilV1", "BilV1", "{710B8D3E-36BA-4118-A2CD-373B0FF777E0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -120,14 +114,6 @@ Global
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{863B340D-1FFB-4269-BFB8-E05181FDB76C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{863B340D-1FFB-4269-BFB8-E05181FDB76C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{863B340D-1FFB-4269-BFB8-E05181FDB76C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{863B340D-1FFB-4269-BFB8-E05181FDB76C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{757F0828-53B6-4CE8-888A-CB78115767F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{757F0828-53B6-4CE8-888A-CB78115767F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{757F0828-53B6-4CE8-888A-CB78115767F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{757F0828-53B6-4CE8-888A-CB78115767F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -147,8 +133,6 @@ Global
 		{E892D1F5-DC4C-4D13-8B62-5D182B2A676C} = {EE2AA4BB-1E67-4074-B371-2C84F6469A72}
 		{C58C8AEC-FB40-42A5-9E74-98BB95045A24} = {EE2AA4BB-1E67-4074-B371-2C84F6469A72}
 		{1A5AA860-E0C0-4BB4-91DD-3AF1A7ED74E2} = {AD4D20EE-C574-4F47-BD41-ECE62C1B27C0}
-		{863B340D-1FFB-4269-BFB8-E05181FDB76C} = {710B8D3E-36BA-4118-A2CD-373B0FF777E0}
-		{757F0828-53B6-4CE8-888A-CB78115767F8} = {710B8D3E-36BA-4118-A2CD-373B0FF777E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {196C39E2-2F2E-46AB-BA2A-0D2E7E171B5A}

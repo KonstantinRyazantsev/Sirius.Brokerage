@@ -8,6 +8,7 @@ using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Brokerage.Common.Persistence.Entities.Deposits;
 using Microsoft.EntityFrameworkCore;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Deposits
 {
@@ -187,7 +188,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.Amount,
                 depositEntity.ConsolidationOperationId,
                 depositEntity.Fees?
-                    .Select(x => new Fee(x.AssetId, x.Amount))
+                    .Select(x => new Unit(x.AssetId, x.Amount))
                     .ToArray(),
                 new TransactionInfo(
                     depositEntity.TransactionId,
