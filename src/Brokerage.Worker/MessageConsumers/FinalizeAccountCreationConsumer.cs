@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Brokerage.Bilv1.Domain.Services;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
@@ -18,7 +17,6 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IVaultAgentClient _vaultAgentClient;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly IAccountsRepository accountsRepository;
-        private readonly IWalletsService _walletsService;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
@@ -26,8 +24,7 @@ namespace Brokerage.Worker.MessageConsumers
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IAccountRequisitesRepository accountRequisitesRepository,
-            IAccountsRepository accountsRepository,
-            IWalletsService walletsService)
+            IAccountsRepository accountsRepository)
         {
             this.loggerFactory = loggerFactory;
             _logger = logger;
@@ -35,7 +32,6 @@ namespace Brokerage.Worker.MessageConsumers
             _vaultAgentClient = vaultAgentClient;
             _accountRequisitesRepository = accountRequisitesRepository;
             this.accountsRepository = accountsRepository;
-            _walletsService = walletsService;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
@@ -49,8 +45,7 @@ namespace Brokerage.Worker.MessageConsumers
                     loggerFactory.CreateLogger<Account>(),
                     blockchainsRepository,
                     _accountRequisitesRepository,
-                    _vaultAgentClient,
-                    _walletsService);
+                    _vaultAgentClient);
             }
             catch (Exception ex)
             {
