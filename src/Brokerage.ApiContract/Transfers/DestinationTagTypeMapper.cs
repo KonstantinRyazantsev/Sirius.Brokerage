@@ -1,5 +1,6 @@
 ﻿using System;
 using Google.Protobuf.WellKnownTypes;
+using Swisschain.Sirius.Brokerage.ApiContract.Common;
 
 namespace Swisschain.Sirius.Brokerage.ApiContract.Transfers
 {

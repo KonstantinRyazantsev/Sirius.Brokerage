@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MassTransit;
 using Swisschain.Sirius.Brokerage.ApiContract;
-using Swisschain.Sirius.Brokerage.ApiContract.common;
+using Swisschain.Sirius.Brokerage.ApiContract.Common;
 
 namespace Brokerage.GrpcServices
 {
@@ -32,9 +31,9 @@ namespace Brokerage.GrpcServices
                 {
                     return new CreateResponse
                     {
-                        Error = new ErrorResponseBody
+                        Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                         {
-                            ErrorCode = ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
+                            ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
                             ErrorMessage = $"Name is empty"
                         }
                     };
@@ -47,9 +46,9 @@ namespace Brokerage.GrpcServices
                 {
                     return new CreateResponse
                     {
-                        Error = new ErrorResponseBody
+                        Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                         {
-                            ErrorCode = ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
+                            ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
                             ErrorMessage = "Not authorized to perform action"
                         }
                     };
@@ -81,9 +80,9 @@ namespace Brokerage.GrpcServices
             {
                 return new CreateResponse
                 {
-                    Error = new ErrorResponseBody
+                    Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                     {
-                        ErrorCode = ErrorResponseBody.Types.ErrorCode.Unknown,
+                        ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.Unknown,
                         ErrorMessage = e.Message,
                     }
                 };

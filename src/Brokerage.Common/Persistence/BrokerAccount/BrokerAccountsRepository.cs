@@ -28,6 +28,17 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return MapToDomain(entity);
         }
 
+        public async Task<Domain.BrokerAccounts.BrokerAccount> GetOrDefaultAsync(long brokerAccountId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var entity = await context
+                .BrokerAccounts
+                .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId);
+
+            return MapToDomain(entity);
+        }
+
         public async Task UpdateAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

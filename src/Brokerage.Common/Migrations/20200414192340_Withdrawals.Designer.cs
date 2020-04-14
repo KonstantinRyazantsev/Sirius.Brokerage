@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200414192340_Withdrawals")]
+    partial class Withdrawals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -412,16 +414,16 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("TenantId")
                         .HasColumnType("text");
 
-                    b.Property<long?>("TransactionBlock")
+                    b.Property<long>("TransactionBlock")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset?>("TransactionDateTime")
+                    b.Property<DateTimeOffset>("TransactionDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TransactionId")
                         .HasColumnType("text");
 
-                    b.Property<long?>("TransactionRequiredConfirmationsCount")
+                    b.Property<long>("TransactionRequiredConfirmationsCount")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedDateTime")

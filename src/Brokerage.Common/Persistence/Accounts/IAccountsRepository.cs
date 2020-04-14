@@ -7,6 +7,8 @@ namespace Brokerage.Common.Persistence.Accounts
     {
         Task<Account> GetAsync(long accountId);
 
+        Task<Account> GetOrDefaultAsync(long accountId);
+
         Task<Account> AddOrGetAsync(Account account);
 
         Task UpdateAsync(Account account);

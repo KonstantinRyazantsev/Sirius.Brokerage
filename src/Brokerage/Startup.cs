@@ -6,14 +6,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.ServiceFunctions;
 using Brokerage.GrpcServices;
 using Brokerage.HostedServices;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.EfCore;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sdk.Server.Common;
 
 namespace Brokerage
@@ -28,6 +34,17 @@ namespace Brokerage
         {
             base.ConfigureServicesExt(services);
 
+            services.AddOutbox(c =>
+            {
+                c.DispatchWithMassTransit();
+                c.PersistWithEfCore(s =>
+                {
+                    var optionsBuilder = s.GetRequiredService<DbContextOptionsBuilder<DatabaseContext>>();
+
+                    return new DatabaseContext(optionsBuilder.Options);
+                });
+            });
+
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<DbSchemaValidationHost>();
             services.AddMassTransit(x =>
@@ -38,6 +55,7 @@ namespace Brokerage
                     new Uri("queue:sirius-brokerage-finalize-account-creation"));
                 EndpointConvention.Map<PublishAccountRequisites>(
                     new Uri("queue:sirius-brokerage-publish-account-requisites"));
+                EndpointConvention.Map<ExecuteWithdrawal>(new Uri("queue:sirius-brokerage-execute-withdrawal"));
 
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {
@@ -61,6 +79,7 @@ namespace Brokerage
             endpoints.MapGrpcService<MonitoringService>();
             endpoints.MapGrpcService<BrokerAccountsService>();
             endpoints.MapGrpcService<AccountsService>();
+            endpoints.MapGrpcService<WithdrawalsService>();
         }
     }
 }

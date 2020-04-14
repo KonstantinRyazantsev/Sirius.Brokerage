@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.BrokerAccounts";
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
 import "common.proto";
 import "google/protobuf/timestamp.proto";

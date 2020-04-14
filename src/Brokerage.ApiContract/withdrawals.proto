@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.Withdrawals";
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
 import "common.proto";
 import "google/protobuf/timestamp.proto";
@@ -9,7 +9,7 @@ import "google/protobuf/wrappers.proto";
 package services;
 
 service Withdrawals {
-  rpc Execute (ExecuteWithdrawalRequest) returns (ExecuteWithdrawalResponse);
+  rpc Execute (ExecuteWithdrawalRequest) returns (ExecuteWithdrawalWrapperResponse);
 }
 
 message ExecuteWithdrawalRequest {
@@ -35,7 +35,26 @@ message DestinationRequisites {
 
   google.protobuf.StringValue Tag = 2;
 
-  NullableDestinationTagType tagType = 3;
+  common.NullableDestinationTagType tagType = 3;
+}
+
+message ExecuteWithdrawalWrapperResponse {
+    oneof kind{
+      ExecuteWithdrawalResponse response = 1;
+      ErrorResponseBody error =2;
+    }
+}
+
+message ErrorResponseBody {
+
+  enum ErrorCode {
+    INVALID_PARAMETERS = 0;
+    Unauthorized = 1;
+    TECHNICAL_PROBLEMS = 2;
+  }
+
+  ErrorCode errorCode = 1;
+  string errorMessage = 2;
 }
 
 message ExecuteWithdrawalResponse{
@@ -45,7 +64,7 @@ message ExecuteWithdrawalResponse{
 
   int64 brokerAccountRequisitesId = 3;
 
-  int64 accountId = 4;
+  google.protobuf.Int64Value accountId = 4;
 
   google.protobuf.StringValue referenceId = 5;
 
@@ -82,6 +101,25 @@ message ExecuteWithdrawalResponse{
   google.protobuf.Timestamp updatedDateTime = 15;
 }
 
+message WithdrawalError
+{
+  string messageInfo = 1; 
+
+  WithdrawalErrorCode errorCode = 2;
+
+  enum WithdrawalErrorCode
+  {
+    NOT_ENOUGH_BALANCE=0;
+     
+    INVALID_DESTINATION_ADDRESS=1;
+     
+    DESTINATION_TAG_REQUIRED=2;
+     
+    TECHNICAL_PROBLEM=3;
+  }
+}
+
+
 message TransactionInfo{
   string transactionId = 1;
 
@@ -91,22 +129,3 @@ message TransactionInfo{
 
   google.protobuf.Timestamp dateTime = 4;
 }
-
-message WithdrawalError
-{
-   string messageInfo = 1; 
-
-   WithdrawalErrorCode errorCode = 2;
-
-  enum WithdrawalErrorCode
-  {
-     NOT_ENOUGH_BALANCE=0;
-     
-     INVALID_DESTINATION_ADDRESS=1;
-     
-     DESTINATION_TAG_REQUIRED=2;
-     
-     TECHNICAL_PROBLEM=3;
-  }
-}
-

@@ -1,11 +1,15 @@
 ﻿using Brokerage.Common.Persistence.Entities;
 using Brokerage.Common.Persistence.Entities.Deposits;
+using Brokerage.Common.Persistence.Entities.Withdrawals;
+using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
+using Swisschain.Extensions.Idempotency.EfCore;
+using DepositSourceEntity = Brokerage.Common.Persistence.Entities.Deposits.DepositSourceEntity;
 
 namespace Brokerage.Common.Persistence.DbContexts
 {
-    public class DatabaseContext : DbContext
+    public class DatabaseContext : DbContext, IDbContextWithOutbox
     {
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
@@ -25,11 +29,19 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<DepositFeeEntity> Fees { get; set; }
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
+        public DbSet<WithdrawalEntity> Withdrawals { get; set; }
+        public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
+
+        public DbSet<OutboxEntity> Outbox { get; set; }
+        public DbSet<Asset> Assets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema(SchemaName);
 
+            modelBuilder.BuildOutbox(startAggregateIdFrom: 99_999);
+
+            BuildAssets(modelBuilder);
             BuildBrokerAccount(modelBuilder);
             BuildBrokerAccountRequisites(modelBuilder);
             BuildAccount(modelBuilder);
@@ -37,8 +49,68 @@ namespace Brokerage.Common.Persistence.DbContexts
             BuildBlockchain(modelBuilder);
             BuildBrokerAccountBalancesEntity(modelBuilder);
             BuildDepositsEntity(modelBuilder);
+            BuildWithdrawalsEntity(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void BuildAssets(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Asset>()
+                .ToTable(Tables.Assets)
+                .HasKey(x => x.Id);
+        }
+
+        private static void BuildWithdrawalsEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<WithdrawalEntity>()
+                .ToTable(Tables.Withdrawals)
+                .HasKey(x => x.Id);
+
+            modelBuilder.Entity<WithdrawalFeeEntity>()
+                .ToTable(Tables.WithdrawalFees)
+                .HasKey(x => new
+                {
+                    x.WithdrawalId,
+                    x.AssetId
+                });
+
+            modelBuilder.Entity<WithdrawalEntity>()
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 100_000);
+
+            modelBuilder.Entity<WithdrawalEntity>(e =>
+            {
+                e.Property(p => p.Version)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
+
+            modelBuilder.Entity<WithdrawalEntity>()
+                .HasIndex(x => new
+                {
+                    x.TransactionId,
+                    x.AssetId,
+                    x.BrokerAccountRequisitesId,
+                })
+                .IsUnique(true)
+                .HasName("IX_Withdrawal_NaturalId");
+
+            modelBuilder.Entity<WithdrawalEntity>()
+                .HasIndex(x => x.TransactionId)
+                .HasName("IX_Withdrawal_TransactionId");
+
+            modelBuilder.Entity<WithdrawalEntity>()
+                .HasIndex(x => x.WithdrawalOperationId)
+                .HasName("IX_Withdrawal_OperationId");
+
+
+            modelBuilder.Entity<WithdrawalEntity>()
+                .HasMany(x => x.Fees)
+                .WithOne(x => x.WithdrawalEntity)
+                .HasForeignKey(x => x.WithdrawalId);
         }
 
         private static void BuildDepositsEntity(ModelBuilder modelBuilder)

@@ -20,6 +20,11 @@ namespace BrokerageTests.Repositories
             return Task.FromResult(_storage.First(x => x.BrokerAccountId == brokerAccountId));
         }
 
+        public Task<BrokerAccount> GetOrDefaultAsync(long brokerAccountId)
+        {
+            return Task.FromResult(_storage.FirstOrDefault(x => x.BrokerAccountId == brokerAccountId));
+        }
+
         public Task<BrokerAccount> AddOrGetAsync(BrokerAccount brokerAccount)
         {
             _id++;

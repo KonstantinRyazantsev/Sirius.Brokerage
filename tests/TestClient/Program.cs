@@ -26,33 +26,43 @@ namespace TestClient
 
                     {
                         var tenantId = "Tenant_1";
-                        var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
+                        //var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
+                        //{
+                        //    Name = "Broker_1",
+                        //    RequestId = requestId,
+                        //    TenantId = tenantId,
+                        //});
+
+                        //var account = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        //{
+                        //    RequestId = requestId,
+                        //    ReferenceId = "some ref",
+                        //    BrokerAccountId = brokerAccount.Response.BrokerAccountId
+                        //});
+
+                        //var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        //{
+                        //    RequestId = requestId,
+                        //    ReferenceId = "some ref",
+                        //    BrokerAccountId = 1
+                        //});
+
+                        var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
                         {
-                            Name = "Broker_1",
-                            RequestId = requestId,
-                            TenantId = tenantId,
+                            BrokerAccountId = 100_007,
+                            AssetId = 100_000,
+                            Amount = 1.0m,
+                            TenantId = "abel-tenant-100",
+                            DestinationRequisites = new DestinationRequisites() {Address = "2N66iZ4D5oo61ZCZUTXtmrt7RNTwQxLTZ2u" },
+                            RequestId = "2",
                         });
 
-                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        {
-                            RequestId = requestId,
-                            ReferenceId = "some ref",
-                            BrokerAccountId = brokerAccount.Response.BrokerAccountId
-                        });
-
-                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        {
-                            RequestId = requestId,
-                            ReferenceId = "some ref",
-                            BrokerAccountId = 1
-                        });
-
-                        var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
-                        var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
+                        //var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
+                        //var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
                         
-                        Console.WriteLine(serializedBrokerAccount);
-                        Console.WriteLine();
-                        Console.WriteLine(serializedAccount);
+                        //Console.WriteLine(serializedBrokerAccount);
+                        //Console.WriteLine();
+                        //Console.WriteLine(serializedAccount);
                     }
 
                     {
