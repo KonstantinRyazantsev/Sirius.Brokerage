@@ -37,7 +37,7 @@ namespace Brokerage.Common.Domain.Deposits
         public async Task Detect(TransactionDetected transaction)
         {
             var incomingTransfers = transaction
-                .Sources
+                .Destinations
                 .Select(x => new
                 {
                     Address = x.Address,
@@ -62,7 +62,7 @@ namespace Brokerage.Common.Domain.Deposits
                 });
 
             var outgoingTransfers = transaction
-                .Destinations
+                .Sources
                 .Select(x => new
                 {
                     Address = x.Address,
@@ -176,7 +176,7 @@ namespace Brokerage.Common.Domain.Deposits
                     DateTime.UtcNow);
 
                 var sources = outgoingTransfers[assetId]
-                    .Select(x => new DepositSource(x.Address, Math.Abs(x.Amount)))
+                    .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray();
 
                 var id = await _depositsRepository.GetNextIdAsync();

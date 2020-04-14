@@ -32,7 +32,7 @@ namespace Brokerage.Common.Domain.Deposits
         public async Task Confirm(TransactionConfirmed transaction)
         {
             var incomingTransfers = transaction
-                .Sources
+                .Destinations
                 .Select(x => new
                 {
                     Address = x.Address,

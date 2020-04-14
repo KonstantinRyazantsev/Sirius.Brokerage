@@ -16,11 +16,6 @@ namespace BrokerageTests.UnitTests
 {
     public class DepositDetectorTests
     {
-        public DepositDetectorTests()
-        {
-
-        }
-
         [Fact]
         public async Task SingleTransferTest()
         {
@@ -45,20 +40,20 @@ namespace BrokerageTests.UnitTests
             var operationAmount = 15m;
             brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
             var assetId = 100_000;
-            var detectedTransaction = new TransactionDetected()
+            var detectedTransaction = new TransactionDetected
             {
                 BlockchainId = bitcoinRegtest,
-                Sources = new []
+                Destinations = new []
                 {
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = brokerAccountRequisistes.Address,
                         Unit = new Unit(assetId, operationAmount)
                     }
                 },
-                Destinations = new []
+                Sources = new []
                 {
-                    new TransferDestination
+                    new TransferSource
                     {
                         Address = senderAddress,
                         Unit = new Unit(assetId, operationAmount)
@@ -144,30 +139,30 @@ namespace BrokerageTests.UnitTests
             var detectedTransaction = new TransactionDetected()
             {
                 BlockchainId = bitcoinRegtest,
-                Sources = new []
+                Destinations = new []
                 {
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = brokerAccountRequisistes.Address,
                         Unit = new Unit(assetId, operationAmount)
                     },
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = brokerAccountRequisistes.Address,
                         Unit = new Unit(assetId2, 2 * operationAmount)
                     },
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = accountRequisistes.Address,
                         Unit = new Unit(assetId, operationAmount)
                     },
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = accountRequisistes.Address,
                         Unit = new Unit(assetId2, 2 * operationAmount)
                     }
                 },
-                Destinations = Array.Empty<TransferDestination>(),
+                Sources = Array.Empty<TransferSource>(),
                 BlockId = "BlockId#1",
                 BlockNumber = 1,
                 Error = null,
