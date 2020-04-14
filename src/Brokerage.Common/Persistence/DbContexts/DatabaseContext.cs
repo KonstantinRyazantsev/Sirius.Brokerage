@@ -17,18 +17,12 @@ namespace Brokerage.Common.Persistence.DbContexts
 
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
-
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
-
         public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
-
         public DbSet<AccountEntity> Accounts { get; set; }
-
         public DbSet<DepositEntity> Deposits { get; set; }
-
         public DbSet<DepositSourceEntity> DepositSources { get; set; }
         public DbSet<DepositFeeEntity> Fees { get; set; }
-
         public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
 
@@ -129,6 +123,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                     x.BrokerAccountId,
                     x.AssetId
                 })
+                .IsUnique()
                 .HasName("IX_BrokerAccountBalances_BrokerAccountId_AssetId");
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>(e =>
