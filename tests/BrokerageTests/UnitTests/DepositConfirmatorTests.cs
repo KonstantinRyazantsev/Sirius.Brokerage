@@ -67,14 +67,14 @@ namespace BrokerageTests.UnitTests
             var detectedTransaction = new TransactionConfirmed
             {
                 BlockchainId = bitcoinRegtest,
-                Sources = new []
+                Destinations = new []
                 {
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = brokerAccountRequisistes.Address,
                         Unit = new Unit(assetId, operationAmount)
                     },
-                    new TransferSource
+                    new TransferDestination
                     {
                         Address = accountRequisistes.Address,
                         Unit = new Unit(assetId, operationAmount),
