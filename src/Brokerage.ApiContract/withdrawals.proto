@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package services;
+
+service Withdrawals {
+  rpc Execute (ExecuteWithdrawalRequest) returns (ExecuteWithdrawalWrapperResponse);
+}
+
+message ExecuteWithdrawalRequest {
+  string tenantId = 1;
+
+  string requestId = 2;
+
+  int64 brokerAccountId = 3;
+
+  google.protobuf.Int64Value accountId = 4;
+
+  google.protobuf.StringValue referenceId = 5;
+
+  int64 assetId = 6;
+
+  common.BigDecimal amount = 7;
+
+  .services.DestinationRequisites destinationRequisites = 8;
+}
+
+message DestinationRequisites {
+  string address = 1;
+
+  google.protobuf.StringValue Tag = 2;
+
+  common.NullableDestinationTagType tagType = 3;
+}
+
+message ExecuteWithdrawalWrapperResponse {
+    oneof kind{
+      ExecuteWithdrawalResponse response = 1;
+      ErrorResponseBody error =2;
+    }
+}
+
+message ErrorResponseBody {
+
+  enum ErrorCode {
+    INVALID_PARAMETERS = 0;
+    UNAUTHORIZED = 1;
+    TECHNICAL_PROBLEMS = 2;
+  }
+
+  ErrorCode errorCode = 1;
+  string errorMessage = 2;
+}
+
+message ExecuteWithdrawalResponse{
+  int64 id = 1;
+
+  int64 brokerAccountId = 2;
+
+  int64 brokerAccountRequisitesId = 3;
+
+  google.protobuf.Int64Value accountId = 4;
+
+  google.protobuf.StringValue referenceId = 5;
+
+  common.Unit unit = 6;
+
+  string tenantId = 7;
+
+  repeated common.Unit fees = 8;
+
+  DestinationRequisites destinationRequisites = 9;
+
+  WithdrawalState State = 10;
+
+  enum WithdrawalState {
+    PROCESSING = 0;
+    
+    EXECUTING=1;
+    
+    SENT=2;
+    
+    COMPLETED=3;
+    
+    FAILED=4;
+  }
+
+  TransactionInfo transactionInfo = 11;
+
+  WithdrawalError error = 12;
+
+  google.protobuf.Int64Value operationId = 13;
+
+  google.protobuf.Timestamp createdAt = 14;
+
+  google.protobuf.Timestamp updatedAt = 15;
+}
+
+message WithdrawalError
+{
+  string messageInfo = 1; 
+
+  WithdrawalErrorCode errorCode = 2;
+
+  enum WithdrawalErrorCode
+  {
+    NOT_ENOUGH_BALANCE=0;
+     
+    INVALID_DESTINATION_ADDRESS=1;
+     
+    DESTINATION_TAG_REQUIRED=2;
+     
+    TECHNICAL_PROBLEM=3;
+  }
+}
+
+
+message TransactionInfo{
+  string transactionId = 1;
+
+  int64 transactionBlock = 2;  
+
+  int64 requiredConfirmationsCount = 3;
+
+  google.protobuf.Timestamp dateTime = 4;
+}

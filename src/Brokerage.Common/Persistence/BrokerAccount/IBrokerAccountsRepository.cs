@@ -6,6 +6,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
     {
         Task<Domain.BrokerAccounts.BrokerAccount> GetAsync(long brokerAccountId);
 
+        Task<Domain.BrokerAccounts.BrokerAccount> GetOrDefaultAsync(long brokerAccountId);
+
         Task<Domain.BrokerAccounts.BrokerAccount> AddOrGetAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount);
 
         Task UpdateAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount);

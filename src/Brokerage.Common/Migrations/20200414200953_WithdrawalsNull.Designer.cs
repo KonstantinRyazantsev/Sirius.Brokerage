@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200414200953_WithdrawalsNull")]
+    partial class WithdrawalsNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +27,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("AccountId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<DateTimeOffset?>("ActivationDateTime")
@@ -65,7 +67,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("AccountId")
@@ -176,7 +178,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("BrokerAccountId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<DateTimeOffset?>("ActivationDateTime")
@@ -214,7 +216,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Address")
@@ -252,7 +254,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long?>("AccountRequisitesId")
@@ -370,7 +372,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'100000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long?>("AccountId")
@@ -450,6 +452,10 @@ namespace Brokerage.Common.Migrations
                     b.HasIndex("WithdrawalOperationId")
                         .HasName("IX_Withdrawal_OperationId");
 
+                    b.HasIndex("TransactionId", "AssetId", "BrokerAccountRequisitesId")
+                        .IsUnique()
+                        .HasName("IX_Withdrawal_NaturalId");
+
                     b.ToTable("withdrawals");
                 });
 
@@ -514,7 +520,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("AggregateId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'999999', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'99999', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Commands")
