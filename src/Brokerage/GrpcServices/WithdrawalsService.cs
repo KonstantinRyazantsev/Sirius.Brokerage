@@ -166,6 +166,7 @@ namespace Brokerage.GrpcServices
                     Response = new ExecuteWithdrawalResponse()
                     {
                         Id = withdrawal.Id,
+                        Sequence = withdrawal.Sequence,
                         BrokerAccountId = withdrawal.BrokerAccountId,
                         BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
                         TenantId = withdrawal.TenantId,

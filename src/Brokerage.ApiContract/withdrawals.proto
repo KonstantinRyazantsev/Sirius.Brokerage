@@ -99,6 +99,8 @@ message ExecuteWithdrawalResponse{
   google.protobuf.Timestamp createdAt = 14;
 
   google.protobuf.Timestamp updatedAt = 15;
+
+  int64 sequence = 16;
 }
 
 message WithdrawalError
