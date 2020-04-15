@@ -238,7 +238,7 @@ namespace Brokerage.GrpcServices
             {
                 Error = new ErrorResponseBody()
                 {
-                    ErrorCode = ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    ErrorCode = errorCode,
                     ErrorMessage = message
                 }
             };
