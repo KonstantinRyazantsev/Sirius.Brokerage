@@ -106,14 +106,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 context.Entry(entity).State = EntityState.Modified;
             }
 
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-            {
-                throw e;
-            }
+            await context.SaveChangesAsync();
         }
 
         public async Task AddOrIgnoreAsync(Withdrawal withdrawal)
@@ -187,18 +180,18 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     .Select(x => new Unit(x.AssetId, x.Amount))
                     .ToArray(),
                 new DestinationRequisites(
-                    withdrawalEntity.DestinationAddress, 
+                    withdrawalEntity.DestinationAddress,
                     withdrawalEntity.DestinationTag,
                     withdrawalEntity.DestinationTagType),
                 withdrawalEntity.State,
                 withdrawalEntity.TransactionId != null ? new TransactionInfo(
-                    withdrawalEntity.TransactionId, 
+                    withdrawalEntity.TransactionId,
                     // ReSharper disable once PossibleInvalidOperationException
-                    withdrawalEntity.TransactionBlock.Value, 
-                    withdrawalEntity.TransactionRequiredConfirmationsCount.Value, 
+                    withdrawalEntity.TransactionBlock.Value,
+                    withdrawalEntity.TransactionRequiredConfirmationsCount.Value,
                     withdrawalEntity.TransactionDateTime.Value.UtcDateTime) : null,
-                withdrawalEntity.WithdrawalErrorCode == null ? 
-                    null : 
+                withdrawalEntity.WithdrawalErrorCode == null ?
+                    null :
                     new WithdrawalError(withdrawalEntity.WithdrawalErrorMessage, withdrawalEntity.WithdrawalErrorCode.Value),
                 withdrawalEntity.WithdrawalOperationId,
                 withdrawalEntity.CreatedDateTime.UtcDateTime,
