@@ -6,7 +6,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
 {
     public interface IWithdrawalRepository
     {
-        Task<Withdrawal> GetOrDefaultAsync(
+        Task<IReadOnlyCollection<Withdrawal>> GetOrDefaultAsync(
             string transactionId,
             long assetId,
             long brokerAccountRequisitesId);
@@ -14,7 +14,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
         Task<Withdrawal> GetAsync(long withdrawalId);
         Task<long> GetNextIdAsync();
         Task<IReadOnlyCollection<Withdrawal>> GetByTransactionIdAsync(string transactionId);
-        Task<Withdrawal> GetByConsolidationOperationIdAsync(long operationId);
+        Task<Withdrawal> GetByOperationIdAsync(long operationId);
         Task SaveAsync(Withdrawal withdrawal);
         Task AddOrIgnoreAsync(Withdrawal withdrawal);
     }

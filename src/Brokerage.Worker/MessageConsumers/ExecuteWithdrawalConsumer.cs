@@ -50,21 +50,22 @@ namespace Brokerage.Worker.MessageConsumers
                 }
                 : new NullableDestinationTagType()
                 {
-                    Value = withdrawal.DestinationRequisites.TagType.Value switch{
+                    Value = withdrawal.DestinationRequisites.TagType.Value switch
+                    {
                         DestinationTagType.Text => Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Text,
                         DestinationTagType.Number => Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Number,
                         _ => throw new ArgumentOutOfRangeException(
-                            nameof(withdrawal.DestinationRequisites.TagType), 
-                            withdrawal.DestinationRequisites.TagType , 
+                            nameof(withdrawal.DestinationRequisites.TagType),
+                            withdrawal.DestinationRequisites.TagType,
                             null)
-                }
+                    }
                 };
             var operation = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest()
             {
                 AssetId = withdrawal.Unit.AssetId,
                 Operation = new OperationRequest()
                 {
-                    RequestId = $"WORKER:WITHDRAWAL:{withdrawal.Id}",
+                    RequestId = $"Brokerage:Withdrawal:{withdrawal.Id}",
                     TenantId = withdrawal.TenantId,
                     FeePayerAddress = sourceRequisites.Address
                 },
@@ -85,7 +86,7 @@ namespace Brokerage.Worker.MessageConsumers
             withdrawal.AddOperation(operation.Response.Operation.Id);
             await _withdrawalRepository.SaveAsync(withdrawal);
 
-            _logger.LogInformation("Asset has been added {@context}", evt);
+            _logger.LogInformation("ExecuteWithdrawal has been processed {@context}", evt);
 
             await Task.CompletedTask;
         }

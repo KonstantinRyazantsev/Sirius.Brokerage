@@ -36,7 +36,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .BrokerAccounts
                 .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId);
 
-            return MapToDomain(entity);
+            return entity != null ? MapToDomain(entity) : null;
         }
 
         public async Task UpdateAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount)

@@ -11,6 +11,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 {
     public class DatabaseContext : DbContext, IDbContextWithOutbox
     {
+        public const long StartingIdentity = 999_999;
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
 
@@ -39,7 +40,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         {
             modelBuilder.HasDefaultSchema(SchemaName);
 
-            modelBuilder.BuildOutbox(startAggregateIdFrom: 99_999);
+            modelBuilder.BuildOutbox(startAggregateIdFrom: StartingIdentity);
 
             BuildAssets(modelBuilder);
             BuildBrokerAccount(modelBuilder);
@@ -77,7 +78,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<WithdrawalEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
 
             modelBuilder.Entity<WithdrawalEntity>(e =>
             {
@@ -87,16 +88,6 @@ namespace Brokerage.Common.Persistence.DbContexts
                     .ValueGeneratedOnAddOrUpdate()
                     .IsConcurrencyToken();
             });
-
-            modelBuilder.Entity<WithdrawalEntity>()
-                .HasIndex(x => new
-                {
-                    x.TransactionId,
-                    x.AssetId,
-                    x.BrokerAccountRequisitesId,
-                })
-                .IsUnique(true)
-                .HasName("IX_Withdrawal_NaturalId");
 
             modelBuilder.Entity<WithdrawalEntity>()
                 .HasIndex(x => x.TransactionId)
@@ -137,7 +128,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<DepositEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
 
             modelBuilder.Entity<DepositEntity>(e =>
             {
@@ -235,7 +226,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<AccountRequisitesEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
 
             modelBuilder.Entity<AccountEntity>()
                 .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
@@ -255,7 +246,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<AccountEntity>()
                 .Property(b => b.AccountId)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasMany<AccountEntity>(s => s.Accounts)
@@ -276,7 +267,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .HasIndex(x => x.BrokerAccountId)
@@ -302,7 +293,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .Property(b => b.BrokerAccountId)
-                .HasIdentityOptions(startValue: 100_000);
+                .HasIdentityOptions(startValue: StartingIdentity);
         }
     }
 }

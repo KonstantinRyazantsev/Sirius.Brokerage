@@ -49,7 +49,7 @@ message ErrorResponseBody {
 
   enum ErrorCode {
     INVALID_PARAMETERS = 0;
-    Unauthorized = 1;
+    UNAUTHORIZED = 1;
     TECHNICAL_PROBLEMS = 2;
   }
 
@@ -94,11 +94,11 @@ message ExecuteWithdrawalResponse{
 
   WithdrawalError error = 12;
 
-  google.protobuf.Int64Value withdrawalOperationId = 13;
+  google.protobuf.Int64Value operationId = 13;
 
-  google.protobuf.Timestamp createdDateTime = 14;
+  google.protobuf.Timestamp createdAt = 14;
 
-  google.protobuf.Timestamp updatedDateTime = 15;
+  google.protobuf.Timestamp updatedAt = 15;
 }
 
 message WithdrawalError

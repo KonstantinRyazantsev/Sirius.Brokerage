@@ -22,21 +22,24 @@ namespace Brokerage.Common.Persistence.Withdrawals
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<Withdrawal> GetOrDefaultAsync(
+        public async Task<IReadOnlyCollection<Withdrawal>> GetOrDefaultAsync(
             string transactionId,
             long assetId,
             long brokerAccountRequisitesId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entity = await context
+            var query = context
                 .Withdrawals
                 .Include(x => x.Fees)
-                .FirstOrDefaultAsync(x => x.TransactionId == transactionId &&
+                .Where(x => x.TransactionId == transactionId &&
                                           x.AssetId == assetId &&
                                           x.BrokerAccountRequisitesId == brokerAccountRequisitesId);
+            await query.LoadAsync();
 
-            return entity != null ? MapToDomain(entity) : null;
+            return query?.AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
         }
 
         public async Task<Withdrawal> GetAsync(long withdrawalId)
@@ -74,7 +77,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 .ToArray();
         }
 
-        public async Task<Withdrawal> GetByConsolidationOperationIdAsync(long operationId)
+        public async Task<Withdrawal> GetByOperationIdAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -107,7 +110,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
             {
                 await context.SaveChangesAsync();
             }
-            catch (Exception e)
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
             {
                 throw e;
             }
@@ -139,7 +142,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 Version = withdrawal.Version,
                 AssetId = withdrawal.Unit.AssetId,
                 Amount = withdrawal.Unit.Amount,
-                WithdrawalOperationId = withdrawal.WithdrawalOperationId,
+                WithdrawalOperationId = withdrawal.operationId,
                 BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
                 Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity()
                 {
@@ -157,8 +160,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 BrokerAccountId = withdrawal.BrokerAccountId,
                 TenantId = withdrawal.TenantId,
                 DestinationTagType = withdrawal.DestinationRequisites.TagType,
-                UpdatedDateTime = withdrawal.UpdatedDateTime,
-                CreatedDateTime = withdrawal.CreatedDateTime,
+                UpdatedDateTime = withdrawal.UpdatedAt,
+                CreatedDateTime = withdrawal.CreatedAt,
                 DestinationAddress = withdrawal.DestinationRequisites.Address,
                 AccountId = withdrawal.AccountId,
                 DestinationTag = withdrawal.DestinationRequisites.Tag,

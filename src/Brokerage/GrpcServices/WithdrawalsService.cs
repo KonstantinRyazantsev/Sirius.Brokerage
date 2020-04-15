@@ -51,16 +51,6 @@ namespace Brokerage.GrpcServices
             _logger = logger;
         }
 
-        /*
-         The Tenant ID is specified
-         The Request ID is specified
-         The broker account is exists
-         The account exists if specified
-         */
-        /*
-         TechnicalProblems
-            Any other errors
-         */
         public override async Task<ExecuteWithdrawalWrapperResponse> Execute(ExecuteWithdrawalRequest request, ServerCallContext context)
         {
             if (string.IsNullOrEmpty(request.TenantId))
@@ -124,31 +114,31 @@ namespace Brokerage.GrpcServices
                 {
                     return GetErrorResponseExecuteWithdrawalWrapperResponse(
                         ErrorResponseBody.Types.ErrorCode.InvalidParameters,
-                        "The Account doesn’t exist if specified");
+                        "The Account doesn’t exist");
                 }
 
                 if (account.BrokerAccountId != brokerAccount.BrokerAccountId)
                 {
                     return GetErrorResponseExecuteWithdrawalWrapperResponse(
                         ErrorResponseBody.Types.ErrorCode.InvalidParameters,
-                        "The Account doesn’t relate to the Broker account (if account specified)");
+                        "The Account doesn’t relate to the Broker account");
                 }
             }
 
             var outbox = await _outbox.Open($"API:Withdrawals.Execute:{request.RequestId}",
                 () => _withdrawalRepository.GetNextIdAsync());
 
-            var brokerAccountRequisistes = await _brokerAccountRequisitesRepository
-                .GetActualByBrokerAccountIdAndBlockchainAsync(
-                brokerAccount.BrokerAccountId,
-                asset.BlockchainId);
-
             if (!outbox.IsStored)
             {
+                var brokerAccountRequisites = await _brokerAccountRequisitesRepository
+                    .GetActualByBrokerAccountIdAndBlockchainAsync(
+                        brokerAccount.BrokerAccountId,
+                        asset.BlockchainId);
+
                 var withdrawal = Withdrawal.Create(
                     outbox.AggregateId,
                     request.BrokerAccountId,
-                    brokerAccountRequisistes.Id,
+                    brokerAccountRequisites.Id,
                     request.AccountId,
                     request.ReferenceId,
                     new Swisschain.Sirius.Sdk.Primitives.Unit(request.AssetId, amount),
@@ -189,8 +179,8 @@ namespace Brokerage.GrpcServices
                             WithdrawalState.Failed => ExecuteWithdrawalResponse.Types.WithdrawalState.Failed,
                             _ => throw new ArgumentOutOfRangeException(nameof(withdrawal.State), withdrawal.State, null)
                         },
-                        CreatedDateTime = Timestamp.FromDateTime(withdrawal.CreatedDateTime),
-                        UpdatedDateTime = Timestamp.FromDateTime(withdrawal.UpdatedDateTime),
+                        CreatedAt = Timestamp.FromDateTime(withdrawal.CreatedAt),
+                        UpdatedAt = Timestamp.FromDateTime(withdrawal.UpdatedAt),
                         Unit = new Swisschain.Sirius.Brokerage.ApiContract.Common.Unit()
                         {
                             Amount = (BigDecimal)withdrawal.Unit.Amount,
@@ -224,7 +214,7 @@ namespace Brokerage.GrpcServices
                 outbox.Return(response);
                 outbox.Send(new ExecuteWithdrawal { WithdrawalId = outbox.AggregateId});
 
-                _logger.LogInformation("Transfer execution has been accepted {@context}",
+                _logger.LogInformation("Withdrawal execution has been accepted {@context}",
                     new
                     {
                         request,
@@ -251,19 +241,6 @@ namespace Brokerage.GrpcServices
                     ErrorMessage = message
                 }
             };
-        }
-
-        private static CreateAccountResponseBody.Types.AccountStatus MapToResponse(AccountState resultState)
-        {
-            var result = resultState switch
-            {
-                AccountState.Creating => CreateAccountResponseBody.Types.AccountStatus.Creating,
-                AccountState.Active =>    CreateAccountResponseBody.Types.AccountStatus.Active,
-                AccountState.Blocked =>  CreateAccountResponseBody.Types.AccountStatus.Blocked,
-                _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
-            };
-
-            return result;
         }
     }
 }

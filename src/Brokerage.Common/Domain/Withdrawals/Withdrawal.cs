@@ -21,9 +21,9 @@ namespace Brokerage.Common.Domain.Withdrawals
             WithdrawalState state,
             TransactionInfo transactionInfo,
             WithdrawalError error,
-            long? withdrawalOperationId,
-            DateTime createdDateTime,
-            DateTime updatedDateTime)
+            long? operationId,
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             Id = id;
             BrokerAccountId = brokerAccountId;
@@ -37,9 +37,9 @@ namespace Brokerage.Common.Domain.Withdrawals
             State = state;
             TransactionInfo = transactionInfo;
             Error = error;
-            WithdrawalOperationId = withdrawalOperationId;
-            CreatedDateTime = createdDateTime;
-            UpdatedDateTime = updatedDateTime;
+            this.operationId = operationId;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
             Version = version;
             Sequence = sequence;
         }
@@ -69,11 +69,11 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public WithdrawalError Error { get; }
 
-        public long? WithdrawalOperationId { get; private set; }
+        public long? operationId { get; private set; }
 
-        public DateTime CreatedDateTime { get; }
+        public DateTime CreatedAt { get; }
 
-        public DateTime UpdatedDateTime { get; private set; }
+        public DateTime UpdatedAt { get; private set; }
 
 
         public static Withdrawal Create(
@@ -87,6 +87,7 @@ namespace Brokerage.Common.Domain.Withdrawals
             IReadOnlyCollection<Unit> fees,
             DestinationRequisites destinationRequisites)
         {
+            var createdAt = DateTime.UtcNow;
             return new Withdrawal(
                 id,
                 0,
@@ -103,8 +104,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 null,
                 null,
                 null,
-                DateTime.UtcNow,
-                DateTime.UtcNow);
+                createdAt,
+                createdAt);
         }
 
         public static Withdrawal Restore(
@@ -148,8 +149,8 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void AddOperation(long operationId)
         {
-            this.WithdrawalOperationId = operationId;
-            this.UpdatedDateTime = DateTime.UtcNow;
+            this.operationId = operationId;
+            this.UpdatedAt = DateTime.UtcNow;
             this.State = WithdrawalState.Executing;
         }
     }
