@@ -116,13 +116,14 @@ namespace Brokerage.Common.Domain.Deposits
                         //Deposit to depositWallet
                         if (!brokerAccountRequisitesHashSet.Contains(addressAmount.Address))
                         {
+                            existing.PendingAmount -= amount;
                             existing.OwnedAmount += amount;
                         }
-                        //Deposit to hotWallet
+                        //Deposit consolidation
                         else
                         {
-                            existing.OwnedAmount += amount;
-                            existing.AvailabeAmount += amount;
+                            //existing.OwnedAmount += amount;
+                            existing.AvailableAmount += amount;
                         }
                     }
                 }
@@ -139,7 +140,7 @@ namespace Brokerage.Common.Domain.Deposits
                     balances = BrokerAccountBalances.Create(id, brokerAccountId, assetId);
                 }
 
-                balances.MovePendingBalanceToAvailableAndOwned(balanceChange.OwnedAmount, balanceChange.AvailabeAmount);
+                balances.MovePendingBalanceToAvailableAndOwned(balanceChange.PendingAmount, balanceChange.OwnedAmount, balanceChange.AvailableAmount);
 
                 var updateId = $"{brokerAccountId}_{assetId}_{transaction.TransactionId}_{TransactionStage.Confirmed}";
                 await _brokerAccountsBalancesRepository.SaveAsync(balances, updateId);
@@ -153,7 +154,9 @@ namespace Brokerage.Common.Domain.Deposits
 
         private class AddressAmount
         {
-            public decimal AvailabeAmount { get; set; }
+            public decimal PendingAmount { get; set; }
+
+            public decimal AvailableAmount { get; set; }
 
             public decimal OwnedAmount { get; set; }
         }

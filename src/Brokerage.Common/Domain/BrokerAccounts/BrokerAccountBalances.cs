@@ -152,9 +152,9 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             });
         }
 
-        public void MovePendingBalanceToAvailableAndOwned(decimal ownedChangeAmount, decimal availableChangeAmount)
+        public void MovePendingBalanceToAvailableAndOwned(decimal pendingChangeAmount, decimal ownedChangeAmount, decimal availableChangeAmount)
         {
-            PendingBalance -= ownedChangeAmount;
+            PendingBalance += pendingChangeAmount;
             OwnedBalance += ownedChangeAmount;
             AvailableBalance += availableChangeAmount;
 

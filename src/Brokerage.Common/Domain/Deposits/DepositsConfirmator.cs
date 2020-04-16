@@ -42,10 +42,10 @@ namespace Brokerage.Common.Domain.Deposits
 
             foreach (var deposit in deposits)
             {
-                deposit.Confirm();
-
                 if (!deposit.IsBrokerDeposit)
                 {
+                    deposit.Confirm();
+
                     // ReSharper disable once PossibleInvalidOperationException
                     var accountRequisites = await _accountRequisitesRepository.GetByIdAsync(deposit.AccountRequisitesId.Value);
                     var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByIdAsync(deposit.BrokerAccountRequisitesId);

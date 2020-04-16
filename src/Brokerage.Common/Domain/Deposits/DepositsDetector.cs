@@ -84,12 +84,12 @@ namespace Brokerage.Common.Domain.Deposits
             var accountRequisitesByAddressDict = accountRequisites
                 .ToDictionary(x => x.Address);
 
-            var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByAddressesAsync(
-                transaction.BlockchainId,
-                incomingTransferAddresses);
+            //var brokerAccountRequisites = await _brokerAccountRequisitesRepository.GetByAddressesAsync(
+            //    transaction.BlockchainId,
+            //    incomingTransferAddresses);
 
-            var brokerAccountRequisitesByBrokerAccountIdDict = brokerAccountRequisites
-                .ToDictionary(x => x.BrokerAccountId);
+            //var brokerAccountRequisitesByBrokerAccountIdDict = brokerAccountRequisites
+            //    .ToDictionary(x => x.BrokerAccountId);
 
             var incomingTransfersByAddress = incomingTransfers
                 .ToLookup(x => x.Key.Address);
@@ -97,16 +97,16 @@ namespace Brokerage.Common.Domain.Deposits
             var transferDict = new Dictionary<(long BrokerAccountId, long AssetId), decimal>();
             var depositsDict = new Dictionary<(long BrokerAccountId, long AssetId, string address), decimal>();
             var brokerAccountsAddressAmounts = accountRequisites
-                .Select(x => new
-                {
-                    x.BrokerAccountId,
-                    x.Address,
-                })
-                .Union(brokerAccountRequisites.Select(x => new
-                {
-                    x.BrokerAccountId,
-                    x.Address
-                }))
+                //.Select(x => new
+                //{
+                //    x.BrokerAccountId,
+                //    x.Address,
+                //})
+                //.Union(brokerAccountRequisites.Select(x => new
+                //{
+                //    x.BrokerAccountId,
+                //    x.Address
+                //}))
                 .Select(x => new
                 {
                     x.Address,
@@ -159,12 +159,12 @@ namespace Brokerage.Common.Domain.Deposits
 
             foreach (var ((brokerAccountId, assetId, address), depositBalance) in depositsDict)
             {
-                if (!brokerAccountRequisitesByBrokerAccountIdDict.TryGetValue(brokerAccountId, out var requisites))
-                {
-                    requisites = await _brokerAccountRequisitesRepository.GetActualByBrokerAccountIdAndBlockchainAsync(
-                        brokerAccountId,
-                        transaction.BlockchainId);
-                }
+                //if (!brokerAccountRequisitesByBrokerAccountIdDict.TryGetValue(brokerAccountId, out var requisites))
+                //{
+                var requisites = await _brokerAccountRequisitesRepository.GetActualByBrokerAccountIdAndBlockchainAsync(
+                    brokerAccountId,
+                    transaction.BlockchainId);
+                //}
 
                 accountRequisitesByAddressDict.TryGetValue(address, out var accountRequisitesVal);
 
@@ -199,7 +199,7 @@ namespace Brokerage.Common.Domain.Deposits
                     }
                 }
                 //TODO: Catch optimistic concurrency exception
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
             }
