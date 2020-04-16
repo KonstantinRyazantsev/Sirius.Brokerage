@@ -46,15 +46,14 @@ namespace TestClient
                         //    ReferenceId = "some ref",
                         //    BrokerAccountId = 1
                         //});
-
                         var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
                         {
                             BrokerAccountId = 999_999,
                             AssetId = 100_000,
-                            Amount = 1.0m,
+                            Amount = 0.1m,
                             TenantId = "abel-tenant-100",
-                            DestinationRequisites = new DestinationRequisites() {Address = "2Mt5zginBHhrNQKnhRCMbEnyVHuJNoPbYNC" },
-                            RequestId = "2",
+                            DestinationRequisites = new DestinationRequisites() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
+                            RequestId = "requestId",
                         });
 
                         //var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
@@ -89,7 +88,7 @@ namespace TestClient
                     }
 
                     sw.Stop();
-                    Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");
+                    Console.WriteLine($"{result.Name} {sw.ElapsedMilliseconds} ms");
                     Thread.Sleep(100_000);
                 }
                 catch(Exception ex)

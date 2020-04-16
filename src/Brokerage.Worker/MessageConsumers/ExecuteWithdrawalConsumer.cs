@@ -86,6 +86,11 @@ namespace Brokerage.Worker.MessageConsumers
             withdrawal.AddOperation(operation.Response.Operation.Id);
             await _withdrawalRepository.SaveAsync(withdrawal);
 
+            foreach (var @event in withdrawal.Events)
+            {
+                await context.Publish(@event);
+            }
+
             _logger.LogInformation("ExecuteWithdrawal has been processed {@context}", evt);
 
             await Task.CompletedTask;
