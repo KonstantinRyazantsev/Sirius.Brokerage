@@ -135,7 +135,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 Version = withdrawal.Version,
                 AssetId = withdrawal.Unit.AssetId,
                 Amount = withdrawal.Unit.Amount,
-                WithdrawalOperationId = withdrawal.operationId,
+                WithdrawalOperationId = withdrawal.OperationId,
                 BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
                 Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity()
                 {
