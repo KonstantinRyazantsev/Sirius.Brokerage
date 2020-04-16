@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Withdrawals

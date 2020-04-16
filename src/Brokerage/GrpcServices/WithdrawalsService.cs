@@ -22,7 +22,6 @@ namespace Brokerage.GrpcServices
 {
     public class WithdrawalsService : Withdrawals.WithdrawalsBase
     {
-        private readonly IPublishEndpoint _publishEndpoint;
         private readonly IWithdrawalRepository _withdrawalRepository;
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IAccountsRepository _accountsRepository;
@@ -32,7 +31,6 @@ namespace Brokerage.GrpcServices
         private readonly ILogger<WithdrawalsService> _logger;
 
         public WithdrawalsService(
-            IPublishEndpoint publishEndpoint,
             IWithdrawalRepository withdrawalRepository,
             IBrokerAccountsRepository brokerAccountsRepository,
             IAccountsRepository accountsRepository,
@@ -41,7 +39,6 @@ namespace Brokerage.GrpcServices
             IAssetsRepository assetsRepository,
             ILogger<WithdrawalsService> logger)
         {
-            _publishEndpoint = publishEndpoint;
             _withdrawalRepository = withdrawalRepository;
             _brokerAccountsRepository = brokerAccountsRepository;
             _accountsRepository = accountsRepository;
@@ -224,7 +221,7 @@ namespace Brokerage.GrpcServices
 
                 foreach (var evt in withdrawal.Events)
                 {
-                    await _publishEndpoint.Publish(evt);
+                    outbox.Publish(evt);
                 }
 
                 await _outbox.Store(outbox);
