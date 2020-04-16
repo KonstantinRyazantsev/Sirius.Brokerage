@@ -16,7 +16,7 @@ namespace BrokerageTests.UnitTests
 {
     public class DepositDetectorTests
     {
-        [Fact]
+        [Fact(Skip = "Broker account deposits are not supported")]
         public async Task SingleTransferTest()
         {
             var accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
