@@ -7,7 +7,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
     public class WithdrawalUpdated
     {
         public long WithdrawalId { get; set; }
-        public uint Version { get; set; }
         public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }
 
