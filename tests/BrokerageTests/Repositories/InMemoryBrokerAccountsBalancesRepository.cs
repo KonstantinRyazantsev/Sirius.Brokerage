@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,18 @@ namespace BrokerageTests.Repositories
             return Task.FromResult(_storage
                 .FirstOrDefault(x => x.BrokerAccountId == brokerAccountId &&
                                                                 x.AssetId == assetId));
+        }
+
+        public async Task<BrokerAccountBalances> GetAsync(long brokerAccountId, long assetId)
+        {
+            var balances = await GetOrDefaultAsync(brokerAccountId, assetId);
+
+            if (balances == null)
+            {
+                throw new InvalidOperationException($"Broker account balances {brokerAccountId}, {assetId} not found");
+            }
+
+            return balances;
         }
 
         public Task SaveAsync(BrokerAccountBalances brokerAccountBalances, string updateId)

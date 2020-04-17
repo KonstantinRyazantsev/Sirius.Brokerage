@@ -27,6 +27,18 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return entity != null ? MapToDomain(entity) : null;
         }
 
+        public async Task<BrokerAccountBalances> GetAsync(long brokerAccountId, long assetId)
+        {
+            var balances = await GetOrDefaultAsync(brokerAccountId, assetId);
+
+            if (balances == null)
+            {
+                throw new InvalidOperationException($"Broker account balances {brokerAccountId}, {assetId} not found");
+            }
+
+            return balances;
+        }
+
         public async Task<long> GetNextIdAsync()
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

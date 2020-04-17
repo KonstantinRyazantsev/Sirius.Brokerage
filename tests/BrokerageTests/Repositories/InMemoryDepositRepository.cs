@@ -73,9 +73,9 @@ namespace BrokerageTests.Repositories
                 .ToArray());
         }
 
-        public Task<Deposit> GetByConsolidationOperationIdAsync(long evtOperationId)
+        public Task<Deposit> GetByOperationIdOrDefaultAsync(long operationId)
         {
-            return Task.FromResult(_storage.First(x => x.ConsolidationOperationId == evtOperationId));
+            return Task.FromResult(_storage.First(x => x.ConsolidationOperationId == operationId));
         }
     }
 }

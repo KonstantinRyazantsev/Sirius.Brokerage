@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -25,24 +26,28 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit = await _depositsRepository.GetByConsolidationOperationIdAsync(evt.OperationId);
+            var deposit = await _depositsRepository.GetByOperationIdOrDefaultAsync(evt.OperationId);
 
-            deposit.Fail(new DepositError(evt.ErrorMessage, evt.ErrorCode switch
+            if (deposit != null)
             {
-                OperationErrorCode.TechnicalProblem =>          DepositErrorCode.TechnicalProblem,
-                OperationErrorCode.NotEnoughBalance =>          DepositErrorCode.TechnicalProblem,
-                OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
-                OperationErrorCode.DestinationTagRequired =>    DepositErrorCode.TechnicalProblem,
-                OperationErrorCode.AmountIsTooSmall =>          DepositErrorCode.TechnicalProblem,
-                 
-                _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
-            }));
+                deposit.Fail(new DepositError(evt.ErrorMessage,
+                    evt.ErrorCode switch
+                    {
+                        OperationErrorCode.TechnicalProblem => DepositErrorCode.TechnicalProblem,
+                        OperationErrorCode.NotEnoughBalance => DepositErrorCode.TechnicalProblem,
+                        OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
+                        OperationErrorCode.DestinationTagRequired => DepositErrorCode.TechnicalProblem,
+                        OperationErrorCode.AmountIsTooSmall => DepositErrorCode.TechnicalProblem,
 
-            await _depositsRepository.SaveAsync(deposit);
+                        _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
+                    }));
 
-            foreach (var @event in deposit.Events)
-            {
-                await context.Publish(@event);
+                await _depositsRepository.SaveAsync(deposit);
+
+                foreach (var @event in deposit.Events)
+                {
+                    await context.Publish(@event);
+                }
             }
 
             _logger.LogInformation("OperationFailed event has been processed {@context}", evt);

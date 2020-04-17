@@ -65,7 +65,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
-        public async Task<Deposit> GetByConsolidationOperationIdAsync(long operationId)
+        public async Task<Deposit> GetByOperationIdOrDefaultAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -73,9 +73,9 @@ namespace Brokerage.Common.Persistence.Deposits
                 .Deposits
                 .Include(x => x.Sources)
                 .Include(x => x.Fees)
-                .FirstAsync(x => x.ConsolidationOperationId == operationId);
+                .FirstOrDefaultAsync(x => x.ConsolidationOperationId == operationId);
 
-            return MapToDomain(entity);
+            return entity != null ? MapToDomain(entity) : null;
         }
 
         public async Task SaveAsync(Deposit deposit)

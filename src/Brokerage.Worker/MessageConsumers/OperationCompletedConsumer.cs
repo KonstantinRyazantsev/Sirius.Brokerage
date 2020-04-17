@@ -23,15 +23,18 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit =  await _depositsRepository.GetByConsolidationOperationIdAsync(evt.OperationId);
+            var deposit =  await _depositsRepository.GetByOperationIdOrDefaultAsync(evt.OperationId);
 
-            deposit.Complete();
-
-            await _depositsRepository.SaveAsync(deposit);
-
-            foreach (var @event in deposit.Events)
+            if (deposit != null)
             {
-                await context.Publish(@event);
+                deposit.Complete();
+
+                await _depositsRepository.SaveAsync(deposit);
+
+                foreach (var @event in deposit.Events)
+                {
+                    await context.Publish(@event);
+                }
             }
 
             _logger.LogInformation("OperationCompleted event has been processed {@context}", evt);

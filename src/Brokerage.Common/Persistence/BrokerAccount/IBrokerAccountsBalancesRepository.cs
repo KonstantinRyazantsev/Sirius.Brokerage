@@ -7,6 +7,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
     {
         Task<long> GetNextIdAsync();
         Task<BrokerAccountBalances> GetOrDefaultAsync(long brokerAccountId, long assetId);
+        Task<BrokerAccountBalances> GetAsync(long brokerAccountId, long assetId);
         Task SaveAsync(BrokerAccountBalances brokerAccountBalances, string updateId);
     }
 }
