@@ -51,6 +51,7 @@ message ErrorResponseBody {
     INVALID_PARAMETERS = 0;
     UNAUTHORIZED = 1;
     TECHNICAL_PROBLEMS = 2;
+    NOT_ENOUGH_BALANCE = 3;
   }
 
   ErrorCode errorCode = 1;

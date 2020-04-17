@@ -134,7 +134,7 @@ namespace Brokerage.GrpcServices
                 var shortage = amount - availableBalance;
 
                 return GetErrorResponseExecuteWithdrawalWrapperResponse(
-                    ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    ErrorResponseBody.Types.ErrorCode.NotEnoughBalance,
                     $"There is no available balance to withdraw {amount} {asset.Symbol}. " +
                     $"Shortage of {shortage} {asset.Symbol}");
             }
