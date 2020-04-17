@@ -28,6 +28,7 @@ namespace Brokerage.GrpcServices
         private readonly IOutboxManager _outbox;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAssetsRepository _assetsRepository;
+        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly ILogger<WithdrawalsService> _logger;
 
         public WithdrawalsService(
@@ -37,6 +38,7 @@ namespace Brokerage.GrpcServices
             IOutboxManager outbox,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAssetsRepository assetsRepository,
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             ILogger<WithdrawalsService> logger)
         {
             _withdrawalRepository = withdrawalRepository;
@@ -45,6 +47,7 @@ namespace Brokerage.GrpcServices
             _outbox = outbox;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _assetsRepository = assetsRepository;
+            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _logger = logger;
         }
 
@@ -120,6 +123,20 @@ namespace Brokerage.GrpcServices
                         ErrorResponseBody.Types.ErrorCode.InvalidParameters,
                         "The Account doesn’t relate to the Broker account");
                 }
+            }
+
+            var balance =
+                await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccount.BrokerAccountId, asset.Id);
+
+            var availableBalance = balance?.AvailableBalance ?? 0m;
+            if (availableBalance < amount)
+            {
+                var shortage = amount - availableBalance;
+
+                return GetErrorResponseExecuteWithdrawalWrapperResponse(
+                    ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    $"There is no available balance to withdraw {amount} {asset.Symbol}. " +
+                    $"Shortage of {shortage} {asset.Symbol}");
             }
 
             var outbox = await _outbox.Open($"API:Withdrawals.Execute:{request.RequestId}",
