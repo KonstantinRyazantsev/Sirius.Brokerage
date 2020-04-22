@@ -12,6 +12,7 @@ namespace Brokerage.Common.Persistence.Entities
         {
             Accounts = new HashSet<AccountEntity>();
         }
+
         public string RequestId { get; set; }
 
         public string TenantId { get; set; }

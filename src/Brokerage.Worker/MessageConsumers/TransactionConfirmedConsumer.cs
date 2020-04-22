@@ -48,6 +48,8 @@ namespace Brokerage.Worker.MessageConsumers
 
         public async Task Consume(ConsumeContext<TransactionConfirmed> context)
         {
+            // TODO: Fail if TransactionDetected wasn't processed yet
+
             var tx = context.Message;
             var processingContextBuilder = new TransactionProcessingContextBuilder(
                 _accountRequisitesRepository, 

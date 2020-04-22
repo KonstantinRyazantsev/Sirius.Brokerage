@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
@@ -37,7 +36,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                                           x.BrokerAccountRequisitesId == brokerAccountRequisitesId);
             await query.LoadAsync();
 
-            return query?.AsEnumerable()
+            return query.AsEnumerable()
                 .Select(MapToDomain)
                 .ToArray();
         }

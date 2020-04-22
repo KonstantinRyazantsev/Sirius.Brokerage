@@ -1,28 +1,28 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Confirmator.MessagingContract;
-using Swisschain.Sirius.Executor.ApiClient;
 
 namespace Brokerage.Common.Domain.Deposits.Processors
 {
     public class ConfirmedDepositProcessor : IConfirmedTransactionProcessor
     {
-        private readonly IExecutorClient _executorClient;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly IOperationsExecutor _operationsExecutor;
 
-        public ConfirmedDepositProcessor(IExecutorClient executorClient,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IAccountRequisitesRepository accountRequisitesRepository)
+        public ConfirmedDepositProcessor(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IAccountRequisitesRepository accountRequisitesRepository,
+            IOperationsExecutor operationsExecutor)
         {
-            _executorClient = executorClient;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _accountRequisitesRepository = accountRequisitesRepository;
+            _operationsExecutor = operationsExecutor;
         }
 
         public async Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
@@ -43,7 +43,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     _brokerAccountRequisitesRepository, 
                     _accountRequisitesRepository, 
                     tx,
-                    _executorClient);
+                    _operationsExecutor);
             }
 
             var balanceChanges = regularDeposits

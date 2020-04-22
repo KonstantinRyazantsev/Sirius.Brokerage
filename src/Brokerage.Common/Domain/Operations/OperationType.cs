@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Domain
+﻿namespace Brokerage.Common.Domain.Operations
 {
     public enum OperationType
     {

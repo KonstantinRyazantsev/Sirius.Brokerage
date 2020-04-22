@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Confirmator.MessagingContract;
-using Swisschain.Sirius.Executor.ApiClient;
-using Swisschain.Sirius.Executor.ApiContract.Common;
-using Swisschain.Sirius.Executor.ApiContract.Transfers;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace Brokerage.Common.Domain.Deposits
@@ -171,7 +169,7 @@ namespace Brokerage.Common.Domain.Deposits
         public async Task ConfirmRegular(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IAccountRequisitesRepository accountRequisitesRepository, 
             TransactionConfirmed tx, 
-            IExecutorClient executorClient)
+            IOperationsExecutor operationsExecutor)
         {
             if (IsBrokerDeposit)
             {
@@ -185,34 +183,15 @@ namespace Brokerage.Common.Domain.Deposits
                 // ReSharper disable once PossibleInvalidOperationException
                 var accountRequisites = await accountRequisitesRepository.GetAsync(AccountRequisitesId.Value);
 
-                var response = await executorClient.Transfers.ExecuteAsync(
-                    new ExecuteTransferRequest(new ExecuteTransferRequest
-                    {
-                        AssetId = Unit.AssetId,
-                        Operation = new OperationRequest
-                        {
-                            AsAtBlockNumber = tx.BlockNumber + tx.RequiredConfirmationsCount,
-                            RequestId = $"Brokerage:DepositConsolidation:{Id}",
-                            FeePayerAddress = brokerAccountRequisites.NaturalId.Address,
-                            TenantId = TenantId
-                        },
-                        Movements =
-                        {
-                            new Movement
-                            {
-                                SourceAddress = accountRequisites.NaturalId.Address,
-                                DestinationAddress = brokerAccountRequisites.NaturalId.Address,
-                                Amount = Unit.Amount,
-                            }
-                        }
-                    }));
+                var operation = await operationsExecutor.StartDepositConsolidation(
+                    TenantId,
+                    Id,
+                    accountRequisites.NaturalId.Address,
+                    brokerAccountRequisites.NaturalId.Address,
+                    Unit,
+                    tx.BlockNumber + tx.RequiredConfirmationsCount);
 
-                if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
-                {
-                    throw new InvalidOperationException($"{response.Error.ErrorCode} {response.Error.ErrorMessage}");
-                }
-
-                ConsolidationOperationId = response.Response.Operation.Id;
+                ConsolidationOperationId = operation.Id;
                 ConfirmedAt = DateTime.UtcNow;
             }
 

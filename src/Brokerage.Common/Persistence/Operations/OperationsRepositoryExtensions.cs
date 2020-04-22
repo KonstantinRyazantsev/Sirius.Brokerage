@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Domain;
+using Brokerage.Common.Domain.Operations;
 
 namespace Brokerage.Common.Persistence.Operations
 {
@@ -7,7 +7,7 @@ namespace Brokerage.Common.Persistence.Operations
     {
         public static async Task<Operation> GetOrDefaultAsync(this IOperationsRepository repo, long? id)
         {
-            return id != null ? await repo.GetOrDefaultAsync(id.Value) : null;
+            return id != null ? await repo.GetOrDefault(id.Value) : null;
         }
     }
 }

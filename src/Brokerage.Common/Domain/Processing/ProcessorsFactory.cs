@@ -9,11 +9,11 @@ namespace Brokerage.Common.Domain.Processing
     internal sealed class ProcessorsFactory : IProcessorsFactory
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly List<Type> _detectedTransactionProcessors;
-        private readonly List<Type> _confirmedTransactionProcessors;
-        private readonly List<Type> _completedOperationProcessors;
-        private readonly List<Type> _failedOperationProcessors;
-        private readonly List<Type> _cancelledBlockProcessors;
+        private readonly IReadOnlyCollection<Type> _detectedTransactionProcessors;
+        private readonly IReadOnlyCollection<Type> _confirmedTransactionProcessors;
+        private readonly IReadOnlyCollection<Type> _completedOperationProcessors;
+        private readonly IReadOnlyCollection<Type> _failedOperationProcessors;
+        private readonly IReadOnlyCollection<Type> _cancelledBlockProcessors;
 
         public ProcessorsFactory(IServiceProvider serviceProvider)
         {

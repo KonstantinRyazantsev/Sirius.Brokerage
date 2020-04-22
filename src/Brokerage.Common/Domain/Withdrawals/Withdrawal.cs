@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Brokerage.Common.Domain.Operations;
+using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Withdrawals
@@ -153,11 +156,21 @@ namespace Brokerage.Common.Domain.Withdrawals
                 updatedDateTime);
         }
 
-        public void AddOperation(long operationId)
+        public async Task Execute(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IOperationsExecutor operationsExecutor)
         {
             if (SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing))
             {
-                this.OperationId = operationId;
+                var brokerAccountRequisites = await brokerAccountRequisitesRepository.GetAsync(BrokerAccountRequisitesId);
+
+                var operation = operationsExecutor.StartWithdrawal(
+                    TenantId,
+                    Id,
+                    brokerAccountRequisites.NaturalId.Address,
+                    DestinationRequisites,
+                    Unit);
+
+                this.OperationId = operation.Id;
                 this.UpdatedAt = DateTime.UtcNow;
             }
 
