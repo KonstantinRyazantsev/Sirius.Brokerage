@@ -11,6 +11,7 @@
         public const string AccountRequisites = "account_requisites";
 
         public const string Blockchains = "blockchains";
+        public const string Assets = "assets";
 
         public const string Deposits = "deposits";
         public const string DepositSources = "deposit_sources";
@@ -18,7 +19,7 @@
 
         public const string Withdrawals = "withdrawals";
         public const string WithdrawalFees = "withdrawals_fees";
-
-        public const string Assets = "assets";
+        
+        public const string Operations = "operations";
     }
 }

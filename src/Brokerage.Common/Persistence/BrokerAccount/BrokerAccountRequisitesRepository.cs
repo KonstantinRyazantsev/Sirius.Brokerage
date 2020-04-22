@@ -77,18 +77,20 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var idStrings = ids.Select(x => x.ToString()).ToArray();
+            var entities = new List<BrokerAccountRequisitesEntity>();
 
-            var result = await context
-                .BrokerAccountsRequisites
-                .Where(x => idStrings.Contains(x.ActiveId))
-                .GroupBy(x => x.ActiveId)
-                .Select(g => g
+            foreach (var id in ids)
+            {
+                var entity = await context
+                    .BrokerAccountsRequisites
+                    .Where(x => x.ActiveId == id.ToString())
                     .OrderByDescending(x => x.Id)
-                    .First())
-                .ToListAsync();
+                    .FirstAsync();
 
-            return result
+                entities.Add(entity);
+            }
+
+            return entities
                 .Select(MapToDomain)
                 .ToDictionary(
                     x => new ActiveBrokerAccountRequisitesId(x.NaturalId.BlockchainId, x.BrokerAccountId), 

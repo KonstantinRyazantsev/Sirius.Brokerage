@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Domain.Operations;
 
 namespace Brokerage.Common.Domain.Processing.Context
 {

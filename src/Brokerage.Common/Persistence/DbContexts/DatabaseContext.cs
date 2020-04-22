@@ -34,6 +34,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
         public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
         public DbSet<Asset> Assets { get; set; }
+        public DbSet<OperationEntity> Operations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,19 +43,28 @@ namespace Brokerage.Common.Persistence.DbContexts
             modelBuilder.BuildOutbox();
 
             BuildAssets(modelBuilder);
-            BuildBlockchain(modelBuilder);
+            BuildBlockchains(modelBuilder);
 
-            BuildBrokerAccount(modelBuilder);
+            BuildBrokerAccounts(modelBuilder);
             BuildBrokerAccountRequisites(modelBuilder);
-            BuildBrokerAccountBalancesEntity(modelBuilder);
+            BuildBrokerAccountBalances(modelBuilder);
             
-            BuildAccount(modelBuilder);
+            BuildAccounts(modelBuilder);
             BuildAccountRequisites(modelBuilder);
             
-            BuildDepositsEntity(modelBuilder);
-            BuildWithdrawalsEntity(modelBuilder);
+            BuildDeposits(modelBuilder);
+            BuildWithdrawals(modelBuilder);
+
+            BuildOperations(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void BuildOperations(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<OperationEntity>()
+                .ToTable(Tables.Operations)
+                .HasKey(x => x.Id);
         }
 
         private static void BuildAssets(ModelBuilder modelBuilder)
@@ -64,7 +74,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => x.Id);
         }
 
-        private static void BuildWithdrawalsEntity(ModelBuilder modelBuilder)
+        private static void BuildWithdrawals(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<WithdrawalEntity>()
                 .ToTable(Tables.Withdrawals)
@@ -106,7 +116,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasForeignKey(x => x.WithdrawalId);
         }
 
-        private static void BuildDepositsEntity(ModelBuilder modelBuilder)
+        private static void BuildDeposits(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DepositEntity>()
                 .ToTable(Tables.Deposits)
@@ -165,7 +175,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasForeignKey(x => x.DepositId);
         }
 
-        private static void BuildBrokerAccountBalancesEntity(ModelBuilder modelBuilder)
+        private static void BuildBrokerAccountBalances(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountBalancesUpdateEntity>()
                 .ToTable(Tables.BrokerAccountBalancesUpdate)
@@ -194,7 +204,7 @@ namespace Brokerage.Common.Persistence.DbContexts
             });
         }
 
-        private static void BuildBlockchain(ModelBuilder modelBuilder)
+        private static void BuildBlockchains(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Blockchain>()
                 .ToTable(Tables.Blockchains)
@@ -226,7 +236,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasForeignKey(x => x.AccountId);
         }
 
-        private static void BuildAccount(ModelBuilder modelBuilder)
+        private static void BuildAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()
                 .HasKey(c => new { Id = c.AccountId });
@@ -275,7 +285,7 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasName("IX_BrokerAccountRequisites_IdDesc");
         }
 
-        private static void BuildBrokerAccount(ModelBuilder modelBuilder)
+        private static void BuildBrokerAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasKey(c => new { c.BrokerAccountId });
