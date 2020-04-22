@@ -10,14 +10,14 @@ namespace Brokerage.Worker.MessageConsumers
     public class BlockchainUpdatesConsumer : IConsumer<BlockchainAdded>
     {
         private readonly ILogger<BlockchainUpdatesConsumer> _logger;
-        private readonly IBlockchainsRepository blockchainsRepository;
+        private readonly IBlockchainsRepository _blockchainsRepository;
 
         public BlockchainUpdatesConsumer(
             ILogger<BlockchainUpdatesConsumer> logger, 
             IBlockchainsRepository blockchainsRepository)
         {
             _logger = logger;
-            this.blockchainsRepository = blockchainsRepository;
+            this._blockchainsRepository = blockchainsRepository;
         }
 
         public async Task Consume(ConsumeContext<BlockchainAdded> context)
@@ -27,10 +27,9 @@ namespace Brokerage.Worker.MessageConsumers
             var model = new Blockchain
             {
                 Id = evt.BlockchainId,
-                IntegrationUrl = evt.IntegrationUrl.ToString()
             };
 
-            await blockchainsRepository.AddOrReplaceAsync(model);
+            await _blockchainsRepository.AddOrReplaceAsync(model);
 
             _logger.LogInformation("BlockchainAdded command has been processed {@context}", evt);
         }

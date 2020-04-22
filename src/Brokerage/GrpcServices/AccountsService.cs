@@ -12,14 +12,14 @@ namespace Brokerage.GrpcServices
 {
     public class AccountsService : Accounts.AccountsBase
     {
-        private readonly IAccountsRepository accountsRepository;
+        private readonly IAccountsRepository _accountsRepository;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
         public AccountsService(
             IAccountsRepository accountsRepository,
             ISendEndpointProvider sendEndpointProvider)
         {
-            this.accountsRepository = accountsRepository;
+            this._accountsRepository = accountsRepository;
             _sendEndpointProvider = sendEndpointProvider;
         }
 
@@ -31,7 +31,7 @@ namespace Brokerage.GrpcServices
                     request.RequestId, 
                     request.BrokerAccountId, 
                     request.ReferenceId);
-                var createdAccount = await accountsRepository.AddOrGetAsync(newAccount);
+                var createdAccount = await _accountsRepository.AddOrGetAsync(newAccount);
 
                 if (createdAccount.BrokerAccountId != request.BrokerAccountId)
                 {

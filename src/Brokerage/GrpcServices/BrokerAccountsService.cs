@@ -12,14 +12,14 @@ namespace Brokerage.GrpcServices
 {
     public class BrokerAccountsService : BrokerAccounts.BrokerAccountsBase
     {
-        private readonly IBrokerAccountsRepository brokerAccountsRepository;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
         public BrokerAccountsService(
             IBrokerAccountsRepository brokerAccountsRepository,
             ISendEndpointProvider sendEndpointProvider)
         {
-            this.brokerAccountsRepository = brokerAccountsRepository;
+            this._brokerAccountsRepository = brokerAccountsRepository;
             _sendEndpointProvider = sendEndpointProvider;
         }
 
@@ -40,7 +40,7 @@ namespace Brokerage.GrpcServices
                 }
 
                 var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId);
-                var createdBrokerAccount = await brokerAccountsRepository.AddOrGetAsync(newBrokerAccount);
+                var createdBrokerAccount = await _brokerAccountsRepository.AddOrGetAsync(newBrokerAccount);
 
                 if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
                 {
