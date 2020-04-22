@@ -29,5 +29,10 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             return HashCode.Combine(BrokerAccountId, AssetId);
         }
+
+        public override string ToString()
+        {
+            return $"{BrokerAccountId}-{AssetId}";
+        }
     }
 }

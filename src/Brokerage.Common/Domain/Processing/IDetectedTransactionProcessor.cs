@@ -6,6 +6,6 @@ namespace Brokerage.Common.Domain.Processing
 {
     public interface IDetectedTransactionProcessor
     {
-        Task Process(TransactionDetected tx, ProcessingContext processingContext);
+        Task Process(TransactionDetected tx, TransactionProcessingContext processingContext);
     }
 }

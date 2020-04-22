@@ -6,16 +6,9 @@ namespace Brokerage.Common.Persistence.Deposits
 {
     public interface IDepositsRepository
     {
-        Task<Deposit> GetOrDefaultAsync(
-            string transactionId, 
-            long assetId,
-            long brokerAccountRequisitesId,
-            long? accountRequisitesId);
-
         Task<long> GetNextIdAsync();
-        Task SaveAsync(Deposit deposit);
-
-        Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId);
-        Task<Deposit> GetByOperationIdOrDefaultAsync(long operationId);
+        Task SaveAsync(IReadOnlyCollection<Deposit> deposits);
+        Task<IReadOnlyCollection<Deposit>> GetAllByTransactionAsync(string blockchainId, string transactionId);
+        Task<Deposit> GetByonsolidationIdOrDefaultAsync(long operationId);
     }
 }

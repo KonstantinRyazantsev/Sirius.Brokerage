@@ -20,9 +20,25 @@ namespace Brokerage.Common.Domain.Processing.Context
         }
 
         public AccountRequisites Requisites { get; }
+
+        /// <summary>
+        /// Inputs to the particular account in the given tx
+        /// </summary>
         public IReadOnlyCollection<Unit> Inputs { get; }
+
+        /// <summary>
+        /// Outputs from the particular account in the given tx
+        /// </summary>
         public IReadOnlyCollection<Unit> Outputs { get; }
+
+        /// <summary>
+        /// Income to the particular account in the given tx, indexed by asset ID
+        /// </summary>
         public IReadOnlyDictionary<long, decimal> Income { get; }
+
+        /// <summary>
+        /// Outcome to from the particular account in the given tx, indexed by asset ID
+        /// </summary>
         public IReadOnlyDictionary<long, decimal> Outcome { get; }
     }
 }

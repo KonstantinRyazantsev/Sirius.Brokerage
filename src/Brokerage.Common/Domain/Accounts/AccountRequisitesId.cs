@@ -42,5 +42,15 @@ namespace Brokerage.Common.Domain.Accounts
         {
             return HashCode.Combine(Address, Tag, TagType);
         }
+
+        public override string ToString()
+        {
+            if (Tag == null)
+            {
+                return $"{BlockchainId}-{Address}";
+            }
+
+            return $"{BlockchainId}-{Address}-{TagType}-{Tag}";
+        }
     }
 }

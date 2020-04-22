@@ -18,6 +18,13 @@ namespace Brokerage.Common.Persistence.Accounts
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
+        public async Task<long> GetNextIdAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            return await context.GetNextId(Tables.AccountRequisites, nameof(AccountRequisites.Id));
+        }
+
         public async Task AddOrIgnoreAsync(AccountRequisites requisites)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -35,54 +42,26 @@ namespace Brokerage.Common.Persistence.Accounts
             }
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> GetByAccountAsync(
-            long accountId,
-            int limit,
-            long? cursor,
-            bool sortAsc)
+        public async Task<AccountRequisites> GetByAccountAsync(long accountId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var query = context
+            var requisites = await context
                 .AccountRequisites
-                .Where(x => x.AccountId == accountId);
+                .FirstAsync(x => x.AccountId == accountId);
 
-            if (sortAsc)
-            {
-                if (cursor != null)
-                {
-                    query = query.Where(x => x.Id > cursor);
-                }
-
-                query = query.OrderBy(x => x.Id);
-            }
-            else
-            {
-                if (cursor != null)
-                {
-                    query = query.Where(x => x.Id < cursor);
-                }
-
-                query = query.OrderByDescending(x => x.Id);
-            }
-
-            query = query.Take(limit);
-
-            await query.LoadAsync();
-
-            return query
-                .AsEnumerable()
-                .Select(MapToDomain)
-                .ToArray();
+            return MapToDomain(requisites);
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<AccountRequisitesId> ids)
+        public async Task<IReadOnlyCollection<AccountRequisites>> GetAnyOfAsync(ISet<AccountRequisitesId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
+            var idStrings = ids.Select(x => x.ToString());
+
             var query = context
                 .AccountRequisites
-                .Where(x => x.BlockchainId == blockchainId && addresses.Contains(x.Address));
+                .Where(x => idStrings.Contains(x.NaturalId));
 
             await query.LoadAsync();
 
@@ -115,7 +94,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<AccountRequisites> GetByIdAsync(long id)
+        public async Task<AccountRequisites> GetAsync(long id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -132,6 +111,7 @@ namespace Brokerage.Common.Persistence.Accounts
             {
                 Address = requisites.NaturalId.Address,
                 Id = requisites.Id,
+                NaturalId = requisites.NaturalId.ToString(),
                 AccountId = requisites.AccountId,
                 BrokerAccountId = requisites.BrokerAccountId,
                 BlockchainId = requisites.NaturalId.BlockchainId,

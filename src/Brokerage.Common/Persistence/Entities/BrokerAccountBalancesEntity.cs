@@ -10,6 +10,7 @@ namespace Brokerage.Common.Persistence.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
+        public string NaturalId { get; set; }
         public uint Version { get; set; }
         public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }

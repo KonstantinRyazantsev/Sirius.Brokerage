@@ -5,34 +5,38 @@ using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Threading;
 using Swisschain.Extensions.Idempotency;
 
 namespace Brokerage.Common.Domain.Processing.Context
 {
-    public sealed class ProcessingContextBuilder
+    public sealed class TransactionProcessingContextBuilder
     {
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
+        private readonly IDepositsRepository _depositsRepository;
         private readonly IOperationsRepository _operationsRepository;
         private readonly IOutboxManager _outboxManager;
 
-        public ProcessingContextBuilder(IAccountRequisitesRepository accountRequisitesRepository,
+        public TransactionProcessingContextBuilder(IAccountRequisitesRepository accountRequisitesRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
             IOutboxManager outboxManager)
         {
             _accountRequisitesRepository = accountRequisitesRepository;
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
+            _depositsRepository = depositsRepository;
             _operationsRepository = operationsRepository;
             _outboxManager = outboxManager;
         }
 
-        public async Task<ProcessingContext> Build(string blockchainId,
+        public async Task<TransactionProcessingContext> Build(string blockchainId,
             long? operationId,
             TransactionInfo transactionInfo,
             SourceContext[] sources,
@@ -97,29 +101,42 @@ namespace Brokerage.Common.Domain.Processing.Context
                 matchedSources,
                 matchedDestinations);
 
-            var existingBrokerAccountBalances = await _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds);
+            var activeBrokerAccountRequisitesIds = matchedBrokerAccountIds
+                .Select(x => new ActiveBrokerAccountRequisitesId(blockchainId, x))
+                .ToHashSet();
+
+            var (existingBrokerAccountBalances, activeBrokerAccountRequisites, deposits) = await TaskExecution.WhenAll(
+                _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds),
+                _brokerAccountRequisitesRepository.GetActiveAsync(activeBrokerAccountRequisitesIds),
+                _depositsRepository.GetAllByTransactionAsync(blockchainId, transactionInfo.TransactionId));
             var newBrokerAccountBalances = await BuildNewBrokerAccountBalances(existingBrokerAccountBalances, brokerAccountBalancesIds);
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)
                 .ToArray();
 
             var brokerAccountsContext = matchedBrokerAccountIds
-                .Select(x => BuildBrokerAccountContext(
+                .Select(x => BuildBrokerAccountContext(x,
+                    blockchainId,
+                    activeBrokerAccountRequisites,
                     brokerAccountBalances,
                     matchedBrokerAccountRequisites,
-                    x,
                     matchedDestinations,
                     matchedSources,
                     matchedAccountRequisites))
                 .ToArray();
 
-            return new ProcessingContext(brokerAccountsContext, matchedOperation, transactionInfo);
+            return new TransactionProcessingContext(
+                brokerAccountsContext,
+                matchedOperation,
+                transactionInfo,
+                deposits);
         }
 
-        private static BrokerAccountContext BuildBrokerAccountContext(
+        private BrokerAccountContext BuildBrokerAccountContext(long brokerAccountId,
+            string blockchainId,
+            IReadOnlyDictionary<ActiveBrokerAccountRequisitesId, BrokerAccountRequisites> allActiveRequisites,
             IReadOnlyCollection<BrokerAccountBalances> brokerAccountBalances,
             IReadOnlyCollection<BrokerAccountRequisites> matchedBrokerAccountRequisites,
-            long brokerAccountId,
             IReadOnlyCollection<DestinationContext> matchedDestinations,
             IReadOnlyCollection<SourceContext> matchedSources,
             IReadOnlyCollection<AccountRequisites> matchedAccountRequisites)
@@ -167,7 +184,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                     outcome.GetValueOrDefault(x.NaturalId.AssetId)))
                 .ToArray();
 
+            var activeRequisites = allActiveRequisites[new ActiveBrokerAccountRequisitesId(blockchainId, brokerAccountId)];
+
             return new BrokerAccountContext(
+                activeRequisites.TenantId,
+                activeRequisites.BrokerAccountId,
+                activeRequisites,
                 accounts,
                 balances,
                 inputs,
@@ -183,20 +205,20 @@ namespace Brokerage.Common.Domain.Processing.Context
         {
             var inputs = matchedDestinations
                 .Where(x => x.Address == requisites.NaturalId.Address)
-                .Select(x => new AccountContextEndpoint(requisites, x.Unit))
+                .Select(x => x.Unit)
                 .ToArray();
             var outputs = matchedSources
                 .Where(x => x.Address == requisites.NaturalId.Address)
-                .Select(x => new AccountContextEndpoint(requisites, x.Unit))
+                .Select(x => x.Unit)
                 .ToArray();
             var income = inputs
-                .GroupBy(x => x.Unit.AssetId)
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
+                .GroupBy(x => x.AssetId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
             var outcome = outputs
-                .GroupBy(x => x.Unit.AssetId)
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
+                .GroupBy(x => x.AssetId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
 
-            return new AccountContext(inputs, outputs, income, outcome);
+            return new AccountContext(requisites, inputs, outputs, income, outcome);
         }
 
         private async Task<IReadOnlyCollection<BrokerAccountBalances>> BuildNewBrokerAccountBalances(
@@ -214,7 +236,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 // TODO: Decouple outbox and ID generator
                 var outbox = await _outboxManager.Open(
                     $"BrokerAccountBalances:Create:{brokerAccountBalancesId.BrokerAccountId}_{brokerAccountBalancesId.AssetId}",
-                    OutboxAggregateIdGenerator.Sequential);
+                    () => _brokerAccountsBalancesRepository.GetNextIdAsync());
 
                 newBrokerAccountBalances.Add(BrokerAccountBalances.Create(outbox.AggregateId, brokerAccountBalancesId));
             }

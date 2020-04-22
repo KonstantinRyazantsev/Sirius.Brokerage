@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
 using Microsoft.Extensions.Logging;
@@ -107,27 +106,10 @@ namespace Brokerage.Common.Domain.Accounts
             }
             else
             {
-                long? requisitesCursor = null;
+                var requisites = await requisitesRepository.GetByAccountAsync(AccountId);
 
-                do
-                {
-                    var requisitesBatch = await requisitesRepository.GetByAccountAsync(
-                        AccountId, 
-                        100, 
-                        requisitesCursor, 
-                        true);
-
-                    if (!requisitesBatch.Any())
-                    {
-                        break;
-                    }
-
-                    _events.AddRange(requisitesBatch.Select(GetAccountRequisitesAddedEvent));
-
-                    requisitesCursor = requisitesBatch.Last().Id;
-
-                } while (true);
-
+                _events.Add(GetAccountRequisitesAddedEvent(requisites));
+                
                 // ReSharper disable once PossibleInvalidOperationException
                 _events.Add(GetAccountActivatedEvent(ActivationDateTime.Value));
             }
@@ -155,7 +137,9 @@ namespace Brokerage.Common.Domain.Accounts
 
                 foreach (var blockchain in blockchains)
                 {
-                    var outbox = await outboxManager.Open("AccountRequisites:Create:{AccountId}_{blockchain.BlockchainId}", OutboxAggregateIdGenerator.Sequential);
+                    var outbox = await outboxManager.Open(
+                        $"AccountRequisites:Create:{AccountId}_{blockchain.Id}", 
+                        () => requisitesRepository.GetNextIdAsync());
 
                     if (!outbox.IsStored)
                     {
@@ -180,7 +164,8 @@ namespace Brokerage.Common.Domain.Accounts
                             new AccountRequisitesId(blockchain.Id, walletGenerationResponse.Response.Address),
                             AccountId,
                             BrokerAccountId);
-
+                        
+                        // TODO: Batch
                         await requisitesRepository.AddOrIgnoreAsync(requisites);
 
                         outbox.Publish(GetAccountRequisitesAddedEvent(requisites));

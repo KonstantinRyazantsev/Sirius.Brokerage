@@ -4,6 +4,7 @@ using Brokerage.Common.Persistence.Entities.Withdrawals;
 using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
 using DepositSourceEntity = Brokerage.Common.Persistence.Entities.Deposits.DepositSourceEntity;
 
@@ -19,7 +20,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         {
         }
 
-        public DbSet<OutboxEntity> Outbox { get; }
+        public DbSet<OutboxEntity> Outbox { get; set; }
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
         public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
@@ -32,8 +33,6 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<Blockchain> Blockchains { get; set; }
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
         public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
-
-        public DbSet<OutboxEntity> Outbox { get; set; }
         public DbSet<Asset> Assets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,12 +42,15 @@ namespace Brokerage.Common.Persistence.DbContexts
             modelBuilder.BuildOutbox();
 
             BuildAssets(modelBuilder);
+            BuildBlockchain(modelBuilder);
+
             BuildBrokerAccount(modelBuilder);
             BuildBrokerAccountRequisites(modelBuilder);
+            BuildBrokerAccountBalancesEntity(modelBuilder);
+            
             BuildAccount(modelBuilder);
             BuildAccountRequisites(modelBuilder);
-            BuildBlockchain(modelBuilder);
-            BuildBrokerAccountBalancesEntity(modelBuilder);
+            
             BuildDepositsEntity(modelBuilder);
             BuildWithdrawalsEntity(modelBuilder);
 
@@ -78,7 +80,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<WithdrawalEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIdentityOptions(startValue: 10600000);
 
             modelBuilder.Entity<WithdrawalEntity>(e =>
             {
@@ -128,7 +130,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<DepositEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIdentityOptions(startValue: 10500000);
 
             modelBuilder.Entity<DepositEntity>(e =>
             {
@@ -142,23 +144,16 @@ namespace Brokerage.Common.Persistence.DbContexts
             modelBuilder.Entity<DepositEntity>()
                 .HasIndex(x => new
                 {
-                    x.TransactionId,
-                    x.AssetId,
-                    x.BrokerAccountRequisitesId,
-                    x.AccountRequisitesId
+                    x.BlockchainId,
+                    x.TransactionId
                 })
-                .IsUnique(true)
-                .HasName("IX_Deposit_NaturalId");
-
-            modelBuilder.Entity<DepositEntity>()
-                .HasIndex(x => x.TransactionId)
-                .HasName("IX_Deposit_TransactionId");
+                .HasName("IX_Deposit_BlockchainId_TransactionId");
 
             modelBuilder.Entity<DepositEntity>()
                 .HasIndex(x => x.ConsolidationOperationId)
+                .IsUnique()
                 .HasName("IX_Deposit_ConsolidationOperationId");
-
-
+            
             modelBuilder.Entity<DepositEntity>()
                 .HasMany(x => x.Fees)
                 .WithOne(x => x.DepositEntity)
@@ -181,13 +176,13 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(x => x.Id);
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
-                .HasIndex(x => new
-                {
-                    x.BrokerAccountId,
-                    x.AssetId
-                })
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 10400000);
+
+            modelBuilder.Entity<BrokerAccountBalancesEntity>()
+                .HasIndex(x => x.NaturalId)
                 .IsUnique()
-                .HasName("IX_BrokerAccountBalances_BrokerAccountId_AssetId");
+                .HasName("IX_BrokerAccountBalances_NaturalId");
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>(e =>
             {
@@ -212,18 +207,18 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(c => new { c.Id });
 
             modelBuilder.Entity<AccountRequisitesEntity>()
-                .HasIndex(x => new
-                {
-                    x.BlockchainId,
-                    x.Address,
-                    x.Tag,
-                    x.TagType
-                })
+                .HasIndex(x => x.NaturalId)
                 .HasName("IX_AccountRequisites_NaturalId");
 
             modelBuilder.Entity<AccountRequisitesEntity>()
                 .Property(b => b.Id)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIdentityOptions(startValue: 10300000);
+
+            // TODO: Workaround to keep requisites <-> accounts 1:1
+            modelBuilder.Entity<AccountRequisitesEntity>()
+                .HasIndex(x => x.AccountId)
+                .IsUnique()
+                .HasName("IX_AccountRequisites_AccountId");
 
             modelBuilder.Entity<AccountEntity>()
                 .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
@@ -243,7 +238,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<AccountEntity>()
                 .Property(b => b.AccountId)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIdentityOptions(startValue: 10200000);
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasMany<AccountEntity>(s => s.Accounts)
@@ -258,24 +253,26 @@ namespace Brokerage.Common.Persistence.DbContexts
                 .HasKey(c => new { c.Id });
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasIndex(x => x.RequestId)
-                .IsUnique(true)
-                .HasName("IX_BrokerAccountRequisites_RequestId");
+                .Property(b => b.Id)
+                .HasIdentityOptions(startValue: 10100000);
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIndex(x => x.ActiveId)
+                .HasName("IX_BrokerAccountRequisites_ActiveId");
+
+            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+                .HasIndex(x => x.NaturalId)
+                .IsUnique()
+                .HasName("IX_BrokerAccountRequisites_NaturalId");
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
                 .HasIndex(x => x.BrokerAccountId)
-                .IsUnique(false)
                 .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
 
             modelBuilder.Entity<BrokerAccountRequisitesEntity>()
-                .HasIndex(x => x.BlockchainId)
-                .IsUnique(false)
-                .HasName("IX_BrokerAccountRequisites_BlockchainId");
-            ;
+                .HasIndex(x => x.Id)
+                .HasSortOrder(SortOrder.Descending)
+                .HasName("IX_BrokerAccountRequisites_IdDesc");
         }
 
         private static void BuildBrokerAccount(ModelBuilder modelBuilder)
@@ -290,7 +287,7 @@ namespace Brokerage.Common.Persistence.DbContexts
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .Property(b => b.BrokerAccountId)
-                .HasIdentityOptions(startValue: StartingIdentity);
+                .HasIdentityOptions(startValue: 10000000);
         }
     }
 }

@@ -29,5 +29,10 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             return HashCode.Combine(BlockchainId, Address);
         }
+
+        public override string ToString()
+        {
+            return $"{BlockchainId}-{Address}";
+        }
     }
 }

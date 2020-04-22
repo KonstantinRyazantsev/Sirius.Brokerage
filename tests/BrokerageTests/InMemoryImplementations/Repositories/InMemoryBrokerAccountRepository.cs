@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 
-namespace BrokerageTests.Repositories
+namespace BrokerageTests.InMemoryImplementations.Repositories
 {
     public class InMemoryBrokerAccountRepository : IBrokerAccountsRepository
     {

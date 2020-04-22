@@ -8,7 +8,7 @@ using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Monitoring;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
 
-namespace BrokerageTests.UnitTests
+namespace BrokerageTests.InMemoryImplementations
 {
     public class FakeExecutorClient : Swisschain.Sirius.Executor.ApiClient.IExecutorClient
     {

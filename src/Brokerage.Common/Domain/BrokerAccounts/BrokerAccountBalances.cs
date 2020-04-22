@@ -37,7 +37,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public long Id { get; }
         public uint Version { get; }
         public long Sequence { get; set; }
-        public BrokerAccountBalancesId NaturalId { get; set; }
+        public BrokerAccountBalancesId NaturalId { get; }
         public decimal OwnedBalance { get; private set; }
         public decimal AvailableBalance { get; private set; }
         public decimal PendingBalance { get; private set; }
@@ -49,8 +49,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public List<object> Events { get; } = new List<object>();
 
-        public static BrokerAccountBalances Create(long id,
-            BrokerAccountBalancesId naturalId)
+        public static BrokerAccountBalances Create(long id, BrokerAccountBalancesId naturalId)
         {
             return new BrokerAccountBalances(
                 id,
@@ -101,64 +100,48 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             PendingBalance += amount;
             PendingBalanceUpdatedAt = DateTime.UtcNow;
 
-            Events.Add(new BrokerAccountBalancesUpdated
-            {
-                BrokerAccountId = this.NaturalId.BrokerAccountId,
-                AssetId = this.NaturalId.AssetId,
-                Sequence = this.Sequence,
-                ReservedBalanceUpdatedAt = this.ReservedBalanceUpdatedAt,
-                AvailableBalance = this.AvailableBalance,
-                OwnedBalance = this.OwnedBalance,
-                OwnedBalanceUpdatedAt = this.OwnedBalanceUpdatedAt,
-                AvailableBalanceUpdatedAt = this.AvailableBalanceUpdatedAt,
-                ReservedBalance = this.ReservedBalance,
-                PendingBalanceUpdatedAt = this.PendingBalanceUpdatedAt,
-                PendingBalance = this.PendingBalance,
-                BrokerAccountBalancesId = this.Id
-            });
+            GenerateEvent();
         }
 
-        public void MovePendingBalanceToOwned(decimal ownedBalanceChange)
+        public void ConfirmRegularPendingBalance(decimal amount)
         {
-            PendingBalance -= ownedBalanceChange;
-            OwnedBalance += ownedBalanceChange;
+            PendingBalance -= amount;
+            OwnedBalance += amount;
 
             var updateDateTime = DateTime.UtcNow;
+
             PendingBalanceUpdatedAt = updateDateTime;
             OwnedBalanceUpdatedAt = updateDateTime;
 
-            Events.Add(new BrokerAccountBalancesUpdated
-            {
-                BrokerAccountId = this.NaturalId.BrokerAccountId,
-                AssetId = this.NaturalId.AssetId,
-                Sequence = this.Sequence,
-                ReservedBalanceUpdatedAt = this.ReservedBalanceUpdatedAt,
-                AvailableBalance = this.AvailableBalance,
-                OwnedBalance = this.OwnedBalance,
-                OwnedBalanceUpdatedAt = this.OwnedBalanceUpdatedAt,
-                AvailableBalanceUpdatedAt = this.AvailableBalanceUpdatedAt,
-                ReservedBalance = this.ReservedBalance,
-                PendingBalanceUpdatedAt = this.PendingBalanceUpdatedAt,
-                PendingBalance = this.PendingBalance,
-                BrokerAccountBalancesId = this.Id
-            });
+            GenerateEvent();
         }
 
-        public void MovePendingBalanceToAvailableAndOwned(decimal pendingChangeAmount, decimal ownedChangeAmount, decimal availableChangeAmount)
+        public void ConfirmBrokerPendingBalance(decimal amount)
         {
-            PendingBalance += pendingChangeAmount;
-            OwnedBalance += ownedChangeAmount;
-            AvailableBalance += availableChangeAmount;
+            PendingBalance -= amount;
+            OwnedBalance += amount;
+            AvailableBalance += amount;
 
             var updateDateTime = DateTime.UtcNow;
+
             PendingBalanceUpdatedAt = updateDateTime;
             OwnedBalanceUpdatedAt = updateDateTime;
+            AvailableBalanceUpdatedAt = updateDateTime;
 
-            if (availableChangeAmount != 0)
-            {
-                AvailableBalanceUpdatedAt = updateDateTime;
-            }
+            GenerateEvent();
+        }
 
+        public void ConsolidateBalance(decimal amount)
+        {
+            AvailableBalance += amount;
+
+            AvailableBalanceUpdatedAt = DateTime.UtcNow;
+            
+            GenerateEvent();
+        }
+
+        private void GenerateEvent()
+        {
             Events.Add(new BrokerAccountBalancesUpdated
             {
                 BrokerAccountId = this.NaturalId.BrokerAccountId,
@@ -174,6 +157,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 PendingBalance = this.PendingBalance,
                 BrokerAccountBalancesId = this.Id
             });
+
+            Sequence++;
         }
     }
 }
