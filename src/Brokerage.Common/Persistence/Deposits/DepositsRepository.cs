@@ -21,26 +21,6 @@ namespace Brokerage.Common.Persistence.Deposits
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<Deposit> GetOrDefaultAsync(
-            string transactionId,
-            long assetId,
-            long brokerAccountRequisitesId,
-            long? accountRequisitesId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
-                .Deposits
-                .Include(x => x.Sources)
-                .Include(x => x.Fees)
-                .FirstOrDefaultAsync(x => x.TransactionId == transactionId &&
-                                          x.AssetId == assetId &&
-                                          x.BrokerAccountRequisitesId == brokerAccountRequisitesId && 
-                                          x.AccountRequisitesId == accountRequisitesId);
-
-            return entity != null ? MapToDomain(entity) : null;
-        }
-
         public async Task<long> GetNextIdAsync()
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -48,14 +28,14 @@ namespace Brokerage.Common.Persistence.Deposits
             return await context.GetNextId(Tables.Deposits, nameof(DepositEntity.Id));
         }
 
-        public async Task<IReadOnlyCollection<Deposit>> GetByTransactionIdAsync(string transactionId)
+        public async Task<IReadOnlyCollection<Deposit>> GetAllByTransactionAsync(string blockchainId, string transactionId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var deposits = context
                 .Deposits
                 .Include(x => x.Sources)
                 .Include(x => x.Fees)
-                .Where(x => x.TransactionId == transactionId);
+                .Where(x => x.BlockchainId == blockchainId && x.TransactionId == transactionId);
 
             await deposits.LoadAsync();
 
@@ -65,7 +45,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
-        public async Task<Deposit> GetByOperationIdOrDefaultAsync(long operationId)
+        public async Task<Deposit> GetByonsolidationIdOrDefaultAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -78,36 +58,31 @@ namespace Brokerage.Common.Persistence.Deposits
             return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task SaveAsync(Deposit deposit)
+        public async Task SaveAsync(IReadOnlyCollection<Deposit> deposits)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entity = MapToEntity(deposit);
+            var entities = deposits.Select(MapToEntity);
 
-            if (entity.Version == default)
+            foreach (var entity in entities)
             {
-                context.Deposits.Add(entity);
-            }
-            else
-            {
-                // TODO: Research how to do it better
-                context.Deposits.Update(entity);
-                context.Entry(entity).State = EntityState.Modified;
+                if (entity.Version == default)
+                {
+                    context.Deposits.Add(entity);
+                }
+                else
+                {
+                    context.Deposits.Update(entity);
+                    context.Entry(entity).State = EntityState.Modified;
+                }    
             }
 
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            await context.SaveChangesAsync();
         }
 
         private static DepositEntity MapToEntity(Deposit deposit)
         {
-            var depositState = deposit.DepositState switch
+            var depositState = deposit.State switch
             {
                 DepositState.Detected =>  DepositStateEnum.Detected,
                 DepositState.Cancelled => DepositStateEnum.Cancelled,
@@ -115,21 +90,24 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositState.Confirmed => DepositStateEnum.Confirmed,
                 DepositState.Failed =>    DepositStateEnum.Failed,
 
-                _ => throw new ArgumentOutOfRangeException(nameof(deposit.DepositState),
-                    deposit.DepositState,
+                _ => throw new ArgumentOutOfRangeException(nameof(deposit.State),
+                    deposit.State,
                     null)
             };
 
-            var depositEntity = new DepositEntity()
+            var depositEntity = new DepositEntity
             {
                 Id = deposit.Id,
                 Sequence = deposit.Sequence,
                 Version = deposit.Version,
-                AssetId = deposit.AssetId,
-                Amount = deposit.Amount,
+                TenantId = deposit.TenantId,
+                BlockchainId = deposit.BlockchainId,
+                BrokerAccountId = deposit.BrokerAccountId,
+                AssetId = deposit.Unit.AssetId,
+                Amount = deposit.Unit.Amount,
                 ConsolidationOperationId = deposit.ConsolidationOperationId,
                 BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
-                Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity()
+                Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity
                 {
                     AssetId = x.AssetId,
                     Amount = x.Amount,
@@ -137,23 +115,23 @@ namespace Brokerage.Common.Persistence.Deposits
                 }).ToArray(),
                 ErrorMessage = deposit.Error?.Message,
                 ErrorCode = deposit.Error?.Code,
-                Sources = deposit.Sources.Select((x, index) => new DepositSourceEntity()
+                Sources = deposit.Sources.Select((x, index) => new DepositSourceEntity
                 {
                     Address = x.Address,
                     Amount = x.Amount,
                     DepositId = deposit.Id
                 }).ToArray(),
                 AccountRequisitesId = deposit.AccountRequisitesId,
-                DepositState = depositState,
+                State = depositState,
                 TransactionId = deposit.TransactionInfo.TransactionId,
                 TransactionBlock = deposit.TransactionInfo.TransactionBlock,
                 TransactionRequiredConfirmationsCount = deposit.TransactionInfo.RequiredConfirmationsCount,
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
-                DetectedDateTime = deposit.DetectedDateTime,
-                ConfirmedDateTime = deposit.ConfirmedDateTime,
-                CompletedDateTime = deposit.CompletedDateTime,
-                CancelledDateTime = deposit.CancelledDateTime,
-                FailedDateTime = deposit.FailedDateTime,
+                DetectedAt = deposit.DetectedAt,
+                ConfirmedAt = deposit.ConfirmedAt,
+                CompletedAt = deposit.CompletedAt,
+                CancelledAt = deposit.CancelledAt,
+                FailedAt = deposit.FailedAt,
             };
 
             return depositEntity;
@@ -165,7 +143,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 ? null
                 : new DepositError(depositEntity.ErrorMessage, depositEntity.ErrorCode ?? DepositErrorCode.TechnicalProblem);
 
-            var depositState = depositEntity.DepositState switch
+            var depositState = depositEntity.State switch
             {
                 DepositStateEnum.Detected => DepositState.Detected,
                 DepositStateEnum.Cancelled => DepositState.Cancelled,
@@ -173,8 +151,8 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositStateEnum.Confirmed => DepositState.Confirmed,
                 DepositStateEnum.Failed => DepositState.Failed,
 
-                _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.DepositState),
-                    depositEntity.DepositState,
+                _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.State),
+                    depositEntity.State,
                     null)
             };
 
@@ -182,10 +160,12 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.Id,
                 depositEntity.Version,
                 depositEntity.Sequence,
+                depositEntity.TenantId,
+                depositEntity.BlockchainId,
+                depositEntity.BrokerAccountId,
                 depositEntity.BrokerAccountRequisitesId,
                 depositEntity.AccountRequisitesId,
-                depositEntity.AssetId,
-                depositEntity.Amount,
+                new Unit(depositEntity.AssetId, depositEntity.Amount),
                 depositEntity.ConsolidationOperationId,
                 depositEntity.Fees?
                     .Select(x => new Unit(x.AssetId, x.Amount))
@@ -200,13 +180,13 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.Sources?
                     .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray(),
-                depositEntity.DetectedDateTime.UtcDateTime,
-                depositEntity.ConfirmedDateTime?.UtcDateTime,
-                depositEntity.CompletedDateTime?.UtcDateTime,
-                depositEntity.FailedDateTime?.UtcDateTime,
-                depositEntity.CancelledDateTime?.UtcDateTime);
+                depositEntity.DetectedAt.UtcDateTime,
+                depositEntity.ConfirmedAt?.UtcDateTime,
+                depositEntity.CompletedAt?.UtcDateTime,
+                depositEntity.FailedAt?.UtcDateTime,
+                depositEntity.CancelledAt?.UtcDateTime);
 
-                return deposit;
+            return deposit;
         }
     }
 }

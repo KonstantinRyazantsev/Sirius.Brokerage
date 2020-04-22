@@ -23,13 +23,13 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit =  await _depositsRepository.GetByOperationIdOrDefaultAsync(evt.OperationId);
+            var deposit =  await _depositsRepository.GetByonsolidationIdOrDefaultAsync(evt.OperationId);
 
             if (deposit != null)
             {
                 deposit.Complete();
 
-                await _depositsRepository.SaveAsync(deposit);
+                await _depositsRepository.SaveAsync(new[] {deposit});
 
                 foreach (var @event in deposit.Events)
                 {

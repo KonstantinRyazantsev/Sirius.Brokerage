@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain.Accounts;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Assets;
@@ -8,12 +8,10 @@ using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Withdrawals;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
 using Swisschain.Sirius.Brokerage.ApiContract.Common;
-using Swisschain.Sirius.Sdk.Primitives;
 using DestinationRequisites = Brokerage.Common.Domain.Withdrawals.DestinationRequisites;
 using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 using ErrorResponseBody = Swisschain.Sirius.Brokerage.ApiContract.ErrorResponseBody;
@@ -125,8 +123,8 @@ namespace Brokerage.GrpcServices
                 }
             }
 
-            var balance =
-                await _brokerAccountsBalancesRepository.GetOrDefaultAsync(brokerAccount.BrokerAccountId, asset.Id);
+            var balance = await _brokerAccountsBalancesRepository
+                .GetOrDefaultAsync(new BrokerAccountBalancesId(brokerAccount.BrokerAccountId, asset.Id));
 
             var availableBalance = balance?.AvailableBalance ?? 0m;
             if (availableBalance < amount)
@@ -139,15 +137,14 @@ namespace Brokerage.GrpcServices
                     $"Shortage of {shortage} {asset.Symbol}");
             }
 
-            var outbox = await _outbox.Open($"API:Withdrawals.Execute:{request.RequestId}",
+            var outbox = await _outbox.Open(
+                $"API:Withdrawals.Execute:{request.RequestId}",
                 () => _withdrawalRepository.GetNextIdAsync());
 
             if (!outbox.IsStored)
             {
                 var brokerAccountRequisites = await _brokerAccountRequisitesRepository
-                    .GetActualByBrokerAccountIdAndBlockchainAsync(
-                        brokerAccount.BrokerAccountId,
-                        asset.BlockchainId);
+                    .GetActiveAsync(new ActiveBrokerAccountRequisitesId(asset.BlockchainId, brokerAccount.BrokerAccountId));
 
                 var withdrawal = Withdrawal.Create(
                     outbox.AggregateId,
@@ -196,9 +193,9 @@ namespace Brokerage.GrpcServices
                         },
                         CreatedAt = Timestamp.FromDateTime(withdrawal.CreatedAt),
                         UpdatedAt = Timestamp.FromDateTime(withdrawal.UpdatedAt),
-                        Unit = new Swisschain.Sirius.Brokerage.ApiContract.Common.Unit()
+                        Unit = new Unit
                         {
-                            Amount = (BigDecimal)withdrawal.Unit.Amount,
+                            Amount = withdrawal.Unit.Amount,
                             AssetId = withdrawal.Unit.AssetId
                         },
                         ReferenceId = withdrawal.ReferenceId,

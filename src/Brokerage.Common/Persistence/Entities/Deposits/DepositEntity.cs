@@ -20,6 +20,9 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
         public long Id { get; set; }
         public uint Version { get; set; }
         public long Sequence { get; set; }
+        public string TenantId { get; set; }
+        public string BlockchainId { get; set; }
+        public long BrokerAccountId { get; set; }
         public long BrokerAccountRequisitesId { get; set; }
         public long? AccountRequisitesId { get; set; }
         public long AssetId { get; set; }
@@ -31,15 +34,13 @@ namespace Brokerage.Common.Persistence.Entities.Deposits
         public long TransactionRequiredConfirmationsCount { get; set; }
         public DateTime TransactionDateTime { get; set; }
         public string ErrorMessage { get; set; }
-
         public DepositErrorCode? ErrorCode { get; set; }
-        public DepositStateEnum DepositState { get; set; }
+        public DepositStateEnum State { get; set; }
         public ICollection<DepositSourceEntity> Sources { get; set; }
-        public string Address { get; set; }
-        public DateTimeOffset DetectedDateTime { get; set; }
-        public DateTimeOffset? ConfirmedDateTime { get; set; }
-        public DateTimeOffset? CompletedDateTime { get; set; }
-        public DateTimeOffset? FailedDateTime { get; set; }
-        public DateTimeOffset? CancelledDateTime { get; set; }
+        public DateTimeOffset DetectedAt { get; set; }
+        public DateTimeOffset? ConfirmedAt { get; set; }
+        public DateTimeOffset? CompletedAt { get; set; }
+        public DateTimeOffset? FailedAt { get; set; }
+        public DateTimeOffset? CancelledAt { get; set; }
     }
 }

@@ -33,19 +33,19 @@ namespace Brokerage.Worker.MessageConsumers
                 {
                     var evt = new AccountRequisitesAdded
                     {
-                        CreationDateTime = requisites.CreationDateTime,
-                        Address = requisites.Address,
-                        BlockchainId = requisites.BlockchainId,
-                        Tag = requisites.Tag,
-                        TagType = requisites.TagType,
+                        CreatedAt = requisites.CreatedAt,
+                        Address = requisites.NaturalId.Address,
+                        BlockchainId = requisites.NaturalId.BlockchainId,
+                        Tag = requisites.NaturalId.Tag,
+                        TagType = requisites.NaturalId.TagType,
                         AccountId = requisites.AccountId,
-                        AccountRequisitesId = requisites.AccountRequisitesId
+                        AccountRequisitesId = requisites.Id
                     };
 
                     await context.Publish(evt);
                 }
 
-                cursor = page.Last().AccountRequisitesId;
+                cursor = page.Last().Id;
             } while (true);
         }
     }

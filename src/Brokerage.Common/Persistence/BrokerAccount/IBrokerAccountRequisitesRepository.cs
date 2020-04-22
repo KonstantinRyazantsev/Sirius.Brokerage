@@ -6,20 +6,14 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 {
     public interface IBrokerAccountRequisitesRepository
     {
-        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(long? brokerAccountId,
+        Task<long> GetNextIdAsync();
+        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByBrokerAccountAsync(long brokerAccountId,
             int limit,
-            long? cursor,
-            bool sortAsc,
-            string blockchainId,
-            string address);
-
-        Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount);
-
-        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses);
-
-        Task UpdateAsync(BrokerAccountRequisites brokerAccount);
-        Task<BrokerAccountRequisites> GetByIdAsync(long brokerAccountRequisitesId);
-
-        Task<BrokerAccountRequisites> GetActualByBrokerAccountIdAndBlockchainAsync(long brokerAccountId, string blockchainId);
+            long? cursor);
+        Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(ISet<BrokerAccountRequisitesId> ids);
+        Task AddOrIgnoreAsync(BrokerAccountRequisites brokerAccount);
+        Task<BrokerAccountRequisites> GetAsync(long id);
+        Task<IReadOnlyDictionary<ActiveBrokerAccountRequisitesId, BrokerAccountRequisites>> GetActiveAsync(ISet<ActiveBrokerAccountRequisitesId> ids);
+        Task<BrokerAccountRequisites> GetActiveAsync(ActiveBrokerAccountRequisitesId id);
     }
 }

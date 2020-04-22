@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Brokerage.Common.Persistence.BrokerAccount
 {
@@ -16,56 +18,43 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
         
-        public async Task<BrokerAccountBalances> GetOrDefaultAsync(long brokerAccountId, long assetId)
+        public async Task<BrokerAccountBalances> GetOrDefaultAsync(BrokerAccountBalancesId id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .BrokerAccountBalances
-                .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId && x.AssetId == assetId);
+                .FirstOrDefaultAsync(x => x.NaturalId == id.ToString());
 
             return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task<BrokerAccountBalances> GetAsync(long brokerAccountId, long assetId)
-        {
-            var balances = await GetOrDefaultAsync(brokerAccountId, assetId);
-
-            if (balances == null)
-            {
-                throw new InvalidOperationException($"Broker account balances {brokerAccountId}, {assetId} not found");
-            }
-
-            return balances;
-        }
-
-        public async Task<long> GetNextIdAsync()
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.BrokerAccountBalances,  nameof(BrokerAccountBalancesEntity.BrokerAccountBalancesId));
-        }
-
-        public async Task SaveAsync(BrokerAccountBalances brokerAccountBalances, string updateId)
+        public async Task SaveAsync(string updatePrefix, IReadOnlyCollection<BrokerAccountBalances> balances)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             await using var transaction = context.Database.BeginTransaction();
 
-            brokerAccountBalances.Sequence++;
-            var entity = MapToEntity(brokerAccountBalances);
+            var entities = balances
+                .Select(MapToEntity);
 
-            context.BrokerAccountBalancesUpdate.Add(new BrokerAccountBalancesUpdateEntity()
+            foreach (var balance in balances)
             {
-                UpdateId = updateId
-            });
-
-            if (brokerAccountBalances.Version == default)
-            {
-                context.BrokerAccountBalances.Add(entity);
+                context.BrokerAccountBalancesUpdate.Add(new BrokerAccountBalancesUpdateEntity
+                {
+                    UpdateId = $"{updatePrefix}-{balance.NaturalId}"
+                });    
             }
-            else
+
+            foreach (var entity in entities)
             {
-                context.BrokerAccountBalances.Update(entity);
+                if (entity.Version == default)
+                {
+                    context.BrokerAccountBalances.Add(entity);
+                }
+                else
+                {
+                    context.BrokerAccountBalances.Update(entity);
+                }
             }
 
             try
@@ -73,28 +62,55 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch (Exception e)
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
             {
                 await transaction.RollbackAsync();
-                throw e;
+
+                throw;
             }
+        }
+
+        public async Task<IReadOnlyCollection<BrokerAccountBalances>> GetAnyOfAsync(ISet<BrokerAccountBalancesId> ids)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var idStrings = ids.Select(x => x.ToString()).ToArray();
+
+            var query = context
+                .BrokerAccountBalances
+                .Where(x => idStrings.Contains(x.NaturalId));
+            
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
+        public async Task<long> GetNextIdAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            return await context.GetNextId(Tables.BrokerAccountBalances,  nameof(BrokerAccountBalancesEntity.Id));
         }
 
         private static BrokerAccountBalancesEntity MapToEntity(BrokerAccountBalances brokerAccountBalances)
         {
             var newEntity = new BrokerAccountBalancesEntity()
             {
-                BrokerAccountId = brokerAccountBalances.BrokerAccountId,
-                AssetId = brokerAccountBalances.AssetId,
+                BrokerAccountId = brokerAccountBalances.NaturalId.BrokerAccountId,
+                AssetId = brokerAccountBalances.NaturalId.AssetId,
                 AvailableBalance = brokerAccountBalances.AvailableBalance,
-                AvailableBalanceUpdateDateTime = brokerAccountBalances.AvailableBalanceUpdateDateTime,
-                BrokerAccountBalancesId = brokerAccountBalances.Id,
+                AvailableBalanceUpdatedAt = brokerAccountBalances.AvailableBalanceUpdatedAt,
+                Id = brokerAccountBalances.Id,
+                NaturalId = brokerAccountBalances.NaturalId.ToString(),
                 OwnedBalance = brokerAccountBalances.OwnedBalance,
-                OwnedBalanceUpdateDateTime = brokerAccountBalances.OwnedBalanceUpdateDateTime,
+                OwnedBalanceUpdatedAt = brokerAccountBalances.OwnedBalanceUpdatedAt,
                 PendingBalance = brokerAccountBalances.PendingBalance,
-                PendingBalanceUpdateDateTime = brokerAccountBalances.PendingBalanceUpdateDateTime,
+                PendingBalanceUpdatedAt = brokerAccountBalances.PendingBalanceUpdatedAt,
                 ReservedBalance = brokerAccountBalances.ReservedBalance,
-                ReservedBalanceUpdateDateTime = brokerAccountBalances.ReservedBalanceUpdateDateTime,
+                ReservedBalanceUpdateDatedAt = brokerAccountBalances.ReservedBalanceUpdatedAt,
                 Version = brokerAccountBalances.Version,
                 Sequence = brokerAccountBalances.Sequence
             };
@@ -105,20 +121,18 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         private static BrokerAccountBalances MapToDomain(BrokerAccountBalancesEntity brokerAccountBalancesEntity)
         {
             var brokerAccountBalances = BrokerAccountBalances.Restore(
-                brokerAccountBalancesEntity.BrokerAccountBalancesId,
+                brokerAccountBalancesEntity.Id,
                 brokerAccountBalancesEntity.Sequence,
                 brokerAccountBalancesEntity.Version,
-                brokerAccountBalancesEntity.BrokerAccountId,
-                brokerAccountBalancesEntity.AssetId,
+                new BrokerAccountBalancesId(brokerAccountBalancesEntity.BrokerAccountId, brokerAccountBalancesEntity.AssetId),
                 brokerAccountBalancesEntity.OwnedBalance,
                 brokerAccountBalancesEntity.AvailableBalance,
                 brokerAccountBalancesEntity.PendingBalance,
                 brokerAccountBalancesEntity.ReservedBalance,
-                brokerAccountBalancesEntity.OwnedBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.AvailableBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.PendingBalanceUpdateDateTime.UtcDateTime,
-                brokerAccountBalancesEntity.ReservedBalanceUpdateDateTime.UtcDateTime
-                );
+                brokerAccountBalancesEntity.OwnedBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.AvailableBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.PendingBalanceUpdatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.ReservedBalanceUpdateDatedAt.UtcDateTime);
 
             return brokerAccountBalances;
         }

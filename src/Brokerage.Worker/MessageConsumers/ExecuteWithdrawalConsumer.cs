@@ -1,18 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Withdrawals;
-using Brokerage.Common.ReadModels.Assets;
-using Google.Protobuf.WellKnownTypes;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
-using Swisschain.Sirius.Indexer.MessagingContract;
-using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 
 namespace Brokerage.Worker.MessageConsumers
 {
@@ -25,7 +19,7 @@ namespace Brokerage.Worker.MessageConsumers
 
         public ExecuteWithdrawalConsumer(
             ILogger<ExecuteWithdrawalConsumer> logger,
-            Swisschain.Sirius.Executor.ApiClient.IExecutorClient executorClient,
+            IExecutorClient executorClient,
             IWithdrawalRepository withdrawalRepository,
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository)
         {
@@ -40,26 +34,8 @@ namespace Brokerage.Worker.MessageConsumers
             var evt = context.Message;
 
             var withdrawal = await _withdrawalRepository.GetAsync(evt.WithdrawalId);
-            var sourceRequisites =
-                await _brokerAccountRequisitesRepository.GetByIdAsync(withdrawal.BrokerAccountRequisitesId);
+            var sourceRequisites = await _brokerAccountRequisitesRepository.GetAsync(withdrawal.BrokerAccountRequisitesId);
 
-            var destinationTagType = withdrawal.DestinationRequisites.TagType == null
-                ? new NullableDestinationTagType()
-                {
-                    Null = NullValue.NullValue,
-                }
-                : new NullableDestinationTagType()
-                {
-                    Value = withdrawal.DestinationRequisites.TagType.Value switch
-                    {
-                        DestinationTagType.Text => Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Text,
-                        DestinationTagType.Number => Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Number,
-                        _ => throw new ArgumentOutOfRangeException(
-                            nameof(withdrawal.DestinationRequisites.TagType),
-                            withdrawal.DestinationRequisites.TagType,
-                            null)
-                    }
-                };
             var operation = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest()
             {
                 AssetId = withdrawal.Unit.AssetId,
@@ -67,15 +43,15 @@ namespace Brokerage.Worker.MessageConsumers
                 {
                     RequestId = $"Brokerage:Withdrawal:{withdrawal.Id}",
                     TenantId = withdrawal.TenantId,
-                    FeePayerAddress = sourceRequisites.Address
+                    FeePayerAddress = sourceRequisites.NaturalId.Address
                 },
                 Movements =
                 {
-                    new Movement()
+                    new Movement
                     {
                         Amount = withdrawal.Unit.Amount,
                         //DestinationTagType = destinationTagType,
-                        SourceAddress = sourceRequisites.Address,
+                        SourceAddress = sourceRequisites.NaturalId.Address,
                         //DestinationTag = withdrawal.DestinationRequisites.Tag,
                         DestinationAddress = withdrawal.DestinationRequisites.Address,
                         //SourceNonce = null

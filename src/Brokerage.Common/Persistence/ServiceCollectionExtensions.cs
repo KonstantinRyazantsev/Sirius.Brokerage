@@ -1,5 +1,6 @@
 ﻿using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Assets;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Deposits;

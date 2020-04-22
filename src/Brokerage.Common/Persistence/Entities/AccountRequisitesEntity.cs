@@ -11,7 +11,7 @@ namespace Brokerage.Common.Persistence.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
-        public string RequestId { get; set; }
+        public string NaturalId { get; set; }
         public long AccountId { get; set; }
         public long BrokerAccountId { get; set; }
         public AccountEntity Account { get; set; }
@@ -19,7 +19,7 @@ namespace Brokerage.Common.Persistence.Entities
         public string Address { get; set; }
         public string Tag { get; set; }
         public DestinationTagType? TagType { get; set; }
-        public DateTimeOffset CreationDateTime { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         
     }
 }

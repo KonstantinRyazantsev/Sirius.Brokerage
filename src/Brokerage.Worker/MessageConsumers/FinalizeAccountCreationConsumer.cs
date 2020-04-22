@@ -1,22 +1,24 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
-using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 
 namespace Brokerage.Worker.MessageConsumers
 {
     public class FinalizeAccountCreationConsumer : IConsumer<FinalizeAccountCreation>
     {
-        private readonly ILoggerFactory loggerFactory;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
-        private readonly IBlockchainsRepository blockchainsRepository;
+        private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
         private readonly IAccountRequisitesRepository _accountRequisitesRepository;
-        private readonly IAccountsRepository accountsRepository;
+        private readonly IAccountsRepository _accountsRepository;
+        private readonly IOutboxManager _outboxManager;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
@@ -24,28 +26,31 @@ namespace Brokerage.Worker.MessageConsumers
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IAccountRequisitesRepository accountRequisitesRepository,
-            IAccountsRepository accountsRepository)
+            IAccountsRepository accountsRepository,
+            IOutboxManager outboxManager)
         {
-            this.loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory;
             _logger = logger;
-            this.blockchainsRepository = blockchainsRepository;
+            _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
             _accountRequisitesRepository = accountRequisitesRepository;
-            this.accountsRepository = accountsRepository;
+            _accountsRepository = accountsRepository;
+            _outboxManager = outboxManager;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
         {
             var command = context.Message;
-            var account = await accountsRepository.GetAsync(command.AccountId);
+            var account = await _accountsRepository.GetAsync(command.AccountId);
 
             try
             {
                 await account.FinalizeCreation(
-                    loggerFactory.CreateLogger<Account>(),
-                    blockchainsRepository,
+                    _loggerFactory.CreateLogger<Account>(),
+                    _blockchainsRepository,
                     _accountRequisitesRepository,
-                    _vaultAgentClient);
+                    _vaultAgentClient,
+                    _outboxManager);
             }
             catch (Exception ex)
             {
@@ -54,7 +59,7 @@ namespace Brokerage.Worker.MessageConsumers
                 throw;
             }
 
-            await accountsRepository.UpdateAsync(account);
+            await _accountsRepository.UpdateAsync(account);
 
             foreach (var evt in account.Events)
             {

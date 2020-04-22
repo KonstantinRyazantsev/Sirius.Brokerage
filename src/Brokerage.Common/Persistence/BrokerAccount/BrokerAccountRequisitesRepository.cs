@@ -19,57 +19,32 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         }
 
 
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(
-            long? brokerAccountId,
+        public async Task<long> GetNextIdAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            return await context.GetNextId(Tables.BrokerAccountRequisites, nameof(BrokerAccountRequisites.Id));
+        }
+
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByBrokerAccountAsync(long brokerAccountId,
             int limit,
-            long? cursor,
-            bool sortAsc,
-            string blockchainId,
-            string address)
+            long? cursor)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var query = context
                 .BrokerAccountsRequisites
-                .Select(x => x);
-
-            if (brokerAccountId != null)
+                .Where(x => x.BrokerAccountId == brokerAccountId);
+        
+            if (cursor != null)
             {
-                query = query.Where(x => x.BrokerAccountId == brokerAccountId);
+                // ReSharper disable once StringCompareToIsCultureSpecific
+                query = query.Where(x => cursor < 0);
             }
 
-            if (!string.IsNullOrEmpty(blockchainId))
-            {
-                query = query.Where(x => x.BlockchainId == blockchainId);
-            }
-
-            if (!string.IsNullOrEmpty(address))
-            {
-                query = query.Where(x => x.Address == address);
-            }
-
-            if (sortAsc)
-            {
-                if (cursor != null)
-                {
-                    // ReSharper disable once StringCompareToIsCultureSpecific
-                    query = query.Where(x => cursor < 0);
-                }
-
-                query = query.OrderBy(x => x.Id);
-            }
-            else
-            {
-                if (cursor != null)
-                {
-                    // ReSharper disable once StringCompareToIsCultureSpecific
-                    query = query.Where(x => cursor > 0);
-                }
-
-                query = query.OrderByDescending(x => x.Id);
-            }
-
-            query = query.Take(limit);
+            query = query
+                .OrderBy(x => x.Id)
+                .Take(limit);
 
             await query.LoadAsync();
 
@@ -79,40 +54,15 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
-        public async Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccount)
+        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(ISet<BrokerAccountRequisitesId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var newEntity = MapToEntity(brokerAccount);
-
-            context.BrokerAccountsRequisites.Add(newEntity);
-
-            try
-            {
-                await context.SaveChangesAsync();
-
-                return MapToDomain(newEntity);
-            }
-            catch (DbUpdateException e) //Check that request was already processed (by constraint)
-                when (e.InnerException is PostgresException pgEx &&
-                      pgEx.SqlState == "23505" &&
-                      pgEx.ConstraintName == "IX_BrokerAccountRequisites_RequestId")
-            {
-                var entity = await context
-                    .BrokerAccountsRequisites
-                    .FirstOrDefaultAsync(x => x.RequestId == brokerAccount.RequestId);
-
-                return MapToDomain(entity);
-            }
-        }
-
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByAddressesAsync(string blockchainId, IReadOnlyCollection<string> addresses)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            var idStrings = ids.Select(x => x.ToString()).ToArray();
 
             var query = context
                 .BrokerAccountsRequisites
-                .Where(x => x.BlockchainId == blockchainId && addresses.Contains(x.Address));
+                .Where(x => idStrings.Contains(x.NaturalId));
             
             await query.LoadAsync();
 
@@ -122,36 +72,66 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
-        public async Task<BrokerAccountRequisites> GetActualByBrokerAccountIdAndBlockchainAsync(long brokerAccountId, string blockchainId)
+        public async Task<IReadOnlyDictionary<ActiveBrokerAccountRequisitesId, BrokerAccountRequisites>> GetActiveAsync(
+            ISet<ActiveBrokerAccountRequisitesId> ids)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var idStrings = ids.Select(x => x.ToString()).ToArray();
+
+            var result = await context
+                .BrokerAccountsRequisites
+                .Where(x => idStrings.Contains(x.ActiveId))
+                .GroupBy(x => x.ActiveId)
+                .Select(g => g
+                    .OrderByDescending(x => x.Id)
+                    .First())
+                .ToListAsync();
+
+            return result
+                .Select(MapToDomain)
+                .ToDictionary(
+                    x => new ActiveBrokerAccountRequisitesId(x.NaturalId.BlockchainId, x.BrokerAccountId), 
+                    x => x);
+        }
+
+        public async Task<BrokerAccountRequisites> GetActiveAsync(ActiveBrokerAccountRequisitesId id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var result = await context
                 .BrokerAccountsRequisites
+                .Where(x => x.ActiveId == id.ToString())
                 .OrderByDescending(x => x.Id)
-                .FirstAsync(x => x.BlockchainId == blockchainId && 
-                                 x.BrokerAccountId == brokerAccountId);
+                .FirstAsync();
 
             return MapToDomain(result);
         }
 
-        public async Task UpdateAsync(BrokerAccountRequisites brokerAccount)
+        public async Task AddOrIgnoreAsync(BrokerAccountRequisites brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            
             var entity = MapToEntity(brokerAccount);
-            context
-                .BrokerAccountsRequisites
-                .Update(entity);
-            await context.SaveChangesAsync();
+
+            try
+            {
+                await context.BrokerAccountsRequisites.AddAsync(entity);
+
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+            }
         }
 
-        public async Task<BrokerAccountRequisites> GetByIdAsync(long brokerAccountRequisitesId)
+        public async Task<BrokerAccountRequisites> GetAsync(long id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var requisites = await context
                 .BrokerAccountsRequisites
-                .FirstAsync(x => x.Id == brokerAccountRequisitesId);
+                .FirstAsync(x => x.Id == id);
 
             return MapToDomain(requisites);
         }
@@ -160,27 +140,28 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             return new BrokerAccountRequisitesEntity
             {
-                RequestId = requisites.RequestId,
-                BlockchainId = requisites.BlockchainId,
+                BlockchainId = requisites.NaturalId.BlockchainId,
+                TenantId = requisites.TenantId,
                 BrokerAccountId = requisites.BrokerAccountId,
-                Address = requisites.Address,
+                Address = requisites.NaturalId.Address,
                 Id = requisites.Id,
-                CreationDateTime = requisites.CreationDateTime
+                NaturalId = requisites.NaturalId.ToString(),
+                ActiveId = new ActiveBrokerAccountRequisitesId(requisites.NaturalId.BlockchainId, requisites.BrokerAccountId).ToString(),
+                CreatedAt = requisites.CreatedAt
             };
         }
 
-        private BrokerAccountRequisites MapToDomain(BrokerAccountRequisitesEntity entity)
+        private static BrokerAccountRequisites MapToDomain(BrokerAccountRequisitesEntity entity)
         {
             if (entity == null)
                 return null;
 
             var brokerAccount = BrokerAccountRequisites.Restore(
-                entity.RequestId,
                 entity.Id,
+                new BrokerAccountRequisitesId(entity.BlockchainId, entity.Address),
+                entity.TenantId,
                 entity.BrokerAccountId,
-                entity.BlockchainId,
-                entity.Address,
-                entity.CreationDateTime.UtcDateTime
+                entity.CreatedAt.UtcDateTime
             );
 
             return brokerAccount;

@@ -9,20 +9,20 @@ namespace Brokerage.Common.Persistence.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long BrokerAccountBalancesId { get; set; }
+        public long Id { get; set; }
+        public string NaturalId { get; set; }
         public uint Version { get; set; }
         public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }
-
         public BrokerAccountEntity BrokerAccount { get; set; }
         public long AssetId { get; set; }
         public decimal OwnedBalance { get; set; }
         public decimal AvailableBalance { get; set; }
         public decimal PendingBalance { get; set; }
         public decimal ReservedBalance { get; set; }
-        public DateTimeOffset OwnedBalanceUpdateDateTime { get; set; }
-        public DateTimeOffset AvailableBalanceUpdateDateTime { get; set; }
-        public DateTimeOffset PendingBalanceUpdateDateTime { get; set; }
-        public DateTimeOffset ReservedBalanceUpdateDateTime { get; set; }
+        public DateTimeOffset OwnedBalanceUpdatedAt { get; set; }
+        public DateTimeOffset AvailableBalanceUpdatedAt { get; set; }
+        public DateTimeOffset PendingBalanceUpdatedAt { get; set; }
+        public DateTimeOffset ReservedBalanceUpdateDatedAt { get; set; }
     }
 }

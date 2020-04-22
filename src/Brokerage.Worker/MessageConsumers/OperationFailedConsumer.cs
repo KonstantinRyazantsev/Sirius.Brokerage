@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Deposits;
-using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -26,7 +25,7 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var evt = context.Message;
 
-            var deposit = await _depositsRepository.GetByOperationIdOrDefaultAsync(evt.OperationId);
+            var deposit = await _depositsRepository.GetByonsolidationIdOrDefaultAsync(evt.OperationId);
 
             if (deposit != null)
             {
@@ -42,7 +41,7 @@ namespace Brokerage.Worker.MessageConsumers
                         _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
                     }));
 
-                await _depositsRepository.SaveAsync(deposit);
+                await _depositsRepository.SaveAsync(new[] {deposit});
 
                 foreach (var @event in deposit.Events)
                 {

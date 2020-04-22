@@ -8,6 +8,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public long BrokerAccountId { get; set; }
         public string BlockchainId { get; set; }
         public string Address { get; set; }
-        public DateTime CreationDateTime { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }
