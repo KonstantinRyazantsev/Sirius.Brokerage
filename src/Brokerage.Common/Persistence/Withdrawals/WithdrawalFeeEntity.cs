@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brokerage.Common.Persistence.Entities.Withdrawals
+namespace Brokerage.Common.Persistence.Withdrawals
 {
     [Table(name: Tables.DepositFees)]
     public class WithdrawalFeeEntity

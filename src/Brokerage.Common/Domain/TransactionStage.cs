@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Persistence.Entities
+﻿namespace Brokerage.Common.Domain
 {
     public enum TransactionStage
     {

@@ -7,8 +7,8 @@ using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
-using Brokerage.Common.Persistence.Entities;
 using Brokerage.Common.Persistence.Operations;
+using Brokerage.Common.Persistence.Transactions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -25,6 +25,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
         private readonly IOperationsRepository _operationsRepository;
+        private readonly IDetectedTransactionsRepository _detectedTransactionsRepository;
         private readonly IOutboxManager _outboxManager;
 
         public TransactionConfirmedConsumer(ILogger<TransactionConfirmedConsumer> logger,
@@ -34,6 +35,7 @@ namespace Brokerage.Worker.MessageConsumers
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
+            IDetectedTransactionsRepository detectedTransactionsRepository,
             IOutboxManager outboxManager)
         {
             _logger = logger;
@@ -43,14 +45,21 @@ namespace Brokerage.Worker.MessageConsumers
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _depositsRepository = depositsRepository;
             _operationsRepository = operationsRepository;
+            _detectedTransactionsRepository = detectedTransactionsRepository;
             _outboxManager = outboxManager;
         }
 
         public async Task Consume(ConsumeContext<TransactionConfirmed> context)
         {
-            // TODO: Fail if TransactionDetected wasn't processed yet
-
             var tx = context.Message;
+
+            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
+            {
+                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}", tx);
+
+                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
+            }
+
             var processingContextBuilder = new TransactionProcessingContextBuilder(
                 _accountRequisitesRepository, 
                 _brokerAccountRequisitesRepository, 

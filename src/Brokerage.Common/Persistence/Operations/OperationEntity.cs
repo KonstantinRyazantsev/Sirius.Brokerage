@@ -1,7 +1,6 @@
-﻿using Brokerage.Common.Domain;
-using Brokerage.Common.Domain.Operations;
+﻿using Brokerage.Common.Domain.Operations;
 
-namespace Brokerage.Common.Persistence.Entities
+namespace Brokerage.Common.Persistence.Operations
 {
     public class OperationEntity
     {

@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Persistence.Entities.Deposits
+﻿namespace Brokerage.Common.Persistence.Deposits
 {
     public enum DepositStateEnum
     {

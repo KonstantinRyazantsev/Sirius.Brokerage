@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brokerage.Common.Persistence.Entities.Deposits
+namespace Brokerage.Common.Persistence.Deposits
 {
     [Table(name: Tables.DepositSources)]
     public class DepositSourceEntity

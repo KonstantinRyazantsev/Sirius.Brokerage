@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Brokerage.Common.Domain.Deposits;
 
-namespace Brokerage.Common.Persistence.Entities.Deposits
+namespace Brokerage.Common.Persistence.Deposits
 {
     [Table(name: Tables.Deposits)]
     public class DepositEntity

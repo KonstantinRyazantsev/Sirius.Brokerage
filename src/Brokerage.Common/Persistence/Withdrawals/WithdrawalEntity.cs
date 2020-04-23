@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Brokerage.Common.Domain.Withdrawals;
 using Swisschain.Sirius.Sdk.Primitives;
 
-namespace Brokerage.Common.Persistence.Entities.Withdrawals
+namespace Brokerage.Common.Persistence.Withdrawals
 {
     [Table(name: Tables.Withdrawals)]
     public class WithdrawalEntity

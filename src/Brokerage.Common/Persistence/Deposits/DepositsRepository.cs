@@ -4,9 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Deposits;
-using Brokerage.Common.Persistence.DbContexts;
-using Brokerage.Common.Persistence.Entities;
-using Brokerage.Common.Persistence.Entities.Deposits;
 using Microsoft.EntityFrameworkCore;
 using Swisschain.Sirius.Sdk.Primitives;
 

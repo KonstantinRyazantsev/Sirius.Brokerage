@@ -1,14 +1,17 @@
-﻿using Brokerage.Common.Persistence.Entities;
-using Brokerage.Common.Persistence.Entities.Deposits;
-using Brokerage.Common.Persistence.Entities.Withdrawals;
+﻿using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.Deposits;
+using Brokerage.Common.Persistence.Operations;
+using Brokerage.Common.Persistence.Transactions;
+using Brokerage.Common.Persistence.Withdrawals;
 using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
-using DepositSourceEntity = Brokerage.Common.Persistence.Entities.Deposits.DepositSourceEntity;
+using DepositSourceEntity = Brokerage.Common.Persistence.Deposits.DepositSourceEntity;
 
-namespace Brokerage.Common.Persistence.DbContexts
+namespace Brokerage.Common.Persistence
 {
     public class DatabaseContext : DbContext, IDbContextWithOutbox
     {
@@ -35,6 +38,7 @@ namespace Brokerage.Common.Persistence.DbContexts
         public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
         public DbSet<Asset> Assets { get; set; }
         public DbSet<OperationEntity> Operations { get; set; }
+        public DbSet<DetectedTransactionEntity> DetectedTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,8 +60,20 @@ namespace Brokerage.Common.Persistence.DbContexts
             BuildWithdrawals(modelBuilder);
 
             BuildOperations(modelBuilder);
+            BuildDetectedTransactions(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void BuildDetectedTransactions(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DetectedTransactionEntity>()
+                .ToTable(Tables.DetectedTransactions)
+                .HasKey(x => new
+                {
+                    x.BlockchainId,
+                    x.TransactionId
+                });
         }
 
         private static void BuildOperations(ModelBuilder modelBuilder)

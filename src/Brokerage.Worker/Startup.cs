@@ -12,7 +12,6 @@ using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.EfCore;

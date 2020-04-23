@@ -7,8 +7,8 @@ using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
-using Brokerage.Common.Persistence.Entities;
 using Brokerage.Common.Persistence.Operations;
+using Brokerage.Common.Persistence.Transactions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -24,6 +24,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
+        private readonly IDetectedTransactionsRepository _detectedTransactionsRepository;
         private readonly IOperationsRepository _operationsRepository;
         private readonly IOutboxManager _outboxManager;
 
@@ -33,6 +34,7 @@ namespace Brokerage.Worker.MessageConsumers
             IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
+            IDetectedTransactionsRepository detectedTransactionsRepository,
             IOperationsRepository operationsRepository,
             IOutboxManager outboxManager)
         {
@@ -42,6 +44,7 @@ namespace Brokerage.Worker.MessageConsumers
             _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _depositsRepository = depositsRepository;
+            _detectedTransactionsRepository = detectedTransactionsRepository;
             _operationsRepository = operationsRepository;
             _outboxManager = outboxManager;
         }
@@ -100,6 +103,8 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(evt);
             }
+
+            await _detectedTransactionsRepository.AddOrIgnore(tx.BlockchainId, tx.TransactionId);
 
             _logger.LogInformation("Detected transaction has been processed {@context}", tx);
         }

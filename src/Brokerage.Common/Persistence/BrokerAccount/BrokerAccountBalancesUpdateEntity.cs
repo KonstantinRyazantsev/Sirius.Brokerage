@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brokerage.Common.Persistence.Entities
+namespace Brokerage.Common.Persistence.BrokerAccount
 {
     [Table(name: Tables.BrokerAccountBalancesUpdate)]
     public class BrokerAccountBalancesUpdateEntity

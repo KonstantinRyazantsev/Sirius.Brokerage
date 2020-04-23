@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Brokerage.Common.Persistence.BrokerAccount;
 
-namespace Brokerage.Common.Persistence.Entities
+namespace Brokerage.Common.Persistence.Accounts
 {
     [Table(name: Tables.Accounts)]
     public class AccountEntity

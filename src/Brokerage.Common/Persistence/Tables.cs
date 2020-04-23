@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Persistence.Entities
+﻿namespace Brokerage.Common.Persistence
 {
     public static class Tables
     {
@@ -21,5 +21,6 @@
         public const string WithdrawalFees = "withdrawals_fees";
         
         public const string Operations = "operations";
+        public const string DetectedTransactions = "detected_transactions";
     }
 }

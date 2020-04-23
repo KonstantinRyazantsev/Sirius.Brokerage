@@ -2,9 +2,9 @@
 using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
-using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
+using Brokerage.Common.Persistence.Transactions;
 using Brokerage.Common.Persistence.Withdrawals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +25,7 @@ namespace Brokerage.Common.Persistence
             services.AddTransient<IWithdrawalRepository, WithdrawalRepository>();
             services.AddTransient<IAssetsRepository, AssetsRepository>();
             services.AddTransient<IOperationsRepository, OperationsRepository>();
+            services.AddTransient<IDetectedTransactionsRepository, DetectedTransactionsRepository>();
 
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {

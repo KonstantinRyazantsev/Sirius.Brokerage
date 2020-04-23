@@ -9,7 +9,6 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
-using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.ServiceFunctions;
 using Brokerage.GrpcServices;
 using Brokerage.HostedServices;

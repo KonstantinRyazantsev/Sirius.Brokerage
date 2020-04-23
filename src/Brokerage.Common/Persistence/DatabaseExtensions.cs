@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace Brokerage.Common.Persistence.DbContexts
+namespace Brokerage.Common.Persistence
 {
     public static class DatabaseExtensions
     {

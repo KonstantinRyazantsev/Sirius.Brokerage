@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence.DbContexts;
 using Brokerage.Common.ReadModels.Assets;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;

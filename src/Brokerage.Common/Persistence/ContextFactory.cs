@@ -1,9 +1,8 @@
 ﻿using System;
-using Brokerage.Common.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Brokerage.Common.Persistence.DesignTime
+namespace Brokerage.Common.Persistence
 {
     public class ContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
     {

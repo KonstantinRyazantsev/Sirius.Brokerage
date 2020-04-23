@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Operations;
-using Brokerage.Common.Persistence.DbContexts;
-using Brokerage.Common.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
