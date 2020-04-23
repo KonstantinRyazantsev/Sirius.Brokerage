@@ -33,6 +33,11 @@ namespace Brokerage.Common.Domain.Processing.Context
         public TransactionInfo TransactionInfo { get; }
         public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances  {  get; }
 
+        public bool IsEmpty => !Deposits.Any() &&
+                               !BrokerAccounts.Any() &&
+                               !BrokerAccountBalances.Any() &&
+                               Operation == null;
+    
         public void AddDeposit(Deposit deposit)
         {
             _deposits.Add(deposit);

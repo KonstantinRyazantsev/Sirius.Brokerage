@@ -240,11 +240,14 @@ namespace Brokerage.Common.Persistence
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10300000);
 
-            // TODO: Workaround to keep requisites <-> accounts 1:1
             modelBuilder.Entity<AccountRequisitesEntity>()
-                .HasIndex(x => x.AccountId)
+                .HasIndex(x => new
+                {
+                    x.AccountId,
+                    x.BlockchainId
+                })
                 .IsUnique()
-                .HasName("IX_AccountRequisites_AccountId");
+                .HasName("IX_AccountRequisites_AccountId_BlockchainId");
 
             modelBuilder.Entity<AccountEntity>()
                 .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)

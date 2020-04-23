@@ -76,6 +76,21 @@ namespace Brokerage.Worker.MessageConsumers
                         x.Unit))
                     .ToArray());
 
+            // TODO: Hack ignore incoming transaction to the broker accounts generated from the BIL v1 balances
+            if (tx.TransactionId.Length < 5 && processingContext.BrokerAccounts.SelectMany(x => x.Inputs).Any())
+            {
+                _logger.LogInformation("There is a BIL v1 transaction to a broker account based on balances. It will be skipped to avoid duplication {@context}", tx);
+
+                return;
+            }
+
+            if (processingContext.IsEmpty)
+            {
+                _logger.LogInformation("There is nothing to process in the transaction {@context}", tx);
+
+                return;
+            }
+
             foreach (var processor in _processorsFactory.GetDetectedTransactionProcessors())
             {
                 await processor.Process(tx, processingContext);
