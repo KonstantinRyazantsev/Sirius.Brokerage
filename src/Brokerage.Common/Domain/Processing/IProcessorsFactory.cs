@@ -6,6 +6,7 @@ namespace Brokerage.Common.Domain.Processing
     {
         IReadOnlyCollection<IDetectedTransactionProcessor> GetDetectedTransactionProcessors();
         IReadOnlyCollection<IConfirmedTransactionProcessor> GetConfirmedTransactionProcessors();
+        IReadOnlyCollection<ISentOperationProcessor> GetSentOperationProcessors();
         IReadOnlyCollection<ICompletedOperationProcessor> GetCompletedOperationProcessors();
         IReadOnlyCollection<IFailedOperationProcessor> GetFailedOperationProcessors();
         IReadOnlyCollection<ICancelledBlockProcessor> GetCancelledBlockProcessors();

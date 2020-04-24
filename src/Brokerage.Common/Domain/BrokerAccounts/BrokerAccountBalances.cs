@@ -41,11 +41,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public decimal OwnedBalance { get; private set; }
         public decimal AvailableBalance { get; private set; }
         public decimal PendingBalance { get; private set; }
-        public decimal ReservedBalance { get; }
+        public decimal ReservedBalance { get; private set; }
         public DateTime OwnedBalanceUpdatedAt { get; private set; }
         public DateTime AvailableBalanceUpdatedAt { get; private set; }
         public DateTime PendingBalanceUpdatedAt { get; private set; }
-        public DateTime ReservedBalanceUpdatedAt { get; }
+        public DateTime ReservedBalanceUpdatedAt { get; private set; }
 
         public List<object> Events { get; } = new List<object>();
 
@@ -137,6 +137,32 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             AvailableBalanceUpdatedAt = DateTime.UtcNow;
             
+            GenerateEvent();
+        }
+
+        public void ReserveBalance(decimal amount)
+        {
+            AvailableBalance -= amount;
+            ReservedBalance += amount;
+
+            var dateTime = DateTime.UtcNow;
+
+            AvailableBalanceUpdatedAt = dateTime;
+            ReservedBalanceUpdatedAt = dateTime;
+
+            GenerateEvent();
+        }
+
+        public void Withdraw(decimal amount)
+        {
+            ReservedBalance -= amount;
+            OwnedBalance -= amount;
+
+            var dateTime = DateTime.UtcNow;
+
+            ReservedBalanceUpdatedAt = dateTime;
+            OwnedBalanceUpdatedAt = dateTime;
+
             GenerateEvent();
         }
 

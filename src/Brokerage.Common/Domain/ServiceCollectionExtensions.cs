@@ -1,6 +1,8 @@
 ﻿using Brokerage.Common.Domain.Deposits.Processors;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
+using Brokerage.Common.Domain.Processing.Context;
+using Brokerage.Common.Domain.Withdrawals.Processors;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Brokerage.Common.Domain
@@ -12,11 +14,19 @@ namespace Brokerage.Common.Domain
             services.AddSingleton<IProcessorsFactory, ProcessorsFactory>();
             services.AddTransient<IOperationsExecutor, OperationsExecutor>();
 
+            services.AddTransient<TransactionProcessingContextBuilder>();
+            services.AddTransient<OperationProcessingContextBuilder>();
+
             services.AddTransient<DetectedDepositProcessor>();
             services.AddTransient<DetectedBrokerDepositProcessor>();
             services.AddTransient<ConfirmedDepositProcessor>();
             services.AddTransient<ConfirmedBrokerDepositProcessor>();
             services.AddTransient<ConfirmedDepositConsolidationProcessor>();
+            services.AddTransient<SentWithdrawalProcessor>();
+            services.AddTransient<CompletedDepositProcessor>();
+            services.AddTransient<CompletedWithdrawalProcessor>();
+            services.AddTransient<FailedDepositProcessor>();
+            services.AddTransient<FailedWithdrawalProcessor>();
 
             return services;
         }

@@ -57,7 +57,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public WithdrawalErrorCode? WithdrawalErrorCode { get; set; }
 
-        public long? WithdrawalOperationId { get; set; }
+        public long? OperationId { get; set; }
 
         public DateTimeOffset CreatedDateTime { get; set; }
 

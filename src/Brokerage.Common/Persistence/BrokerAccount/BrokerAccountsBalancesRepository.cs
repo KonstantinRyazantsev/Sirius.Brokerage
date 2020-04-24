@@ -29,6 +29,11 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
         public async Task SaveAsync(string updatePrefix, IReadOnlyCollection<BrokerAccountBalances> balances)
         {
+            if (!balances.Any())
+            {
+                return;
+            }
+
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             await using var transaction = context.Database.BeginTransaction();
 

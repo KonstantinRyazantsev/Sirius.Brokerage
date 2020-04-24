@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Brokerage.Common.Domain.Deposits.Processors;
+using Brokerage.Common.Domain.Withdrawals.Processors;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Brokerage.Common.Domain.Processing
@@ -11,6 +12,7 @@ namespace Brokerage.Common.Domain.Processing
         private readonly IServiceProvider _serviceProvider;
         private readonly IReadOnlyCollection<Type> _detectedTransactionProcessors;
         private readonly IReadOnlyCollection<Type> _confirmedTransactionProcessors;
+        private readonly IReadOnlyCollection<Type> _sentOperationProcessors;
         private readonly IReadOnlyCollection<Type> _completedOperationProcessors;
         private readonly IReadOnlyCollection<Type> _failedOperationProcessors;
         private readonly IReadOnlyCollection<Type> _cancelledBlockProcessors;
@@ -31,9 +33,24 @@ namespace Brokerage.Common.Domain.Processing
                 typeof(ConfirmedBrokerDepositProcessor),
                 typeof(ConfirmedDepositConsolidationProcessor)
             };
-            
-            _completedOperationProcessors = new List<Type>();
-            _failedOperationProcessors = new List<Type>();
+
+            _sentOperationProcessors = new List<Type>
+            {
+                typeof(SentWithdrawalProcessor)
+            };
+
+            _completedOperationProcessors = new List<Type>
+            {
+                typeof(CompletedDepositProcessor),
+                typeof(CompletedWithdrawalProcessor)
+            };
+
+            _failedOperationProcessors = new List<Type>
+            {
+                typeof(FailedDepositProcessor),
+                typeof(FailedWithdrawalProcessor)
+            };
+
             _cancelledBlockProcessors = new List<Type>();
         }
 
@@ -52,6 +69,12 @@ namespace Brokerage.Common.Domain.Processing
                 .Cast<IConfirmedTransactionProcessor>()
                 .ToArray();
         }
+
+        public IReadOnlyCollection<ISentOperationProcessor> GetSentOperationProcessors()
+        {
+            throw new NotImplementedException();
+        }
+
         public IReadOnlyCollection<ICompletedOperationProcessor> GetCompletedOperationProcessors()
         {
             return _completedOperationProcessors

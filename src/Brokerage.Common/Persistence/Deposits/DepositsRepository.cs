@@ -42,7 +42,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
-        public async Task<Deposit> GetByonsolidationIdOrDefaultAsync(long operationId)
+        public async Task<Deposit> GetByConsolidationIdOrDefaultAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
@@ -57,6 +57,11 @@ namespace Brokerage.Common.Persistence.Deposits
 
         public async Task SaveAsync(IReadOnlyCollection<Deposit> deposits)
         {
+            if (!deposits.Any())
+            {
+                return;
+            }
+
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entities = deposits.Select(MapToEntity);

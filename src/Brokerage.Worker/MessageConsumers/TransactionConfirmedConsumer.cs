@@ -4,14 +4,11 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
-using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Transactions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 
 namespace Brokerage.Worker.MessageConsumers
@@ -19,34 +16,25 @@ namespace Brokerage.Worker.MessageConsumers
     public class TransactionConfirmedConsumer : IConsumer<TransactionConfirmed>
     {
         private readonly ILogger<TransactionConfirmedConsumer> _logger;
+        private readonly TransactionProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
-        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
-        private readonly IOperationsRepository _operationsRepository;
         private readonly IDetectedTransactionsRepository _detectedTransactionsRepository;
-        private readonly IOutboxManager _outboxManager;
 
         public TransactionConfirmedConsumer(ILogger<TransactionConfirmedConsumer> logger,
+            TransactionProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
-            IAccountRequisitesRepository accountRequisitesRepository,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
-            IOperationsRepository operationsRepository,
-            IDetectedTransactionsRepository detectedTransactionsRepository,
-            IOutboxManager outboxManager)
+            IDetectedTransactionsRepository detectedTransactionsRepository)
         {
             _logger = logger;
+            _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
-            _accountRequisitesRepository = accountRequisitesRepository;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _depositsRepository = depositsRepository;
-            _operationsRepository = operationsRepository;
             _detectedTransactionsRepository = detectedTransactionsRepository;
-            _outboxManager = outboxManager;
         }
 
         public async Task Consume(ConsumeContext<TransactionConfirmed> context)
@@ -63,14 +51,7 @@ namespace Brokerage.Worker.MessageConsumers
                 throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
             }
 
-            var processingContextBuilder = new TransactionProcessingContextBuilder(
-                _accountRequisitesRepository, 
-                _brokerAccountRequisitesRepository, 
-                _brokerAccountsBalancesRepository,
-                _depositsRepository,
-                _operationsRepository, 
-                _outboxManager);
-            var processingContext = await processingContextBuilder.Build(
+            var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
                 // TODO: Add timestamp to the tx event
@@ -116,7 +97,9 @@ namespace Brokerage.Worker.MessageConsumers
 
             // TODO: Use Sequence instead of the update ID for the balances
             await Task.WhenAll(
-                _brokerAccountsBalancesRepository.SaveAsync($"{tx.TransactionId}_{TransactionStage.Confirmed}", updatedBrokerAccountBalances),
+                _brokerAccountsBalancesRepository.SaveAsync(
+                    $"{BalanceChangingReason.TransactionConfirmed}_{tx.BlockchainId}_{tx.TransactionId}", 
+                    updatedBrokerAccountBalances),
                 _depositsRepository.SaveAsync(updatedDeposits));
 
             foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))

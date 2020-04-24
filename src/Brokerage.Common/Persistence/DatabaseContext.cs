@@ -122,7 +122,7 @@ namespace Brokerage.Common.Persistence
                 .HasName("IX_Withdrawal_TransactionId");
 
             modelBuilder.Entity<WithdrawalEntity>()
-                .HasIndex(x => x.WithdrawalOperationId)
+                .HasIndex(x => x.OperationId)
                 .HasName("IX_Withdrawal_OperationId");
 
 

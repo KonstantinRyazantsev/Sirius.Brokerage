@@ -18,26 +18,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
 
-        public async Task<IReadOnlyCollection<Withdrawal>> GetOrDefaultAsync(
-            string transactionId,
-            long assetId,
-            long brokerAccountRequisitesId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var query = context
-                .Withdrawals
-                .Include(x => x.Fees)
-                .Where(x => x.TransactionId == transactionId &&
-                                          x.AssetId == assetId &&
-                                          x.BrokerAccountRequisitesId == brokerAccountRequisitesId);
-            await query.LoadAsync();
-
-            return query.AsEnumerable()
-                .Select(MapToDomain)
-                .ToArray();
-        }
-
         public async Task<Withdrawal> GetAsync(long withdrawalId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -57,49 +37,41 @@ namespace Brokerage.Common.Persistence.Withdrawals
             return await context.GetNextId(Tables.Withdrawals, nameof(WithdrawalEntity.Id));
         }
 
-        public async Task<IReadOnlyCollection<Withdrawal>> GetByTransactionIdAsync(string transactionId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            var withdrawalEntities = context
-                .Withdrawals
-                .Include(x => x.Fees)
-                .Where(x => x.TransactionId == transactionId);
-
-            await withdrawalEntities.LoadAsync();
-
-            return withdrawalEntities
-                .AsEnumerable()
-                .Select(MapToDomain)
-                .ToArray();
-        }
-
-        public async Task<Withdrawal> GetByOperationIdAsync(long operationId)
+        public async Task<Withdrawal> GetByOperationIdOrDefaultAsync(long operationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var entity = await context
                 .Withdrawals
                 .Include(x => x.Fees)
-                .FirstAsync(x => x.WithdrawalOperationId == operationId);
+                .FirstOrDefaultAsync(x => x.OperationId == operationId);
 
-            return MapToDomain(entity);
+            return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task SaveAsync(Withdrawal withdrawal)
+        public async Task SaveAsync(IReadOnlyCollection<Withdrawal> withdrawals)
         {
+            if (!withdrawals.Any())
+            {
+                return;
+            }
+
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entity = MapToEntity(withdrawal);
+            foreach (var withdrawal in withdrawals)
+            {
+                var entity = MapToEntity(withdrawal);
 
-            if (entity.Version == default)
-            {
-                context.Withdrawals.Add(entity);
-            }
-            else
-            {
-                // TODO: Research how to do it better
-                context.Withdrawals.Update(entity);
-                context.Entry(entity).State = EntityState.Modified;
+                if (entity.Version == default)
+                {
+                    context.Withdrawals.Add(entity);
+                }
+                else
+                {
+                    // TODO: Research how to do it better
+                    context.Withdrawals.Update(entity);
+                    context.Entry(entity).State = EntityState.Modified;
+                }
             }
 
             await context.SaveChangesAsync();
@@ -131,9 +103,9 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 Version = withdrawal.Version,
                 AssetId = withdrawal.Unit.AssetId,
                 Amount = withdrawal.Unit.Amount,
-                WithdrawalOperationId = withdrawal.OperationId,
+                OperationId = withdrawal.OperationId,
                 BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
-                Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity()
+                Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity
                 {
                     AssetId = x.AssetId,
                     Amount = x.Amount,
@@ -184,12 +156,14 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     withdrawalEntity.TransactionId,
                     // ReSharper disable once PossibleInvalidOperationException
                     withdrawalEntity.TransactionBlock.Value,
+                    // ReSharper disable once PossibleInvalidOperationException
                     withdrawalEntity.TransactionRequiredConfirmationsCount.Value,
+                    // ReSharper disable once PossibleInvalidOperationException
                     withdrawalEntity.TransactionDateTime.Value.UtcDateTime) : null,
                 withdrawalEntity.WithdrawalErrorCode == null ?
                     null :
                     new WithdrawalError(withdrawalEntity.WithdrawalErrorMessage, withdrawalEntity.WithdrawalErrorCode.Value),
-                withdrawalEntity.WithdrawalOperationId,
+                withdrawalEntity.OperationId,
                 withdrawalEntity.CreatedDateTime.UtcDateTime,
                 withdrawalEntity.UpdatedDateTime.UtcDateTime);
 

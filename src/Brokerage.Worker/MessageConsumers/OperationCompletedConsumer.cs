@@ -1,43 +1,87 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Brokerage.Common.Domain;
+using Brokerage.Common.Domain.Processing;
+using Brokerage.Common.Domain.Processing.Context;
+using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
+using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Executor.MessagingContract;
+using OperationProcessingContextBuilder = Brokerage.Common.Domain.Processing.Context.OperationProcessingContextBuilder;
 
 namespace Brokerage.Worker.MessageConsumers
 {
     public class OperationCompletedConsumer : IConsumer<OperationCompleted>
     {
         private readonly ILogger<OperationCompletedConsumer> _logger;
+        private readonly OperationProcessingContextBuilder _processingContextBuilder;
+        private readonly IProcessorsFactory _processorsFactory;
         private readonly IDepositsRepository _depositsRepository;
+        private readonly IWithdrawalRepository _withdrawalRepository;
+        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
 
-        public OperationCompletedConsumer(
-            ILogger<OperationCompletedConsumer> logger,
-            IDepositsRepository depositsRepository)
+        public OperationCompletedConsumer(ILogger<OperationCompletedConsumer> logger,
+            OperationProcessingContextBuilder processingContextBuilder,
+            IProcessorsFactory processorsFactory,
+            IDepositsRepository depositsRepository,
+            IWithdrawalRepository withdrawalRepository,
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
         {
             _logger = logger;
+            _processingContextBuilder = processingContextBuilder;
+            _processorsFactory = processorsFactory;
             _depositsRepository = depositsRepository;
+            _withdrawalRepository = withdrawalRepository;
+            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
         }
 
         public async Task Consume(ConsumeContext<OperationCompleted> context)
         {
             var evt = context.Message;
 
-            var deposit =  await _depositsRepository.GetByonsolidationIdOrDefaultAsync(evt.OperationId);
-
-            if (deposit != null)
+            var processingContext = await _processingContextBuilder.Build(evt.OperationId);
+            
+            if (processingContext.IsEmpty)
             {
-                deposit.Complete();
+                _logger.LogInformation("There is nothing to process in the operation {@context}", evt);
 
-                await _depositsRepository.SaveAsync(new[] {deposit});
-
-                foreach (var @event in deposit.Events)
-                {
-                    await context.Publish(@event);
-                }
+                return;
             }
 
-            _logger.LogInformation("OperationCompleted event has been processed {@context}", evt);
+            foreach (var processor in _processorsFactory.GetCompletedOperationProcessors())
+            {
+                await processor.Process(evt, processingContext);
+            }
+
+            var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
+            var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
+            var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+
+            await Task.WhenAll(
+                _depositsRepository.SaveAsync(updatedDeposits),
+                _withdrawalRepository.SaveAsync(updatedWithdrawals),
+                _brokerAccountsBalancesRepository.SaveAsync(
+                    $"{BalanceChangingReason.OperationCompleted}_{processingContext.Operation.Id}",
+                    updatedBrokerAccountBalances));
+            
+            foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
+            {
+                await context.Publish(@event);
+            }
+
+            foreach (var @event in updatedWithdrawals.SelectMany(x => x.Events))
+            {
+                await context.Publish(@event);
+            }
+
+            foreach (var @event in updatedBrokerAccountBalances.SelectMany(x => x.Events))
+            {
+                await context.Publish(@event);
+            }
+
+            _logger.LogInformation("Operation completion has been processed {@context}", evt);
         }
     }
 }

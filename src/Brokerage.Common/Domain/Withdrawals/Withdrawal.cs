@@ -71,7 +71,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public TransactionInfo TransactionInfo { get; }
 
-        public WithdrawalError Error { get; }
+        public WithdrawalError Error { get; private set; }
 
         public long? OperationId { get; private set; }
 
@@ -132,8 +132,8 @@ namespace Brokerage.Common.Domain.Withdrawals
             WithdrawalState state,
             TransactionInfo transactionInfo,
             WithdrawalError error,
-            long? withdrawalOperationId,
-            DateTime createdDateTime,
+            long? operationId,
+            DateTime createdAt,
             DateTime updatedDateTime)
         {
             return new Withdrawal(
@@ -151,8 +151,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 state,
                 transactionInfo,
                 error,
-                withdrawalOperationId,
-                createdDateTime,
+                operationId,
+                createdAt,
                 updatedDateTime);
         }
 
@@ -172,6 +172,37 @@ namespace Brokerage.Common.Domain.Withdrawals
 
                 this.OperationId = operation.Id;
                 this.UpdatedAt = DateTime.UtcNow;
+            }
+
+            this.AddUpdateEvent();
+        }
+
+        public void TrackSent()
+        {
+            if (SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed))
+            {
+                this.UpdatedAt = DateTime.UtcNow;
+            }
+
+            this.AddUpdateEvent();
+        }
+
+        public void Complete()
+        {
+            if (SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent))
+            {
+                this.UpdatedAt = DateTime.UtcNow;
+            }
+
+            this.AddUpdateEvent();
+        }
+
+        public void Fail(WithdrawalError error)
+        {
+            if (SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Sent))
+            {
+                this.UpdatedAt = DateTime.UtcNow;
+                this.Error = error;
             }
 
             this.AddUpdateEvent();

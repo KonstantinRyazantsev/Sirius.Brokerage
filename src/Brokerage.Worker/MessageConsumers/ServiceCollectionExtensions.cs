@@ -12,6 +12,7 @@ namespace Brokerage.Worker.MessageConsumers
             services.AddTransient<PublishAccountRequisitesConsumer>();
             services.AddTransient<TransactionDetectedConsumer>();
             services.AddTransient<TransactionConfirmedConsumer>();
+            services.AddTransient<OperationSentConsumer>();
             services.AddTransient<OperationCompletedConsumer>();
             services.AddTransient<OperationFailedConsumer>();
             services.AddTransient<AssetAddedConsumer>();

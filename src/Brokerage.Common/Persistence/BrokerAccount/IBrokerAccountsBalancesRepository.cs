@@ -10,6 +10,6 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         Task<BrokerAccountBalances> GetOrDefaultAsync(BrokerAccountBalancesId id);
         Task SaveAsync(string updatePrefix, IReadOnlyCollection<BrokerAccountBalances> balances);
         Task<IReadOnlyCollection<BrokerAccountBalances>> GetAnyOfAsync(ISet<BrokerAccountBalancesId> ids);
-        
+
     }
 }

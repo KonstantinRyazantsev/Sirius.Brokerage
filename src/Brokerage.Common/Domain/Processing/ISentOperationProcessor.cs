@@ -4,8 +4,8 @@ using Swisschain.Sirius.Executor.MessagingContract;
 
 namespace Brokerage.Common.Domain.Processing
 {
-    public interface ICompletedOperationProcessor
+    public interface ISentOperationProcessor
     {
-        Task Process(OperationCompleted evt, OperationProcessingContext processingContext);
+        Task Process(OperationSent evt, OperationProcessingContext processingContext);
     }
 }

@@ -15,8 +15,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
-
-
+        
         public async Task<long> GetNextIdAsync()
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

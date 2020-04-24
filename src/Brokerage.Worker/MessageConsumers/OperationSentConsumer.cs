@@ -12,16 +12,16 @@ using Swisschain.Sirius.Executor.MessagingContract;
 
 namespace Brokerage.Worker.MessageConsumers
 {
-    public class OperationFailedConsumer : IConsumer<OperationFailed>
+    public class OperationSentConsumer : IConsumer<OperationSent>
     {
-        private readonly ILogger<OperationFailedConsumer> _logger;
+        private readonly ILogger<OperationSentConsumer> _logger;
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
         private readonly IDepositsRepository _depositsRepository;
         private readonly IWithdrawalRepository _withdrawalRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
 
-        public OperationFailedConsumer(ILogger<OperationFailedConsumer> logger,
+        public OperationSentConsumer(ILogger<OperationSentConsumer> logger,
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
@@ -36,7 +36,7 @@ namespace Brokerage.Worker.MessageConsumers
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
         }
 
-        public async Task Consume(ConsumeContext<OperationFailed> context)
+        public async Task Consume(ConsumeContext<OperationSent> context)
         {
             var evt = context.Message;
 
@@ -49,7 +49,7 @@ namespace Brokerage.Worker.MessageConsumers
                 return;
             }
 
-            foreach (var processor in _processorsFactory.GetFailedOperationProcessors())
+            foreach (var processor in _processorsFactory.GetSentOperationProcessors())
             {
                 await processor.Process(evt, processingContext);
             }
@@ -62,7 +62,7 @@ namespace Brokerage.Worker.MessageConsumers
                 _depositsRepository.SaveAsync(updatedDeposits),
                 _withdrawalRepository.SaveAsync(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.OperationFailed}_{processingContext.Operation.Id}",
+                    $"{BalanceChangingReason.OperationSent}_{processingContext.Operation.Id}",
                     updatedBrokerAccountBalances));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
