@@ -163,7 +163,7 @@ namespace Brokerage.Common.Domain.Withdrawals
             {
                 var brokerAccountRequisites = await brokerAccountRequisitesRepository.GetAsync(BrokerAccountRequisitesId);
 
-                var operation = operationsExecutor.StartWithdrawal(
+                var operation = await operationsExecutor.StartWithdrawal(
                     TenantId,
                     Id,
                     brokerAccountRequisites.NaturalId.Address,
@@ -179,7 +179,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void TrackSent()
         {
-            if (SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed))
+            if (SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent))
             {
                 this.UpdatedAt = DateTime.UtcNow;
             }
@@ -189,7 +189,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void Complete()
         {
-            if (SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent))
+            if (SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed))
             {
                 this.UpdatedAt = DateTime.UtcNow;
             }
@@ -199,7 +199,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void Fail(WithdrawalError error)
         {
-            if (SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Sent))
+            if (SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Failed))
             {
                 this.UpdatedAt = DateTime.UtcNow;
                 this.Error = error;

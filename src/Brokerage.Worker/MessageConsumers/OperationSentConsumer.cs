@@ -80,7 +80,7 @@ namespace Brokerage.Worker.MessageConsumers
                 await context.Publish(@event);
             }
 
-            _logger.LogInformation("Operation failure has been processed {@context}", evt);
+            _logger.LogInformation("Operation sending has been processed {@context}", evt);
         }
     }
 }

@@ -47,6 +47,8 @@ namespace Brokerage.Worker.MessageConsumers
             var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(
                 new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
 
+            brokerAccountBalances.ReserveBalance(withdrawal.Unit.Amount);
+
             await executionTask;
 
             await _withdrawalRepository.SaveAsync(new[] {withdrawal});

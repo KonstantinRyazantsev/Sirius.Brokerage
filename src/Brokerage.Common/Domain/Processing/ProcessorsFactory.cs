@@ -72,7 +72,10 @@ namespace Brokerage.Common.Domain.Processing
 
         public IReadOnlyCollection<ISentOperationProcessor> GetSentOperationProcessors()
         {
-            throw new NotImplementedException();
+            return _sentOperationProcessors
+                .Select(x => _serviceProvider.GetRequiredService(x))
+                .Cast<ISentOperationProcessor>()
+                .ToArray();
         }
 
         public IReadOnlyCollection<ICompletedOperationProcessor> GetCompletedOperationProcessors()
