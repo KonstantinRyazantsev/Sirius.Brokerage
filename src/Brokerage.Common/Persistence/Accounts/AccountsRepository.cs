@@ -21,7 +21,7 @@ namespace Brokerage.Common.Persistence.Accounts
 
             var entity = await context
                 .Accounts
-                .FirstAsync(x => x.AccountId == accountId);
+                .FirstAsync(x => x.Id == accountId);
 
             return MapToDomain(entity);
         }
@@ -32,7 +32,7 @@ namespace Brokerage.Common.Persistence.Accounts
 
             var entity = await context
                 .Accounts
-                .FirstOrDefaultAsync(x => x.AccountId == accountId);
+                .FirstOrDefaultAsync(x => x.Id == accountId);
 
             return MapToDomain(entity);
         }
@@ -93,7 +93,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 UpdatedAt = domainModel.UpdatedAt,
                 BrokerAccountId = domainModel.BrokerAccountId,
                 ReferenceId = domainModel.ReferenceId,
-                AccountId = domainModel.AccountId,
+                Id = domainModel.Id,
             };
 
             return entity;
@@ -114,7 +114,7 @@ namespace Brokerage.Common.Persistence.Accounts
 
             var brokerAccount = Account.Restore(
                 entity.RequestId,
-                entity.AccountId,
+                entity.Id,
                 entity.BrokerAccountId,
                 entity.ReferenceId,
                 state,

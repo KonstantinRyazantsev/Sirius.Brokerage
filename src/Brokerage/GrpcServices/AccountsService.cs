@@ -46,7 +46,7 @@ namespace Brokerage.GrpcServices
 
                 await _sendEndpointProvider.Send(new FinalizeAccountCreation
                 {
-                    AccountId = createdAccount.AccountId,
+                    AccountId = createdAccount.Id,
                     RequestId = request.RequestId,
 
                 });
@@ -57,7 +57,7 @@ namespace Brokerage.GrpcServices
                     {
                         BrokerAccountId = createdAccount.BrokerAccountId,
                         Status = MapToResponse(createdAccount.State),
-                        AccountId = createdAccount.AccountId,
+                        Id = createdAccount.Id,
                         ReferenceId = createdAccount.ReferenceId,
                         UpdatedAt = Timestamp.FromDateTime(createdAccount.UpdatedAt),
                         CreatedAt = Timestamp.FromDateTime(createdAccount.CreatedAt)

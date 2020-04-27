@@ -115,7 +115,7 @@ namespace Brokerage.GrpcServices
                         "The Account doesn’t exist");
                 }
 
-                if (account.BrokerAccountId != brokerAccount.BrokerAccountId)
+                if (account.BrokerAccountId != brokerAccount.Id)
                 {
                     return GetErrorResponseExecuteWithdrawalWrapperResponse(
                         ErrorResponseBody.Types.ErrorCode.InvalidParameters,
@@ -124,7 +124,7 @@ namespace Brokerage.GrpcServices
             }
 
             var balance = await _brokerAccountsBalancesRepository
-                .GetOrDefaultAsync(new BrokerAccountBalancesId(brokerAccount.BrokerAccountId, asset.Id));
+                .GetOrDefaultAsync(new BrokerAccountBalancesId(brokerAccount.Id, asset.Id));
 
             var availableBalance = balance?.AvailableBalance ?? 0m;
             if (availableBalance < amount)
@@ -144,7 +144,7 @@ namespace Brokerage.GrpcServices
             if (!outbox.IsStored)
             {
                 var brokerAccountRequisites = await _brokerAccountRequisitesRepository
-                    .GetActiveAsync(new ActiveBrokerAccountRequisitesId(asset.BlockchainId, brokerAccount.BrokerAccountId));
+                    .GetActiveAsync(new ActiveBrokerAccountRequisitesId(asset.BlockchainId, brokerAccount.Id));
 
                 var withdrawal = Withdrawal.Create(
                     outbox.AggregateId,
