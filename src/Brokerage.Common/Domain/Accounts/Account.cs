@@ -18,7 +18,7 @@ namespace Brokerage.Common.Domain.Accounts
 
         private Account(
             string requestId,
-            long accountId,
+            long id,
             long brokerAccountId,
             string referenceId,
             AccountState state,
@@ -26,7 +26,7 @@ namespace Brokerage.Common.Domain.Accounts
             DateTime updatedAt)
         {
             RequestId = requestId;
-            AccountId = accountId;
+            Id = id;
             BrokerAccountId = brokerAccountId;
             ReferenceId = referenceId;
             State = state;
@@ -40,7 +40,7 @@ namespace Brokerage.Common.Domain.Accounts
 
         // TODO: This is here only because of EF - we can't update DB record without having entire entity
         public string RequestId { get; }
-        public long AccountId { get; }
+        public long Id { get; }
         public long BrokerAccountId { get; }
         public string ReferenceId { get; }
         public AccountState State { get; private set; }
@@ -101,7 +101,7 @@ namespace Brokerage.Common.Domain.Accounts
             }
             else
             {
-                var requisites = await requisitesRepository.GetByAccountAsync(AccountId);
+                var requisites = await requisitesRepository.GetByAccountAsync(Id);
 
                 _events.Add(GetAccountRequisitesAddedEvent(requisites));
                 
@@ -133,7 +133,7 @@ namespace Brokerage.Common.Domain.Accounts
                 foreach (var blockchain in blockchains)
                 {
                     var outbox = await outboxManager.Open(
-                        $"AccountRequisites:Create:{AccountId}_{blockchain.Id}", 
+                        $"AccountRequisites:Create:{Id}_{blockchain.Id}", 
                         () => requisitesRepository.GetNextIdAsync());
 
                     if (!outbox.IsStored)
@@ -157,7 +157,7 @@ namespace Brokerage.Common.Domain.Accounts
                         var requisites = AccountRequisites.Create(
                             outbox.AggregateId,
                             new AccountRequisitesId(blockchain.Id, walletGenerationResponse.Response.Address),
-                            AccountId,
+                            Id,
                             BrokerAccountId);
                         
                         // TODO: Batch
@@ -187,7 +187,7 @@ namespace Brokerage.Common.Domain.Accounts
             return new AccountActivated
             {
                 UpdatedAt = activationDateTime,
-                AccountId = AccountId
+                AccountId = Id
             };
         }
 

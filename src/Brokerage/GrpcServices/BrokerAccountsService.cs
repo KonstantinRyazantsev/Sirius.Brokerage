@@ -55,7 +55,7 @@ namespace Brokerage.GrpcServices
 
                 await _sendEndpointProvider.Send(new FinalizeBrokerAccountCreation
                 {
-                    BrokerAccountId = createdBrokerAccount.BrokerAccountId,
+                    BrokerAccountId = createdBrokerAccount.Id,
                     TenantId = createdBrokerAccount.TenantId,
                     RequestId = request.RequestId
                 });
@@ -64,7 +64,7 @@ namespace Brokerage.GrpcServices
                 {
                     Response = new CreateResponseBody
                     {
-                        BrokerAccountId = createdBrokerAccount.BrokerAccountId,
+                        Id = createdBrokerAccount.Id,
                         Name = createdBrokerAccount.Name,
                         Status = MapToResponse(createdBrokerAccount.State),
                         CreatedAt = Timestamp.FromDateTime(createdBrokerAccount.CreatedAt),

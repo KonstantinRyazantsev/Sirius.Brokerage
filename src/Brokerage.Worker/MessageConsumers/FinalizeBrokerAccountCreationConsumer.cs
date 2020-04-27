@@ -111,7 +111,7 @@ namespace Brokerage.Worker.MessageConsumers
                 do
                 {
                     var result = await _brokerAccountRequisitesRepository.GetByBrokerAccountAsync(
-                        brokerAccount.BrokerAccountId,
+                        brokerAccount.Id,
                         1000,
                         requisitesCursor);
 
@@ -140,7 +140,7 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 // ReSharper disable once PossibleInvalidOperationException
                 UpdatedAt = brokerAccount.UpdatedAt,
-                BrokerAccountId = brokerAccount.BrokerAccountId
+                BrokerAccountId = brokerAccount.Id
             });
 
             _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@context}", message);

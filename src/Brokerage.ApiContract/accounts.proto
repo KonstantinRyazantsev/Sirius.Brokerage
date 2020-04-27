@@ -24,7 +24,7 @@ message CreateAccountResponseBody {
   
   int64 brokerAccountId = 1;
 
-  int64 accountId = 2;
+  int64 id = 2;
 
   AccountStatus status = 3;
 

@@ -21,7 +21,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
             var entity = await context
                 .BrokerAccounts
-                .FirstAsync(x => x.BrokerAccountId == brokerAccountId);
+                .FirstAsync(x => x.Id == brokerAccountId);
 
             return MapToDomain(entity);
         }
@@ -32,7 +32,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
             var entity = await context
                 .BrokerAccounts
-                .FirstOrDefaultAsync(x => x.BrokerAccountId == brokerAccountId);
+                .FirstOrDefaultAsync(x => x.Id == brokerAccountId);
 
             return entity != null ? MapToDomain(entity) : null;
         }
@@ -94,7 +94,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 TenantId = brokerAccount.TenantId,
                 RequestId = brokerAccount.RequestId,
                 UpdatedAt = brokerAccount.UpdatedAt,
-                BrokerAccountId = brokerAccount.BrokerAccountId
+                Id = brokerAccount.Id
             };
             return newEntity;
         }
@@ -110,7 +110,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             };
 
             var brokerAccount = Domain.BrokerAccounts.BrokerAccount.Restore(
-                brokerAccountEntity.BrokerAccountId,
+                brokerAccountEntity.Id,
                 brokerAccountEntity.Name,
                 brokerAccountEntity.TenantId,
                 brokerAccountEntity.CreatedAt.UtcDateTime,

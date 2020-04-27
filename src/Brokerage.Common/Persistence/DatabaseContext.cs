@@ -258,7 +258,7 @@ namespace Brokerage.Common.Persistence
         private static void BuildAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()
-                .HasKey(c => new { Id = c.AccountId });
+                .HasKey(c => new { Id = c.Id });
 
             modelBuilder.Entity<AccountEntity>()
                 .HasIndex(x => x.RequestId)
@@ -266,7 +266,7 @@ namespace Brokerage.Common.Persistence
                 .HasName("IX_Account_RequestId");
 
             modelBuilder.Entity<AccountEntity>()
-                .Property(b => b.AccountId)
+                .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10200000);
 
             modelBuilder.Entity<BrokerAccountEntity>()
@@ -307,7 +307,7 @@ namespace Brokerage.Common.Persistence
         private static void BuildBrokerAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountEntity>()
-                .HasKey(c => new { c.BrokerAccountId });
+                .HasKey(c => c.Id);
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasIndex(x => x.RequestId)
@@ -315,7 +315,7 @@ namespace Brokerage.Common.Persistence
                 .HasName("IX_BrokerAccount_RequestId");
 
             modelBuilder.Entity<BrokerAccountEntity>()
-                .Property(b => b.BrokerAccountId)
+                .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10000000);
         }
     }

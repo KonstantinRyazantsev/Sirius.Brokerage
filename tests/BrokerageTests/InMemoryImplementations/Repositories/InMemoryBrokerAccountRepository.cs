@@ -17,12 +17,12 @@ namespace BrokerageTests.InMemoryImplementations.Repositories
         }
         public Task<BrokerAccount> GetAsync(long brokerAccountId)
         {
-            return Task.FromResult(_storage.First(x => x.BrokerAccountId == brokerAccountId));
+            return Task.FromResult(_storage.First(x => x.Id == brokerAccountId));
         }
 
         public Task<BrokerAccount> GetOrDefaultAsync(long brokerAccountId)
         {
-            return Task.FromResult(_storage.FirstOrDefault(x => x.BrokerAccountId == brokerAccountId));
+            return Task.FromResult(_storage.FirstOrDefault(x => x.Id == brokerAccountId));
         }
 
         public Task<BrokerAccount> AddOrGetAsync(BrokerAccount brokerAccount)

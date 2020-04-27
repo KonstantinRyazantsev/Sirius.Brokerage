@@ -20,7 +20,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long BrokerAccountId { get; set; }
+        public long Id { get; set; }
 
         public string Name { get; set; }
 

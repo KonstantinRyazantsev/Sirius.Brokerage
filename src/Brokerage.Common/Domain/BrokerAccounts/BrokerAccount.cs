@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         }
 
         private BrokerAccount(
-            long brokerAccountId, 
+            long id, 
             string name,
             string tenantId, 
             DateTime createdAt, 
@@ -24,7 +24,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             BrokerAccountState state,
             string requestId)
         {
-            BrokerAccountId = brokerAccountId;
+            Id = id;
             Name = name;
             TenantId = tenantId;
             CreatedAt = createdAt;
@@ -33,7 +33,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             RequestId = requestId;
         }
         
-        public long BrokerAccountId { get; }
+        public long Id { get; }
         public string Name { get; }
         public string TenantId { get; }
         // TODO: This is here only because of EF - we can't update DB record without having entire entity
@@ -53,7 +53,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         }
 
         public static BrokerAccount Restore(
-            long brokerAccountId,
+            long id,
             string name,
             string tenantId,
             DateTime createdAt,
@@ -62,7 +62,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             string requestId)
         {
             return new BrokerAccount(
-                brokerAccountId, 
+                id, 
                 name, 
                 tenantId, 
                 createdAt, 

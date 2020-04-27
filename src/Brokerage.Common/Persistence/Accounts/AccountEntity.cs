@@ -18,7 +18,7 @@ namespace Brokerage.Common.Persistence.Accounts
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long AccountId { get; set; }
+        public long Id { get; set; }
 
         [ForeignKey(Tables.BrokerAccounts)]
         public long BrokerAccountId { get; set; }
