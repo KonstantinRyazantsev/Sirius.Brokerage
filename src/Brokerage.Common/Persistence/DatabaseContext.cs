@@ -307,7 +307,7 @@ namespace Brokerage.Common.Persistence
         private static void BuildBrokerAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountEntity>()
-                .HasKey(c => new { BrokerAccountId = c.Id });
+                .HasKey(c => c.Id);
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasIndex(x => x.RequestId)
