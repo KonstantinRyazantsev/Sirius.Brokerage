@@ -6,11 +6,13 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     {
         private BrokerAccount(string name, string tenantId, string requestId)
         {
+            var createdAt = DateTime.UtcNow;
             Name = name;
             TenantId = tenantId;
             RequestId = requestId;
             State = BrokerAccountState.Creating;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = createdAt;
+            UpdatedAt = createdAt;
         }
 
         private BrokerAccount(
