@@ -88,11 +88,10 @@ namespace Brokerage.Common.Persistence.Accounts
             var entity = new AccountEntity
             {
                 State = state,
-                CreationDateTime = domainModel.CreationDateTime,
+                CreatedAt = domainModel.CreatedAt,
                 RequestId = domainModel.RequestId,
-                ActivationDateTime = domainModel.ActivationDateTime,
+                UpdatedAt = domainModel.UpdatedAt,
                 BrokerAccountId = domainModel.BrokerAccountId,
-                BlockingDateTime = domainModel.BlockingDateTime,
                 ReferenceId = domainModel.ReferenceId,
                 AccountId = domainModel.AccountId,
             };
@@ -119,9 +118,8 @@ namespace Brokerage.Common.Persistence.Accounts
                 entity.BrokerAccountId,
                 entity.ReferenceId,
                 state,
-                entity.CreationDateTime.UtcDateTime,
-                entity.BlockingDateTime?.UtcDateTime,
-                entity.ActivationDateTime?.UtcDateTime
+                entity.CreatedAt.UtcDateTime,
+                entity.UpdatedAt.UtcDateTime
             );
 
             return brokerAccount;

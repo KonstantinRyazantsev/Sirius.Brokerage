@@ -105,15 +105,13 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 BrokerAccountId = brokerAccountBalances.NaturalId.BrokerAccountId,
                 AssetId = brokerAccountBalances.NaturalId.AssetId,
                 AvailableBalance = brokerAccountBalances.AvailableBalance,
-                AvailableBalanceUpdatedAt = brokerAccountBalances.AvailableBalanceUpdatedAt,
+                UpdatedAt = brokerAccountBalances.UpdatedAt,
                 Id = brokerAccountBalances.Id,
                 NaturalId = brokerAccountBalances.NaturalId.ToString(),
                 OwnedBalance = brokerAccountBalances.OwnedBalance,
-                OwnedBalanceUpdatedAt = brokerAccountBalances.OwnedBalanceUpdatedAt,
+                CreatedAt = brokerAccountBalances.CreatedAt,
                 PendingBalance = brokerAccountBalances.PendingBalance,
-                PendingBalanceUpdatedAt = brokerAccountBalances.PendingBalanceUpdatedAt,
                 ReservedBalance = brokerAccountBalances.ReservedBalance,
-                ReservedBalanceUpdateDatedAt = brokerAccountBalances.ReservedBalanceUpdatedAt,
                 Version = brokerAccountBalances.Version,
                 Sequence = brokerAccountBalances.Sequence
             };
@@ -132,10 +130,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountBalancesEntity.AvailableBalance,
                 brokerAccountBalancesEntity.PendingBalance,
                 brokerAccountBalancesEntity.ReservedBalance,
-                brokerAccountBalancesEntity.OwnedBalanceUpdatedAt.UtcDateTime,
-                brokerAccountBalancesEntity.AvailableBalanceUpdatedAt.UtcDateTime,
-                brokerAccountBalancesEntity.PendingBalanceUpdatedAt.UtcDateTime,
-                brokerAccountBalancesEntity.ReservedBalanceUpdateDatedAt.UtcDateTime);
+                brokerAccountBalancesEntity.CreatedAt.UtcDateTime,
+                brokerAccountBalancesEntity.UpdatedAt.UtcDateTime);
 
             return brokerAccountBalances;
         }

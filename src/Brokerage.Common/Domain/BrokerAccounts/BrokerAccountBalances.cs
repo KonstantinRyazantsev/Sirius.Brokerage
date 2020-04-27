@@ -15,10 +15,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             decimal availableBalance,
             decimal pendingBalance,
             decimal reservedBalance,
-            DateTime ownedBalanceUpdatedAt,
-            DateTime availableBalanceUpdatedAt,
-            DateTime pendingBalanceUpdatedAt,
-            DateTime reservedBalanceUpdatedAt)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             Id = id;
             Version = version;
@@ -27,10 +25,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             AvailableBalance = availableBalance;
             PendingBalance = pendingBalance;
             ReservedBalance = reservedBalance;
-            OwnedBalanceUpdatedAt = ownedBalanceUpdatedAt;
-            AvailableBalanceUpdatedAt = availableBalanceUpdatedAt;
-            PendingBalanceUpdatedAt = pendingBalanceUpdatedAt;
-            ReservedBalanceUpdatedAt = reservedBalanceUpdatedAt;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
             Sequence = sequence;
         }
 
@@ -42,15 +38,14 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public decimal AvailableBalance { get; private set; }
         public decimal PendingBalance { get; private set; }
         public decimal ReservedBalance { get; private set; }
-        public DateTime OwnedBalanceUpdatedAt { get; private set; }
-        public DateTime AvailableBalanceUpdatedAt { get; private set; }
-        public DateTime PendingBalanceUpdatedAt { get; private set; }
-        public DateTime ReservedBalanceUpdatedAt { get; private set; }
+        public DateTime CreatedAt { get; }
+        public DateTime UpdatedAt { get; private set; }
 
         public List<object> Events { get; } = new List<object>();
 
         public static BrokerAccountBalances Create(long id, BrokerAccountBalancesId naturalId)
         {
+            var createdAt = DateTime.UtcNow;
             return new BrokerAccountBalances(
                 id,
                 0,
@@ -60,10 +55,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 ownedBalance: 0,
                 availableBalance: 0,
                 reservedBalance: 0,
-                pendingBalanceUpdatedAt: DateTime.UtcNow,
-                ownedBalanceUpdatedAt: DateTime.UtcNow,
-                availableBalanceUpdatedAt: DateTime.UtcNow,
-                reservedBalanceUpdatedAt: DateTime.UtcNow);
+                createdAt: createdAt,
+                updatedAt: createdAt);
         }
 
         public static BrokerAccountBalances Restore(
@@ -75,10 +68,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             decimal availableBalance,
             decimal pendingBalance,
             decimal reservedBalance,
-            DateTime ownedBalanceUpdatedAt,
-            DateTime availableBalanceUpdatedAt,
-            DateTime pendingBalanceUpdatedAt,
-            DateTime reservedBalanceUpdatedAt)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             return new BrokerAccountBalances(
                 id,
@@ -89,16 +80,14 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 availableBalance,
                 pendingBalance,
                 reservedBalance,
-                ownedBalanceUpdatedAt,
-                availableBalanceUpdatedAt,
-                pendingBalanceUpdatedAt,
-                reservedBalanceUpdatedAt);
+                createdAt,
+                updatedAt);
         }
 
         public void AddPendingBalance(decimal amount)
         {
             PendingBalance += amount;
-            PendingBalanceUpdatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
 
             GenerateEvent();
         }
@@ -110,8 +99,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var updateDateTime = DateTime.UtcNow;
 
-            PendingBalanceUpdatedAt = updateDateTime;
-            OwnedBalanceUpdatedAt = updateDateTime;
+            UpdatedAt = updateDateTime;
 
             GenerateEvent();
         }
@@ -124,9 +112,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var updateDateTime = DateTime.UtcNow;
 
-            PendingBalanceUpdatedAt = updateDateTime;
-            OwnedBalanceUpdatedAt = updateDateTime;
-            AvailableBalanceUpdatedAt = updateDateTime;
+            UpdatedAt = updateDateTime;
 
             GenerateEvent();
         }
@@ -135,7 +121,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             AvailableBalance += amount;
 
-            AvailableBalanceUpdatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
             
             GenerateEvent();
         }
@@ -147,8 +133,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var dateTime = DateTime.UtcNow;
 
-            AvailableBalanceUpdatedAt = dateTime;
-            ReservedBalanceUpdatedAt = dateTime;
+            UpdatedAt = dateTime;
 
             GenerateEvent();
         }
@@ -160,8 +145,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var dateTime = DateTime.UtcNow;
 
-            ReservedBalanceUpdatedAt = dateTime;
-            OwnedBalanceUpdatedAt = dateTime;
+            UpdatedAt = dateTime;
 
             GenerateEvent();
         }
@@ -173,13 +157,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 BrokerAccountId = this.NaturalId.BrokerAccountId,
                 AssetId = this.NaturalId.AssetId,
                 Sequence = this.Sequence,
-                ReservedBalanceUpdatedAt = this.ReservedBalanceUpdatedAt,
                 AvailableBalance = this.AvailableBalance,
                 OwnedBalance = this.OwnedBalance,
-                OwnedBalanceUpdatedAt = this.OwnedBalanceUpdatedAt,
-                AvailableBalanceUpdatedAt = this.AvailableBalanceUpdatedAt,
+                CreatedAt = this.CreatedAt,
+                UpdatedAt = this.UpdatedAt,
                 ReservedBalance = this.ReservedBalance,
-                PendingBalanceUpdatedAt = this.PendingBalanceUpdatedAt,
                 PendingBalance = this.PendingBalance,
                 BrokerAccountBalancesId = this.Id
             });

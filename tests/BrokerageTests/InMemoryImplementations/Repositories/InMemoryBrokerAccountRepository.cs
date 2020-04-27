@@ -31,9 +31,8 @@ namespace BrokerageTests.InMemoryImplementations.Repositories
             var account = BrokerAccount.Restore(_id,
                 brokerAccount.Name,
                 brokerAccount.TenantId,
-                brokerAccount.CreationDateTime,
-                brokerAccount.BlockingDateTime,
-                brokerAccount.ActivationDateTime,
+                brokerAccount.CreatedAt,
+                brokerAccount.UpdatedAt,
                 brokerAccount.State,
                 brokerAccount.RequestId);
             _storage.Add(account);

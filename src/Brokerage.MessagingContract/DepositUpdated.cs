@@ -19,10 +19,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public DepositError Error { get; set; }
         public IReadOnlyCollection<DepositSource> Sources { get; set; }
         public DepositState State { get; set; }
-        public DateTime DetectedAt { get; set; }
-        public DateTime? ConfirmedAt { get; set; }
-        public DateTime? CompletedAt { get; set; }
-        public DateTime? FailedAt { get; set; }
-        public DateTime? CancelledAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

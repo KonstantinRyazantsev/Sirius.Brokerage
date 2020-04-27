@@ -12,9 +12,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public decimal AvailableBalance { get; set; }
         public decimal PendingBalance { get; set; }
         public decimal ReservedBalance { get; set; }
-        public DateTime OwnedBalanceUpdatedAt { get; set; }
-        public DateTime AvailableBalanceUpdatedAt { get; set; }
-        public DateTime PendingBalanceUpdatedAt { get; set; }
-        public DateTime ReservedBalanceUpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

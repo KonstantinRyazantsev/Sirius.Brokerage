@@ -30,11 +30,8 @@ namespace Brokerage.Common.Domain.Deposits
             DepositError error,
             DepositState state,
             IReadOnlyCollection<DepositSource> sources,
-            DateTime detectedAt,
-            DateTime? confirmedAt,
-            DateTime? completedAt,
-            DateTime? failedAt,
-            DateTime? cancelledAt)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             Id = id;
             Version = version;
@@ -50,11 +47,8 @@ namespace Brokerage.Common.Domain.Deposits
             Error = error;
             State = state;
             Sources = sources;
-            DetectedAt = detectedAt;
-            ConfirmedAt = confirmedAt;
-            CompletedAt = completedAt;
-            FailedAt = failedAt;
-            CancelledAt = cancelledAt;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
             ConsolidationOperationId = consolidationOperationId;
         }
 
@@ -72,11 +66,8 @@ namespace Brokerage.Common.Domain.Deposits
         public DepositError Error { get; private set; }
         public DepositState State { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
-        public DateTime DetectedAt { get; }
-        public DateTime? ConfirmedAt { get; private set; }
-        public DateTime? CompletedAt { get; private set; }
-        public DateTime? FailedAt { get; private set; }
-        public DateTime? CancelledAt { get; }
+        public DateTime CreatedAt { get; }
+        public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
 
         public List<object> Events { get; } = new List<object>();
@@ -94,6 +85,7 @@ namespace Brokerage.Common.Domain.Deposits
             TransactionInfo transactionInfo,
             IReadOnlyCollection<DepositSource> sources)
         {
+            var createdAt = DateTime.UtcNow;
             var deposit = new Deposit(
                 id,
                 default,
@@ -110,11 +102,8 @@ namespace Brokerage.Common.Domain.Deposits
                 null,
                 DepositState.Detected,
                 sources,
-                DateTime.UtcNow,
-                null,
-                null,
-                null,
-                null);
+                createdAt,
+                createdAt);
 
             deposit.AddDepositUpdatedEvent();
 
@@ -137,11 +126,8 @@ namespace Brokerage.Common.Domain.Deposits
             DepositError error,
             DepositState depositState,
             IReadOnlyCollection<DepositSource> sources,
-            DateTime detectedDateTime,
-            DateTime? confirmedDateTime,
-            DateTime? completedDateTime,
-            DateTime? failedDateTime,
-            DateTime? cancelledDateTime)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             return new Deposit(
                 id,
@@ -159,11 +145,8 @@ namespace Brokerage.Common.Domain.Deposits
                 error,
                 depositState,
                 sources,
-                detectedDateTime,
-                confirmedDateTime,
-                completedDateTime,
-                failedDateTime,
-                cancelledDateTime);
+                createdAt,
+                updatedAt);
         }
 
         public async Task ConfirmRegular(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
@@ -192,7 +175,7 @@ namespace Brokerage.Common.Domain.Deposits
                     tx.BlockNumber + tx.RequiredConfirmationsCount);
 
                 ConsolidationOperationId = operation.Id;
-                ConfirmedAt = DateTime.UtcNow;
+                UpdatedAt = DateTime.UtcNow;
             }
 
             AddDepositUpdatedEvent();
@@ -209,8 +192,7 @@ namespace Brokerage.Common.Domain.Deposits
             {
                 var date = DateTime.UtcNow;
 
-                ConfirmedAt = date;
-                CompletedAt = date;
+                UpdatedAt = date;
             }
 
             AddDepositUpdatedEvent();
@@ -220,7 +202,7 @@ namespace Brokerage.Common.Domain.Deposits
         {
             if (SwitchState(new[] {DepositState.Confirmed}, DepositState.Completed))
             {
-                CompletedAt = DateTime.UtcNow;
+                UpdatedAt = DateTime.UtcNow;
             }
 
             AddDepositUpdatedEvent();
@@ -230,7 +212,7 @@ namespace Brokerage.Common.Domain.Deposits
         {
             if (SwitchState(new[] {DepositState.Confirmed}, DepositState.Failed))
             {
-                FailedAt = DateTime.UtcNow;
+                UpdatedAt = DateTime.UtcNow;
                 Error = depositError;
             }
 
@@ -290,11 +272,8 @@ namespace Brokerage.Common.Domain.Deposits
                         Code = Swisschain.Sirius.Brokerage.MessagingContract.DepositError.DepositErrorCode.TechnicalProblem,
                         Message = Error.Message
                     },
-                ConfirmedAt = ConfirmedAt,
-                DetectedAt = DetectedAt,
-                CompletedAt = CompletedAt,
-                FailedAt = FailedAt,
-                CancelledAt = CancelledAt,
+                UpdatedAt = UpdatedAt,
+                CreatedAt = CreatedAt,
                 State = State switch
                 {
                     DepositState.Detected => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Detected,

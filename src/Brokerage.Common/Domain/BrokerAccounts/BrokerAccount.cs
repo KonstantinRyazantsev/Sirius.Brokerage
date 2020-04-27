@@ -10,25 +10,23 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             TenantId = tenantId;
             RequestId = requestId;
             State = BrokerAccountState.Creating;
-            CreationDateTime = DateTime.UtcNow;
+            CreatedAt = DateTime.UtcNow;
         }
 
         private BrokerAccount(
             long brokerAccountId, 
             string name,
             string tenantId, 
-            DateTime creationDateTime, 
-            DateTime? blockingDateTime, 
-            DateTime? activationDateTime, 
+            DateTime createdAt, 
+            DateTime updatedAt, 
             BrokerAccountState state,
             string requestId)
         {
             BrokerAccountId = brokerAccountId;
             Name = name;
             TenantId = tenantId;
-            CreationDateTime = creationDateTime;
-            BlockingDateTime = blockingDateTime;
-            ActivationDateTime = activationDateTime;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
             State = state;
             RequestId = requestId;
         }
@@ -38,9 +36,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public string TenantId { get; }
         // TODO: This is here only because of EF - we can't update DB record without having entire entity
         public string RequestId { get; }
-        public DateTime CreationDateTime { get; }
-        public DateTime? BlockingDateTime { get; }
-        public DateTime? ActivationDateTime { get; private set; }
+        public DateTime CreatedAt { get; }
+        public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
 
         public bool IsOwnedBy(string tenantId)
@@ -57,9 +54,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             long brokerAccountId,
             string name,
             string tenantId,
-            DateTime creationDateTime,
-            DateTime? blockingDateTime,
-            DateTime? activationDateTime,
+            DateTime createdAt,
+            DateTime updatedAt,
             BrokerAccountState state,
             string requestId)
         {
@@ -67,16 +63,15 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 brokerAccountId, 
                 name, 
                 tenantId, 
-                creationDateTime, 
-                blockingDateTime, 
-                activationDateTime, 
+                createdAt, 
+                updatedAt, 
                 state, 
                 requestId);
         }
 
         public void Activate()
         {
-            ActivationDateTime = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
             State = BrokerAccountState.Active;
         }
     }

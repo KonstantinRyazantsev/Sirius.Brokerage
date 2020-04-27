@@ -59,8 +59,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public long? OperationId { get; set; }
 
-        public DateTimeOffset CreatedDateTime { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
-        public DateTimeOffset UpdatedDateTime { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

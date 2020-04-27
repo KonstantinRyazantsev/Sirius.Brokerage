@@ -22,18 +22,16 @@ namespace Brokerage.Common.Domain.Accounts
             long brokerAccountId,
             string referenceId,
             AccountState state,
-            DateTime creationDateTime,
-            DateTime? blockingDateTime,
-            DateTime? activationDateTime)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             RequestId = requestId;
             AccountId = accountId;
             BrokerAccountId = brokerAccountId;
             ReferenceId = referenceId;
             State = state;
-            CreationDateTime = creationDateTime;
-            BlockingDateTime = blockingDateTime;
-            ActivationDateTime = activationDateTime;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
 
             _events = new List<object>();
         }
@@ -46,24 +44,23 @@ namespace Brokerage.Common.Domain.Accounts
         public long BrokerAccountId { get; }
         public string ReferenceId { get; }
         public AccountState State { get; private set; }
-        public DateTime CreationDateTime { get; }
-        public DateTime? BlockingDateTime { get; }
-        public DateTime? ActivationDateTime { get; private set; }
+        public DateTime CreatedAt { get; }
+        public DateTime UpdatedAt { get; private set; }
         
         public static Account Create(
             string requestId,
             long brokerAccountId,
             string referenceId)
         {
+            var createdAt = DateTime.UtcNow;
             return new Account(
                 requestId,
                 default,
                 brokerAccountId,
                 referenceId,
                 AccountState.Creating,
-                DateTime.UtcNow,
-                null,
-                null);
+                createdAt,
+                createdAt);
         }
 
         public static Account Restore(
@@ -73,8 +70,7 @@ namespace Brokerage.Common.Domain.Accounts
             string referenceId,
             AccountState accountState,
             DateTime creationDateTime,
-            DateTime? blockingDateTime,
-            DateTime? activationDateTime)
+            DateTime updatedDateTime)
         {
             return new Account(
                 requestId,
@@ -83,8 +79,7 @@ namespace Brokerage.Common.Domain.Accounts
                 referenceId,
                 accountState,
                 creationDateTime,
-                blockingDateTime,
-                activationDateTime);
+                updatedDateTime);
         }
 
         public async Task FinalizeCreation(
@@ -111,7 +106,7 @@ namespace Brokerage.Common.Domain.Accounts
                 _events.Add(GetAccountRequisitesAddedEvent(requisites));
                 
                 // ReSharper disable once PossibleInvalidOperationException
-                _events.Add(GetAccountActivatedEvent(ActivationDateTime.Value));
+                _events.Add(GetAccountActivatedEvent(UpdatedAt));
             }
         }
 
@@ -182,16 +177,16 @@ namespace Brokerage.Common.Domain.Accounts
         private void Activate()
         {
             State = AccountState.Active;
-            ActivationDateTime = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
 
-            _events.Add(GetAccountActivatedEvent(ActivationDateTime.Value));
+            _events.Add(GetAccountActivatedEvent(UpdatedAt));
         }
 
         private AccountActivated GetAccountActivatedEvent(DateTime activationDateTime)
         {
             return new AccountActivated
             {
-                ActivatedAt = activationDateTime,
+                UpdatedAt = activationDateTime,
                 AccountId = AccountId
             };
         }

@@ -6,7 +6,6 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MassTransit;
 using Swisschain.Sirius.Brokerage.ApiContract;
-using Swisschain.Sirius.Brokerage.ApiContract.Common;
 
 namespace Brokerage.GrpcServices
 {
@@ -68,11 +67,8 @@ namespace Brokerage.GrpcServices
                         BrokerAccountId = createdBrokerAccount.BrokerAccountId,
                         Name = createdBrokerAccount.Name,
                         Status = MapToResponse(createdBrokerAccount.State),
-                        ActivationDateTime = createdBrokerAccount.ActivationDateTime.HasValue ? 
-                            Timestamp.FromDateTime(createdBrokerAccount.ActivationDateTime.Value) : null,
-                        BlockingDateTime = createdBrokerAccount.BlockingDateTime.HasValue ? 
-                            Timestamp.FromDateTime(createdBrokerAccount.BlockingDateTime.Value) : null,
-                        CreationDateTime = Timestamp.FromDateTime(createdBrokerAccount.CreationDateTime)
+                        CreatedAt = Timestamp.FromDateTime(createdBrokerAccount.CreatedAt),
+                        UpdatedAt = Timestamp.FromDateTime(createdBrokerAccount.UpdatedAt)
                     }
                 };
             }
