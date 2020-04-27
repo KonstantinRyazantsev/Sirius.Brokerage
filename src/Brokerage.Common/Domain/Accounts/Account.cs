@@ -69,8 +69,8 @@ namespace Brokerage.Common.Domain.Accounts
             long brokerAccountId,
             string referenceId,
             AccountState accountState,
-            DateTime creationDateTime,
-            DateTime updatedDateTime)
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             return new Account(
                 requestId,
@@ -78,8 +78,8 @@ namespace Brokerage.Common.Domain.Accounts
                 brokerAccountId,
                 referenceId,
                 accountState,
-                creationDateTime,
-                updatedDateTime);
+                createdAt,
+                updatedAt);
         }
 
         public async Task FinalizeCreation(
