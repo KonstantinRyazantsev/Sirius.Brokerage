@@ -121,8 +121,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 BrokerAccountId = withdrawal.BrokerAccountId,
                 TenantId = withdrawal.TenantId,
                 DestinationTagType = withdrawal.DestinationRequisites.TagType,
-                UpdatedDateTime = withdrawal.UpdatedAt,
-                CreatedDateTime = withdrawal.CreatedAt,
+                UpdatedAt = withdrawal.UpdatedAt,
+                CreatedAt = withdrawal.CreatedAt,
                 DestinationAddress = withdrawal.DestinationRequisites.Address,
                 AccountId = withdrawal.AccountId,
                 DestinationTag = withdrawal.DestinationRequisites.Tag,
@@ -164,8 +164,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     null :
                     new WithdrawalError(withdrawalEntity.WithdrawalErrorMessage, withdrawalEntity.WithdrawalErrorCode.Value),
                 withdrawalEntity.OperationId,
-                withdrawalEntity.CreatedDateTime.UtcDateTime,
-                withdrawalEntity.UpdatedDateTime.UtcDateTime);
+                withdrawalEntity.CreatedAt.UtcDateTime,
+                withdrawalEntity.UpdatedAt.UtcDateTime);
 
             return withdrawal;
         }

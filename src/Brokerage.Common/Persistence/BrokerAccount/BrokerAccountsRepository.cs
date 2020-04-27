@@ -90,12 +90,11 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             {
                 Name = brokerAccount.Name,
                 State = state,
-                CreationDateTime = brokerAccount.CreationDateTime,
+                CreatedAt = brokerAccount.CreatedAt,
                 TenantId = brokerAccount.TenantId,
                 RequestId = brokerAccount.RequestId,
-                ActivationDateTime = brokerAccount.ActivationDateTime,
-                BrokerAccountId = brokerAccount.BrokerAccountId,
-                BlockingDateTime = brokerAccount.BlockingDateTime
+                UpdatedAt = brokerAccount.UpdatedAt,
+                BrokerAccountId = brokerAccount.BrokerAccountId
             };
             return newEntity;
         }
@@ -114,9 +113,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountEntity.BrokerAccountId,
                 brokerAccountEntity.Name,
                 brokerAccountEntity.TenantId,
-                brokerAccountEntity.CreationDateTime.UtcDateTime,
-                brokerAccountEntity.BlockingDateTime?.UtcDateTime,
-                brokerAccountEntity.ActivationDateTime?.UtcDateTime,
+                brokerAccountEntity.CreatedAt.UtcDateTime,
+                brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
                 brokerAccountEntity.RequestId
             );

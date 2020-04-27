@@ -20,9 +20,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         public decimal AvailableBalance { get; set; }
         public decimal PendingBalance { get; set; }
         public decimal ReservedBalance { get; set; }
-        public DateTimeOffset OwnedBalanceUpdatedAt { get; set; }
-        public DateTimeOffset AvailableBalanceUpdatedAt { get; set; }
-        public DateTimeOffset PendingBalanceUpdatedAt { get; set; }
-        public DateTimeOffset ReservedBalanceUpdateDatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

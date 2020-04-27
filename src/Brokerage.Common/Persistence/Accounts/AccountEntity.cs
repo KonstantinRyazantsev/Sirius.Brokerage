@@ -31,10 +31,8 @@ namespace Brokerage.Common.Persistence.Accounts
 
         public AccountStateEnum State { get; set; }
 
-        public DateTimeOffset CreationDateTime { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
-        public DateTimeOffset? ActivationDateTime { get; set; }
-
-        public DateTimeOffset? BlockingDateTime { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

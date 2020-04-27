@@ -129,11 +129,8 @@ namespace Brokerage.Common.Persistence.Deposits
                 TransactionBlock = deposit.TransactionInfo.TransactionBlock,
                 TransactionRequiredConfirmationsCount = deposit.TransactionInfo.RequiredConfirmationsCount,
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
-                DetectedAt = deposit.DetectedAt,
-                ConfirmedAt = deposit.ConfirmedAt,
-                CompletedAt = deposit.CompletedAt,
-                CancelledAt = deposit.CancelledAt,
-                FailedAt = deposit.FailedAt,
+                CreatedAt = deposit.CreatedAt,
+                UpdatedAt = deposit.UpdatedAt,
             };
 
             return depositEntity;
@@ -182,11 +179,8 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.Sources?
                     .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray(),
-                depositEntity.DetectedAt.UtcDateTime,
-                depositEntity.ConfirmedAt?.UtcDateTime,
-                depositEntity.CompletedAt?.UtcDateTime,
-                depositEntity.FailedAt?.UtcDateTime,
-                depositEntity.CancelledAt?.UtcDateTime);
+                depositEntity.CreatedAt.UtcDateTime,
+                depositEntity.UpdatedAt.UtcDateTime);
 
             return deposit;
         }

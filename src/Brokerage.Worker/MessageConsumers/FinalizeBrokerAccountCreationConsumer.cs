@@ -139,7 +139,7 @@ namespace Brokerage.Worker.MessageConsumers
             await context.Publish(new BrokerAccountActivated
             {
                 // ReSharper disable once PossibleInvalidOperationException
-                ActivatedAt = brokerAccount.ActivationDateTime.Value,
+                UpdatedAt = brokerAccount.UpdatedAt,
                 BrokerAccountId = brokerAccount.BrokerAccountId
             });
 

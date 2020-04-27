@@ -27,11 +27,9 @@ message CreateResponseBody {
 
   BrokerAccountStatus status = 3;
 
-  google.protobuf.Timestamp creationDateTime = 4;
+  google.protobuf.Timestamp createdAt = 4;
 
-  google.protobuf.Timestamp activationDateTime = 5;
-
-  google.protobuf.Timestamp blockingDateTime = 6;
+  google.protobuf.Timestamp updatedAt = 5;
 
   enum BrokerAccountStatus {
     CREATING = 0;

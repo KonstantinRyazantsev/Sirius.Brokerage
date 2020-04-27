@@ -37,10 +37,7 @@ namespace Brokerage.Common.Persistence.Deposits
         public DepositErrorCode? ErrorCode { get; set; }
         public DepositStateEnum State { get; set; }
         public ICollection<DepositSourceEntity> Sources { get; set; }
-        public DateTimeOffset DetectedAt { get; set; }
-        public DateTimeOffset? ConfirmedAt { get; set; }
-        public DateTimeOffset? CompletedAt { get; set; }
-        public DateTimeOffset? FailedAt { get; set; }
-        public DateTimeOffset? CancelledAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }
