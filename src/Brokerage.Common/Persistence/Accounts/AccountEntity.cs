@@ -11,7 +11,7 @@ namespace Brokerage.Common.Persistence.Accounts
     {
         public AccountEntity()
         {
-            AccountRequisites = new HashSet<AccountRequisitesEntity>();
+            AccountDetails = new HashSet<AccountDetailsEntity>();
         }
 
         public string RequestId { get; set; }
@@ -25,7 +25,7 @@ namespace Brokerage.Common.Persistence.Accounts
 
         public BrokerAccountEntity BrokerAccount { get; set; }
 
-        public ICollection<AccountRequisitesEntity> AccountRequisites { get; set; }
+        public ICollection<AccountDetailsEntity> AccountDetails { get; set; }
 
         public string ReferenceId { get; set; }
 

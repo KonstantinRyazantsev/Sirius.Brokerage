@@ -27,10 +27,10 @@ message ExecuteWithdrawalRequest {
 
   common.BigDecimal amount = 7;
 
-  .services.DestinationRequisites destinationRequisites = 8;
+  .services.DestinationDetails destinationDetails = 8;
 }
 
-message DestinationRequisites {
+message DestinationDetails {
   string address = 1;
 
   google.protobuf.StringValue Tag = 2;
@@ -63,7 +63,7 @@ message ExecuteWithdrawalResponse{
 
   int64 brokerAccountId = 2;
 
-  int64 brokerAccountRequisitesId = 3;
+  int64 brokerAccountDetailsId = 3;
 
   google.protobuf.Int64Value accountId = 4;
 
@@ -75,7 +75,7 @@ message ExecuteWithdrawalResponse{
 
   repeated common.Unit fees = 8;
 
-  DestinationRequisites destinationRequisites = 9;
+  DestinationDetails destinationDetails = 9;
 
   WithdrawalState State = 10;
 

@@ -25,14 +25,14 @@ namespace Brokerage.Common.Persistence
 
         public DbSet<OutboxEntity> Outbox { get; set; }
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
-        public DbSet<BrokerAccountRequisitesEntity> BrokerAccountsRequisites { get; set; }
+        public DbSet<BrokerAccountDetailsEntity> BrokerAccountsDetails { get; set; }
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
         public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<DepositEntity> Deposits { get; set; }
         public DbSet<DepositSourceEntity> DepositSources { get; set; }
         public DbSet<DepositFeeEntity> Fees { get; set; }
-        public DbSet<AccountRequisitesEntity> AccountRequisites { get; set; }
+        public DbSet<AccountDetailsEntity> AccountDetails { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
         public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
@@ -50,11 +50,11 @@ namespace Brokerage.Common.Persistence
             BuildBlockchains(modelBuilder);
 
             BuildBrokerAccounts(modelBuilder);
-            BuildBrokerAccountRequisites(modelBuilder);
+            BuildBrokerAccountDetails(modelBuilder);
             BuildBrokerAccountBalances(modelBuilder);
             
             BuildAccounts(modelBuilder);
-            BuildAccountRequisites(modelBuilder);
+            BuildAccountDetails(modelBuilder);
             
             BuildDeposits(modelBuilder);
             BuildWithdrawals(modelBuilder);
@@ -227,30 +227,31 @@ namespace Brokerage.Common.Persistence
                 .HasKey(x => x.Id);
         }
 
-        private static void BuildAccountRequisites(ModelBuilder modelBuilder)
+        private static void BuildAccountDetails(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<AccountDetailsEntity>()
+                .ToTable(Tables.AccountDetails)
                 .HasKey(c => new { c.Id });
 
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<AccountDetailsEntity>()
                 .HasIndex(x => x.NaturalId)
-                .HasName("IX_AccountRequisites_NaturalId");
+                .HasName("IX_AccountDetails_NaturalId");
 
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<AccountDetailsEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10300000);
 
-            modelBuilder.Entity<AccountRequisitesEntity>()
+            modelBuilder.Entity<AccountDetailsEntity>()
                 .HasIndex(x => new
                 {
                     x.AccountId,
                     x.BlockchainId
                 })
                 .IsUnique()
-                .HasName("IX_AccountRequisites_AccountId_BlockchainId");
+                .HasName("IX_AccountDetails_AccountId_BlockchainId");
 
             modelBuilder.Entity<AccountEntity>()
-                .HasMany<AccountRequisitesEntity>(s => s.AccountRequisites)
+                .HasMany<AccountDetailsEntity>(s => s.AccountDetails)
                 .WithOne(s => s.Account)
                 .HasForeignKey(x => x.AccountId);
         }
@@ -276,32 +277,32 @@ namespace Brokerage.Common.Persistence
                 .IsRequired(true);
         }
 
-        private static void BuildBrokerAccountRequisites(ModelBuilder modelBuilder)
+        private static void BuildBrokerAccountDetails(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasKey(c => new { c.Id });
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10100000);
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.ActiveId)
-                .HasName("IX_BrokerAccountRequisites_ActiveId");
+                .HasName("IX_BrokerAccountDetails_ActiveId");
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.NaturalId)
                 .IsUnique()
-                .HasName("IX_BrokerAccountRequisites_NaturalId");
+                .HasName("IX_BrokerAccountDetails_NaturalId");
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.BrokerAccountId)
-                .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
+                .HasName("IX_BrokerAccountDetails_BrokerAccountId");
 
-            modelBuilder.Entity<BrokerAccountRequisitesEntity>()
+            modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.Id)
                 .HasSortOrder(SortOrder.Descending)
-                .HasName("IX_BrokerAccountRequisites_IdDesc");
+                .HasName("IX_BrokerAccountDetails_IdDesc");
         }
 
         private static void BuildBrokerAccounts(ModelBuilder modelBuilder)

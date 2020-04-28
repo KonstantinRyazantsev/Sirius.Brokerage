@@ -3,12 +3,12 @@
     public static class Tables
     {
         public const string BrokerAccounts = "broker_accounts";
-        public const string BrokerAccountRequisites = "broker_account_requisites";
+        public const string BrokerAccountDetails = "broker_account_details";
         public const string BrokerAccountBalances = "broker_account_balances";
         public const string BrokerAccountBalancesUpdate = "broker_account_balances_update";
 
         public const string Accounts = "accounts";
-        public const string AccountRequisites = "account_requisites";
+        public const string AccountDetails = "account_details";
 
         public const string Blockchains = "blockchains";
         public const string Assets = "assets";

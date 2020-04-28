@@ -7,11 +7,11 @@ using Npgsql;
 
 namespace Brokerage.Common.Persistence.BrokerAccount
 {
-    public class BrokerAccountRequisitesRepository : IBrokerAccountRequisitesRepository
+    public class BrokerAccountDetailsRepository : IBrokerAccountDetailsRepository
     {
         private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public BrokerAccountRequisitesRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public BrokerAccountDetailsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
@@ -20,17 +20,17 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            return await context.GetNextId(Tables.BrokerAccountRequisites, nameof(BrokerAccountRequisites.Id));
+            return await context.GetNextId(Tables.BrokerAccountDetails, nameof(BrokerAccountDetails.Id));
         }
 
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetByBrokerAccountAsync(long brokerAccountId,
+        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetByBrokerAccountAsync(long brokerAccountId,
             int limit,
             long? cursor)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var query = context
-                .BrokerAccountsRequisites
+                .BrokerAccountsDetails
                 .Where(x => x.BrokerAccountId == brokerAccountId);
         
             if (cursor != null)
@@ -51,14 +51,14 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
-        public async Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(ISet<BrokerAccountRequisitesId> ids)
+        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOfAsync(ISet<BrokerAccountDetailsId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var idStrings = ids.Select(x => x.ToString()).ToArray();
 
             var query = context
-                .BrokerAccountsRequisites
+                .BrokerAccountsDetails
                 .Where(x => idStrings.Contains(x.NaturalId));
             
             await query.LoadAsync();
@@ -69,17 +69,17 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
-        public async Task<IReadOnlyDictionary<ActiveBrokerAccountRequisitesId, BrokerAccountRequisites>> GetActiveAsync(
-            ISet<ActiveBrokerAccountRequisitesId> ids)
+        public async Task<IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>> GetActiveAsync(
+            ISet<ActiveBrokerAccountDetailsId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entities = new List<BrokerAccountRequisitesEntity>();
+            var entities = new List<BrokerAccountDetailsEntity>();
 
             foreach (var id in ids)
             {
                 var entity = await context
-                    .BrokerAccountsRequisites
+                    .BrokerAccountsDetails
                     .Where(x => x.ActiveId == id.ToString())
                     .OrderByDescending(x => x.Id)
                     .FirstAsync();
@@ -90,16 +90,16 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return entities
                 .Select(MapToDomain)
                 .ToDictionary(
-                    x => new ActiveBrokerAccountRequisitesId(x.NaturalId.BlockchainId, x.BrokerAccountId), 
+                    x => new ActiveBrokerAccountDetailsId(x.NaturalId.BlockchainId, x.BrokerAccountId), 
                     x => x);
         }
 
-        public async Task<BrokerAccountRequisites> GetActiveAsync(ActiveBrokerAccountRequisitesId id)
+        public async Task<BrokerAccountDetails> GetActiveAsync(ActiveBrokerAccountDetailsId id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var result = await context
-                .BrokerAccountsRequisites
+                .BrokerAccountsDetails
                 .Where(x => x.ActiveId == id.ToString())
                 .OrderByDescending(x => x.Id)
                 .FirstAsync();
@@ -107,7 +107,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return MapToDomain(result);
         }
 
-        public async Task AddOrIgnoreAsync(BrokerAccountRequisites brokerAccount)
+        public async Task AddOrIgnoreAsync(BrokerAccountDetails brokerAccount)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             
@@ -115,7 +115,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
             try
             {
-                await context.BrokerAccountsRequisites.AddAsync(entity);
+                await context.BrokerAccountsDetails.AddAsync(entity);
 
                 await context.SaveChangesAsync();
             }
@@ -124,40 +124,40 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             }
         }
 
-        public async Task<BrokerAccountRequisites> GetAsync(long id)
+        public async Task<BrokerAccountDetails> GetAsync(long id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var requisites = await context
-                .BrokerAccountsRequisites
+            var details = await context
+                .BrokerAccountsDetails
                 .FirstAsync(x => x.Id == id);
 
-            return MapToDomain(requisites);
+            return MapToDomain(details);
         }
 
-        private static BrokerAccountRequisitesEntity MapToEntity(BrokerAccountRequisites requisites)
+        private static BrokerAccountDetailsEntity MapToEntity(BrokerAccountDetails details)
         {
-            return new BrokerAccountRequisitesEntity
+            return new BrokerAccountDetailsEntity
             {
-                BlockchainId = requisites.NaturalId.BlockchainId,
-                TenantId = requisites.TenantId,
-                BrokerAccountId = requisites.BrokerAccountId,
-                Address = requisites.NaturalId.Address,
-                Id = requisites.Id,
-                NaturalId = requisites.NaturalId.ToString(),
-                ActiveId = new ActiveBrokerAccountRequisitesId(requisites.NaturalId.BlockchainId, requisites.BrokerAccountId).ToString(),
-                CreatedAt = requisites.CreatedAt
+                BlockchainId = details.NaturalId.BlockchainId,
+                TenantId = details.TenantId,
+                BrokerAccountId = details.BrokerAccountId,
+                Address = details.NaturalId.Address,
+                Id = details.Id,
+                NaturalId = details.NaturalId.ToString(),
+                ActiveId = new ActiveBrokerAccountDetailsId(details.NaturalId.BlockchainId, details.BrokerAccountId).ToString(),
+                CreatedAt = details.CreatedAt
             };
         }
 
-        private static BrokerAccountRequisites MapToDomain(BrokerAccountRequisitesEntity entity)
+        private static BrokerAccountDetails MapToDomain(BrokerAccountDetailsEntity entity)
         {
             if (entity == null)
                 return null;
 
-            var brokerAccount = BrokerAccountRequisites.Restore(
+            var brokerAccount = BrokerAccountDetails.Restore(
                 entity.Id,
-                new BrokerAccountRequisitesId(entity.BlockchainId, entity.Address),
+                new BrokerAccountDetailsId(entity.BlockchainId, entity.Address),
                 entity.TenantId,
                 entity.BrokerAccountId,
                 entity.CreatedAt.UtcDateTime

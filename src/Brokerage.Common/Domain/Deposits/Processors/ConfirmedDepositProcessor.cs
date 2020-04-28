@@ -12,16 +12,16 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 {
     public class ConfirmedDepositProcessor : IConfirmedTransactionProcessor
     {
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
-        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
+        private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IOperationsExecutor _operationsExecutor;
 
-        public ConfirmedDepositProcessor(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IAccountRequisitesRepository accountRequisitesRepository,
+        public ConfirmedDepositProcessor(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
+            IAccountDetailsRepository accountDetailsRepository,
             IOperationsExecutor operationsExecutor)
         {
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
-            _accountRequisitesRepository = accountRequisitesRepository;
+            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
+            _accountDetailsRepository = accountDetailsRepository;
             _operationsExecutor = operationsExecutor;
         }
 
@@ -40,8 +40,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             foreach (var deposit in regularDeposits)
             {
                 await deposit.ConfirmRegular(
-                    _brokerAccountRequisitesRepository, 
-                    _accountRequisitesRepository, 
+                    _brokerAccountDetailsRepository, 
+                    _accountDetailsRepository, 
                     tx,
                     _operationsExecutor);
             }

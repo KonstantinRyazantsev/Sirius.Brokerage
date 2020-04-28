@@ -14,20 +14,20 @@ namespace Brokerage.Worker.MessageConsumers
     {
         private readonly ILogger<ExecuteWithdrawalConsumer> _logger;
         private readonly IWithdrawalRepository _withdrawalRepository;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
+        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IOperationsExecutor _operationsExecutor;
 
         public ExecuteWithdrawalConsumer(
             ILogger<ExecuteWithdrawalConsumer> logger,
             IWithdrawalRepository withdrawalRepository,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IOperationsExecutor operationsExecutor)
         {
             _logger = logger;
             _withdrawalRepository = withdrawalRepository;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
+            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _operationsExecutor = operationsExecutor;
         }
@@ -41,7 +41,7 @@ namespace Brokerage.Worker.MessageConsumers
             var withdrawal = await _withdrawalRepository.GetAsync(evt.WithdrawalId);
             
             var executionTask = withdrawal.Execute(
-                _brokerAccountRequisitesRepository, 
+                _brokerAccountDetailsRepository, 
                 _operationsExecutor);
 
             var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(

@@ -62,8 +62,8 @@ namespace Brokerage
                     new Uri("queue:sirius-brokerage-finalize-broker-account-creation"));
                 EndpointConvention.Map<FinalizeAccountCreation>(
                     new Uri("queue:sirius-brokerage-finalize-account-creation"));
-                EndpointConvention.Map<PublishAccountRequisites>(
-                    new Uri("queue:sirius-brokerage-publish-account-requisites"));
+                EndpointConvention.Map<PublishAccountDetails>(
+                    new Uri("queue:sirius-brokerage-publish-account-details"));
                 EndpointConvention.Map<ExecuteWithdrawal>(new Uri("queue:sirius-brokerage-execute-withdrawal"));
 
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>

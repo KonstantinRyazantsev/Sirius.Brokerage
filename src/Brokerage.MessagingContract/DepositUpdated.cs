@@ -11,8 +11,8 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract
         public string TenantId { get; set; }
         public string BlockchainId { get; set; }
         public long BrokerAccountId { get; set; }
-        public long BrokerAccountRequisitesId { get; set; }
-        public long? AccountRequisitesId { get; set; }
+        public long BrokerAccountDetailsId { get; set; }
+        public long? AccountDetailsId { get; set; }
         public Unit Unit { get; set; }
         public IReadOnlyCollection<Unit> Fees { get; set; }
         public TransactionInfo TransactionInfo { get; set; }

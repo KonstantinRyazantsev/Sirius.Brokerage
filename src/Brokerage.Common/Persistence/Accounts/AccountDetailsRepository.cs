@@ -7,11 +7,11 @@ using Npgsql;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
-    public class AccountRequisitesRepository : IAccountRequisitesRepository
+    public class AccountDetailsRepository : IAccountDetailsRepository
     {
         private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
 
-        public AccountRequisitesRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public AccountDetailsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
@@ -20,16 +20,16 @@ namespace Brokerage.Common.Persistence.Accounts
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            return await context.GetNextId(Tables.AccountRequisites, nameof(AccountRequisites.Id));
+            return await context.GetNextId(Tables.AccountDetails, nameof(AccountDetails.Id));
         }
 
-        public async Task AddOrIgnoreAsync(AccountRequisites requisites)
+        public async Task AddOrIgnoreAsync(AccountDetails details)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entity = MapToEntity(requisites);
+            var entity = MapToEntity(details);
 
-            context.AccountRequisites.Add(entity);
+            context.AccountDetails.Add(entity);
 
             try
             {
@@ -40,25 +40,25 @@ namespace Brokerage.Common.Persistence.Accounts
             }
         }
 
-        public async Task<AccountRequisites> GetByAccountAsync(long accountId)
+        public async Task<AccountDetails> GetByAccountAsync(long accountId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var requisites = await context
-                .AccountRequisites
+                .AccountDetails
                 .FirstAsync(x => x.AccountId == accountId);
 
             return MapToDomain(requisites);
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> GetAnyOfAsync(ISet<AccountRequisitesId> ids)
+        public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOfAsync(ISet<AccountDetailsId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var idStrings = ids.Select(x => x.ToString());
 
             var query = context
-                .AccountRequisites
+                .AccountDetails
                 .Where(x => idStrings.Contains(x.NaturalId));
 
             await query.LoadAsync();
@@ -69,11 +69,11 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<IReadOnlyCollection<AccountRequisites>> GetAllAsync(long? cursor, int limit)
+        public async Task<IReadOnlyCollection<AccountDetails>> GetAllAsync(long? cursor, int limit)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var query = context.AccountRequisites.AsQueryable();
+            var query = context.AccountDetails.AsQueryable();
 
             if (cursor != null)
             {
@@ -92,38 +92,38 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<AccountRequisites> GetAsync(long id)
+        public async Task<AccountDetails> GetAsync(long id)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var requisites = await context
-                .AccountRequisites
+                .AccountDetails
                 .FirstAsync(x => x.Id == id);
 
             return MapToDomain(requisites);
         }
 
-        private static AccountRequisitesEntity MapToEntity(AccountRequisites requisites)
+        private static AccountDetailsEntity MapToEntity(AccountDetails details)
         {
-            return new AccountRequisitesEntity
+            return new AccountDetailsEntity
             {
-                Address = requisites.NaturalId.Address,
-                Id = requisites.Id,
-                NaturalId = requisites.NaturalId.ToString(),
-                AccountId = requisites.AccountId,
-                BrokerAccountId = requisites.BrokerAccountId,
-                BlockchainId = requisites.NaturalId.BlockchainId,
-                Tag = requisites.NaturalId.Tag,
-                TagType = requisites.NaturalId.TagType,
-                CreatedAt = requisites.CreatedAt
+                Address = details.NaturalId.Address,
+                Id = details.Id,
+                NaturalId = details.NaturalId.ToString(),
+                AccountId = details.AccountId,
+                BrokerAccountId = details.BrokerAccountId,
+                BlockchainId = details.NaturalId.BlockchainId,
+                Tag = details.NaturalId.Tag,
+                TagType = details.NaturalId.TagType,
+                CreatedAt = details.CreatedAt
             };
         }
 
-        private static AccountRequisites MapToDomain(AccountRequisitesEntity entity)
+        private static AccountDetails MapToDomain(AccountDetailsEntity entity)
         {
-            var brokerAccount = AccountRequisites.Restore(
+            var brokerAccount = AccountDetails.Restore(
                 entity.Id,
-                new AccountRequisitesId(entity.BlockchainId,
+                new AccountDetailsId(entity.BlockchainId,
                     entity.Address,
                     entity.Tag,
                     entity.TagType),

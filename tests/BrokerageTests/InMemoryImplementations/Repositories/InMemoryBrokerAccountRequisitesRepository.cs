@@ -6,17 +6,17 @@
 
 //namespace BrokerageTests.Repositories
 //{
-//    public class InMemoryBrokerAccountRequisitesRepository : IBrokerAccountRequisitesRepository
+//    public class InMemoryBrokerAccountDetailsRepository : IBrokerAccountDetailsRepository
 //    {
 //        private long _idCounter = 0;
-//        private readonly List<BrokerAccountRequisites> _storage;
+//        private readonly List<BrokerAccountDetails> _storage;
 
-//        public InMemoryBrokerAccountRequisitesRepository()
+//        public InMemoryBrokerAccountDetailsRepository()
 //        {
-//            _storage = new List<BrokerAccountRequisites>(5);
+//            _storage = new List<BrokerAccountDetails>(5);
 //        }
 
-//        public Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAllAsync(long? brokerAccountId,
+//        public Task<IReadOnlyCollection<BrokerAccountDetails>> GetAllAsync(long? brokerAccountId,
 //            int limit,
 //            long? cursor,
 //            bool sortAsc,
@@ -26,39 +26,39 @@
 //            throw new System.NotImplementedException();
 //        }
 
-//        public Task<BrokerAccountRequisites> AddOrGetAsync(BrokerAccountRequisites brokerAccountRequisites)
+//        public Task<BrokerAccountDetails> AddOrGetAsync(BrokerAccountDetails brokerAccountDetails)
 //        {
 //            _idCounter++;
-//            _storage.Add(BrokerAccountRequisites.Restore(
-//                brokerAccountRequisites.RequestId,
+//            _storage.Add(BrokerAccountDetails.Restore(
+//                brokerAccountDetails.RequestId,
 //                _idCounter,
-//                brokerAccountRequisites.BrokerAccountId,
-//                brokerAccountRequisites.BlockchainId,
-//                brokerAccountRequisites.Address,
-//                brokerAccountRequisites.CreatedAt));
+//                brokerAccountDetails.BrokerAccountId,
+//                brokerAccountDetails.BlockchainId,
+//                brokerAccountDetails.Address,
+//                brokerAccountDetails.CreatedAt));
 
 //            return Task.FromResult(_storage.Last());
 //        }
 
-//        public Task<IReadOnlyCollection<BrokerAccountRequisites>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<string> addresses)
+//        public Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOfAsync(string blockchainId, IReadOnlyCollection<string> addresses)
 //        {
-//            return Task.FromResult<IReadOnlyCollection<BrokerAccountRequisites>>(
+//            return Task.FromResult<IReadOnlyCollection<BrokerAccountDetails>>(
 //                _storage.Where(x => x.BlockchainId == blockchainId &&
 //                                    addresses.Contains(x.Address))
 //                    .ToArray());
 //        }
 
-//        public Task AddOrIgnoreAsync(BrokerAccountRequisites brokerAccount)
+//        public Task AddOrIgnoreAsync(BrokerAccountDetails brokerAccount)
 //        {
 //            throw new System.NotImplementedException();
 //        }
 
-//        public Task<BrokerAccountRequisites> GetAsync(long brokerAccountRequisitesId)
+//        public Task<BrokerAccountDetails> GetAsync(long brokerAccountDetailsId)
 //        {
-//            return Task.FromResult(_storage.First(x => x.Id == brokerAccountRequisitesId));
+//            return Task.FromResult(_storage.First(x => x.Id == brokerAccountDetailsId));
 //        }
 
-//        public Task<BrokerAccountRequisites> GetActiveAsync(long brokerAccountId, string blockchainId)
+//        public Task<BrokerAccountDetails> GetActiveAsync(long brokerAccountId, string blockchainId)
 //        {
 //            return Task.FromResult(_storage.OrderByDescending(x => x.Id)
 //                .First(x => x.BrokerAccountId == brokerAccountId &&

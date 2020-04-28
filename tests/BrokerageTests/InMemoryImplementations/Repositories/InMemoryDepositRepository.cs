@@ -19,13 +19,13 @@
 //        public Task<Deposit> GetOrDefaultAsync(
 //            string transactionId,
 //            long assetId,
-//            long brokerAccountRequisitesId,
-//            long? accountRequisitesId)
+//            long brokerAccountDetailsId,
+//            long? AccountDetailsId)
 //        {
 //            return Task.FromResult(_storage.FirstOrDefault(x => x.TransactionInfo.TransactionId == transactionId &&
 //                                                x.AssetId == assetId &&
-//                                                x.BrokerAccountRequisitesId == brokerAccountRequisitesId &&
-//                                                x.AccountRequisitesId == accountRequisitesId));
+//                                                x.BrokerAccountDetailsId == brokerAccountDetailsId &&
+//                                                x.AccountDetailsId == AccountDetailsId));
 //        }
 
 //        public Task<long> GetNextIdAsync()
@@ -47,8 +47,8 @@
 //                _idCounter,
 //                deposit.Version,
 //                deposit.Sequence,
-//                deposit.BrokerAccountRequisitesId,
-//                deposit.AccountRequisitesId,
+//                deposit.BrokerAccountDetailsId,
+//                deposit.AccountDetailsId,
 //                deposit.AssetId,
 //                deposit.Amount,
 //                deposit.ConsolidationOperationId,

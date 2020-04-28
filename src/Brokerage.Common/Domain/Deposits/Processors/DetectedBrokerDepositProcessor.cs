@@ -38,7 +38,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 foreach (var input in brokerAccountContext.Inputs)
                 {
                     var outbox = await _outboxManager.Open(
-                        $"BrokerDeposits:Create:{tx.TransactionId}-{input.Requisites.Id}-{input.Unit.AssetId}",
+                        $"BrokerDeposits:Create:{tx.TransactionId}-{input.Details.Id}-{input.Unit.AssetId}",
                         () => _depositsRepository.GetNextIdAsync());
 
                     var deposit = Deposit.Create(
@@ -46,7 +46,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         brokerAccountContext.TenantId,
                         tx.BlockchainId,
                         brokerAccountContext.BrokerAccountId,
-                        input.Requisites.Id,
+                        input.Details.Id,
                         null,
                         input.Unit,
                         processingContext.TransactionInfo,

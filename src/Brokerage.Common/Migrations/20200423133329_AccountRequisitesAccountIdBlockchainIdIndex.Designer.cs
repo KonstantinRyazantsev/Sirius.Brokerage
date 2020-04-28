@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200423133329_AccountRequisitesAccountIdBlockchainIdIndex")]
-    partial class AccountRequisitesAccountIdBlockchainIdIndex
+    [Migration("20200423133329_AccountDetailsAccountIdBlockchainIdIndex")]
+    partial class AccountDetailsAccountIdBlockchainIdIndex
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -62,7 +62,7 @@ namespace Brokerage.Common.Migrations
                     b.ToTable("accounts");
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountRequisitesEntity", b =>
+            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountDetailsEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -97,11 +97,11 @@ namespace Brokerage.Common.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NaturalId")
-                        .HasName("IX_AccountRequisites_NaturalId");
+                        .HasName("IX_AccountDetails_NaturalId");
 
                     b.HasIndex("AccountId", "BlockchainId")
                         .IsUnique()
-                        .HasName("IX_AccountRequisites_AccountId_BlockchainId");
+                        .HasName("IX_AccountDetails_AccountId_BlockchainId");
 
                     b.ToTable("account_requisites");
                 });
@@ -215,7 +215,7 @@ namespace Brokerage.Common.Migrations
                     b.ToTable("broker_accounts");
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountRequisitesEntity", b =>
+            modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountDetailsEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -247,18 +247,18 @@ namespace Brokerage.Common.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActiveId")
-                        .HasName("IX_BrokerAccountRequisites_ActiveId");
+                        .HasName("IX_BrokerAccountDetails_ActiveId");
 
                     b.HasIndex("BrokerAccountId")
-                        .HasName("IX_BrokerAccountRequisites_BrokerAccountId");
+                        .HasName("IX_BrokerAccountDetails_BrokerAccountId");
 
                     b.HasIndex("Id")
-                        .HasName("IX_BrokerAccountRequisites_IdDesc")
+                        .HasName("IX_BrokerAccountDetails_IdDesc")
                         .HasAnnotation("Npgsql:IndexSortOrder", new[] { SortOrder.Descending });
 
                     b.HasIndex("NaturalId")
                         .IsUnique()
-                        .HasName("IX_BrokerAccountRequisites_NaturalId");
+                        .HasName("IX_BrokerAccountDetails_NaturalId");
 
                     b.ToTable("broker_account_requisites");
                 });
@@ -271,7 +271,7 @@ namespace Brokerage.Common.Migrations
                         .HasAnnotation("Npgsql:IdentitySequenceOptions", "'10500000', '1', '', '', 'False', '1'")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AccountRequisitesId")
+                    b.Property<long?>("AccountDetailsId")
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("Amount")
@@ -286,7 +286,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("BrokerAccountId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("BrokerAccountRequisitesId")
+                    b.Property<long>("BrokerAccountDetailsId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset?>("CancelledAt")
@@ -432,7 +432,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("BrokerAccountId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("BrokerAccountRequisitesId")
+                    b.Property<long>("BrokerAccountDetailsId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("CreatedDateTime")
@@ -590,10 +590,10 @@ namespace Brokerage.Common.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountRequisitesEntity", b =>
+            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountDetailsEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Accounts.AccountEntity", "Account")
-                        .WithMany("AccountRequisites")
+                        .WithMany("AccountDetails")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

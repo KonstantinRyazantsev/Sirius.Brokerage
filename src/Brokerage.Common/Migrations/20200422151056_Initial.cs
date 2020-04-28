@@ -108,8 +108,8 @@ namespace Brokerage.Common.Migrations
                     TenantId = table.Column<string>(nullable: true),
                     BlockchainId = table.Column<string>(nullable: true),
                     BrokerAccountId = table.Column<long>(nullable: false),
-                    BrokerAccountRequisitesId = table.Column<long>(nullable: false),
-                    AccountRequisitesId = table.Column<long>(nullable: true),
+                    BrokerAccountDetailsId = table.Column<long>(nullable: false),
+                    AccountDetailsId = table.Column<long>(nullable: true),
                     AssetId = table.Column<long>(nullable: false),
                     Amount = table.Column<decimal>(nullable: false),
                     ConsolidationOperationId = table.Column<long>(nullable: true),
@@ -162,7 +162,7 @@ namespace Brokerage.Common.Migrations
                     xmin = table.Column<uint>(type: "xid", nullable: false),
                     Sequence = table.Column<long>(nullable: false),
                     BrokerAccountId = table.Column<long>(nullable: false),
-                    BrokerAccountRequisitesId = table.Column<long>(nullable: false),
+                    BrokerAccountDetailsId = table.Column<long>(nullable: false),
                     AccountId = table.Column<long>(nullable: true),
                     ReferenceId = table.Column<string>(nullable: true),
                     AssetId = table.Column<long>(nullable: false),
@@ -342,14 +342,14 @@ namespace Brokerage.Common.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AccountRequisites_AccountId",
+                name: "IX_AccountDetails_AccountId",
                 schema: "brokerage",
                 table: "account_requisites",
                 column: "AccountId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_AccountRequisites_NaturalId",
+                name: "IX_AccountDetails_NaturalId",
                 schema: "brokerage",
                 table: "account_requisites",
                 column: "NaturalId");
@@ -381,26 +381,26 @@ namespace Brokerage.Common.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_BrokerAccountRequisites_ActiveId",
+                name: "IX_BrokerAccountDetails_ActiveId",
                 schema: "brokerage",
                 table: "broker_account_requisites",
                 column: "ActiveId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BrokerAccountRequisites_BrokerAccountId",
+                name: "IX_BrokerAccountDetails_BrokerAccountId",
                 schema: "brokerage",
                 table: "broker_account_requisites",
                 column: "BrokerAccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BrokerAccountRequisites_IdDesc",
+                name: "IX_BrokerAccountDetails_IdDesc",
                 schema: "brokerage",
                 table: "broker_account_requisites",
                 column: "Id")
                 .Annotation("Npgsql:IndexSortOrder", new[] { SortOrder.Descending });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BrokerAccountRequisites_NaturalId",
+                name: "IX_BrokerAccountDetails_NaturalId",
                 schema: "brokerage",
                 table: "broker_account_requisites",
                 column: "NaturalId",

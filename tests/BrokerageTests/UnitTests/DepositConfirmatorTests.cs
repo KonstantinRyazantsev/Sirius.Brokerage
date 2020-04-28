@@ -32,15 +32,15 @@
 //            var publishEndpoint = new InMemoryPublishEndpoint();
 //            Swisschain.Sirius.Executor.ApiClient.IExecutorClient executorClient = new FakeExecutorClient();
 //            var transferClient = executorClient.Transfers as FakeExecutorClient.TestTransfersClient;
-//            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
-//            IAccountRequisitesRepository accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
+//            IBrokerAccountDetailsRepository brokerAccountDetailsRepository = new InMemoryBrokerAccountDetailsRepository();
+//            IAccountDetailsRepository AccountDetailsRepository = new InMemoryAccountDetailsRepository();
 //            var brokerAccountRepository = new InMemoryBrokerAccountRepository();
 
 //            var depositsConfirmator = new DepositsConfirmator(
 //                depositRepository,
 //                executorClient,
-//                brokerAccountRequisitesRepository,
-//                accountRequisitesRepository,
+//                brokerAccountDetailsRepository,
+//                AccountDetailsRepository,
 //                brokerAccountRepository,
 //                publishEndpoint);
 
@@ -50,9 +50,9 @@
 //            var bitcoinRegtest = "bitcoin-regtest";
 //            var brokerAccountId = brokerAccount.BrokerAccountId;
 //            var accountId = 100_000;
-//            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
+//            var brokerAccountRequisistes = BrokerAccountDetails.Create("request-1", brokerAccountId, bitcoinRegtest);
 //            var address2 = "address2";
-//            var accountRequisistes = AccountRequisites.Create(
+//            var accountRequisistes = AccountDetails.Create(
 //                "request-1",
 //                accountId,
 //                brokerAccountId,
@@ -60,8 +60,8 @@
 //                address2);
 //            brokerAccountRequisistes.Address = "address";
 //            var operationAmount = 15m;
-//            brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
-//            accountRequisistes = await accountRequisitesRepository.AddOrGetAsync(accountRequisistes);
+//            brokerAccountRequisistes = await brokerAccountDetailsRepository.AddOrGetAsync(brokerAccountRequisistes);
+//            accountRequisistes = await AccountDetailsRepository.AddOrGetAsync(accountRequisistes);
 
 //            var assetId = 100_000;
 //            var detectedTransaction = new TransactionConfirmed

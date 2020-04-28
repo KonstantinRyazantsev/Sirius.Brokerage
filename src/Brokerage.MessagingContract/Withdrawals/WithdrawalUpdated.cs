@@ -10,7 +10,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
         public long Sequence { get; set; }
         public long BrokerAccountId { get; set; }
 
-        public long BrokerAccountRequisitesId { get; set; }
+        public long BrokerAccountDetailsId { get; set; }
 
         public long? AccountId { get; set; }
 
@@ -22,7 +22,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
 
         public IReadOnlyCollection<Unit> Fees { get; set; }
 
-        public DestinationRequisites DestinationRequisites { get; set; }
+        public DestinationDetails DestinationDetails { get; set; }
 
         public WithdrawalState State { get; set; }
 

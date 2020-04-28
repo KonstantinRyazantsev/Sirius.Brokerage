@@ -16,10 +16,10 @@ namespace Brokerage.WebApi
             _commandsSender = commandsSender;
         }
 
-        [HttpPost("publish-account-requisites")]
-        public async Task<IActionResult> PublishAccountRequisites()
+        [HttpPost("publish-account-details")]
+        public async Task<IActionResult> PublishAccountDetails()
         {
-            await _commandsSender.Send(new PublishAccountRequisites());
+            await _commandsSender.Send(new PublishAccountDetails());
 
             return Ok();
         }
