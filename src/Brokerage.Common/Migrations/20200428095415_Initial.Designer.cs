@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200424105718_withdrawalOperationIdRenamed")]
-    partial class withdrawalOperationIdRenamed
+    [Migration("20200428095415_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,46 +21,6 @@ namespace Brokerage.Common.Migrations
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountEntity", b =>
-                {
-                    b.Property<long>("AccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'10200000', '1', '', '', 'False', '1'")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<DateTimeOffset?>("ActivationDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("BlockingDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("BrokerAccountId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset>("CreationDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ReferenceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RequestId")
-                        .HasColumnType("text");
-
-                    b.Property<int>("State")
-                        .HasColumnType("integer");
-
-                    b.HasKey("AccountId");
-
-                    b.HasIndex("BrokerAccountId");
-
-                    b.HasIndex("RequestId")
-                        .IsUnique()
-                        .HasName("IX_Account_RequestId");
-
-                    b.ToTable("accounts");
-                });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountDetailsEntity", b =>
                 {
@@ -103,7 +63,44 @@ namespace Brokerage.Common.Migrations
                         .IsUnique()
                         .HasName("IX_AccountDetails_AccountId_BlockchainId");
 
-                    b.ToTable("account_requisites");
+                    b.ToTable("account_details");
+                });
+
+            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'10200000', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<long>("BrokerAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrokerAccountId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasName("IX_Account_RequestId");
+
+                    b.ToTable("accounts");
                 });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountBalancesEntity", b =>
@@ -120,11 +117,11 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("AvailableBalance")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTimeOffset>("AvailableBalanceUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<long>("BrokerAccountId")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NaturalId")
                         .HasColumnType("text");
@@ -132,23 +129,17 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("OwnedBalance")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTimeOffset>("OwnedBalanceUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<decimal>("PendingBalance")
                         .HasColumnType("numeric");
-
-                    b.Property<DateTimeOffset>("PendingBalanceUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("ReservedBalance")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTimeOffset>("ReservedBalanceUpdateDatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<long>("Sequence")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -175,44 +166,6 @@ namespace Brokerage.Common.Migrations
                     b.HasKey("UpdateId");
 
                     b.ToTable("broker_account_balances_update");
-                });
-
-            modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountEntity", b =>
-                {
-                    b.Property<long>("BrokerAccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'10000000', '1', '', '', 'False', '1'")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<DateTimeOffset?>("ActivationDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("BlockingDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("CreationDateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RequestId")
-                        .HasColumnType("text");
-
-                    b.Property<int>("State")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TenantId")
-                        .HasColumnType("text");
-
-                    b.HasKey("BrokerAccountId");
-
-                    b.HasIndex("RequestId")
-                        .IsUnique()
-                        .HasName("IX_BrokerAccount_RequestId");
-
-                    b.ToTable("broker_accounts");
                 });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountDetailsEntity", b =>
@@ -260,7 +213,42 @@ namespace Brokerage.Common.Migrations
                         .IsUnique()
                         .HasName("IX_BrokerAccountDetails_NaturalId");
 
-                    b.ToTable("broker_account_requisites");
+                    b.ToTable("broker_account_details");
+                });
+
+            modelBuilder.Entity("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:IdentitySequenceOptions", "'10000000', '1', '', '', 'False', '1'")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TenantId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasName("IX_BrokerAccount_RequestId");
+
+                    b.ToTable("broker_accounts");
                 });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositEntity", b =>
@@ -283,25 +271,16 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("BlockchainId")
                         .HasColumnType("text");
 
-                    b.Property<long>("BrokerAccountId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("BrokerAccountDetailsId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset?>("CancelledAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("ConfirmedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<long>("BrokerAccountId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("ConsolidationOperationId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("DetectedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("ErrorCode")
@@ -309,9 +288,6 @@ namespace Brokerage.Common.Migrations
 
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
-
-                    b.Property<DateTimeOffset?>("FailedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("Sequence")
                         .HasColumnType("bigint");
@@ -333,6 +309,9 @@ namespace Brokerage.Common.Migrations
 
                     b.Property<long>("TransactionRequiredConfirmationsCount")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -429,13 +408,13 @@ namespace Brokerage.Common.Migrations
                     b.Property<long>("AssetId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("BrokerAccountId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("BrokerAccountDetailsId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("CreatedDateTime")
+                    b.Property<long>("BrokerAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DestinationAddress")
@@ -474,7 +453,7 @@ namespace Brokerage.Common.Migrations
                     b.Property<long?>("TransactionRequiredConfirmationsCount")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("UpdatedDateTime")
+                    b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("Version")
@@ -581,20 +560,20 @@ namespace Brokerage.Common.Migrations
                     b.ToTable("outbox");
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountEntity", b =>
-                {
-                    b.HasOne("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountEntity", "BrokerAccount")
-                        .WithMany("Accounts")
-                        .HasForeignKey("BrokerAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountDetailsEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Accounts.AccountEntity", "Account")
                         .WithMany("AccountDetails")
                         .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Brokerage.Common.Persistence.Accounts.AccountEntity", b =>
+                {
+                    b.HasOne("Brokerage.Common.Persistence.BrokerAccount.BrokerAccountEntity", "BrokerAccount")
+                        .WithMany("Accounts")
+                        .HasForeignKey("BrokerAccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -44,11 +44,11 @@ namespace Brokerage.Common.Persistence.Accounts
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var requisites = await context
+            var accountDetailsEntity = await context
                 .AccountDetails
                 .FirstAsync(x => x.AccountId == accountId);
 
-            return MapToDomain(requisites);
+            return MapToDomain(accountDetailsEntity);
         }
 
         public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOfAsync(ISet<AccountDetailsId> ids)
