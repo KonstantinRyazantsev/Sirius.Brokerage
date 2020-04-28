@@ -9,6 +9,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 

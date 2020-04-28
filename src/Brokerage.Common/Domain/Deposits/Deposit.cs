@@ -6,6 +6,7 @@ using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
@@ -250,7 +251,7 @@ namespace Brokerage.Common.Domain.Deposits
                 Unit = Unit,
                 BrokerAccountDetailsId = BrokerAccountDetailsId,
                 Sources = Sources
-                    .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.DepositSource()
+                    .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositSource()
                     {
                         Amount = x.Amount,
                         Address = x.Address
@@ -267,20 +268,20 @@ namespace Brokerage.Common.Domain.Deposits
                 },
                 Error = Error == null
                     ? null
-                    : new Swisschain.Sirius.Brokerage.MessagingContract.DepositError()
+                    : new Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError()
                     {
-                        Code = Swisschain.Sirius.Brokerage.MessagingContract.DepositError.DepositErrorCode.TechnicalProblem,
+                        Code = Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
                         Message = Error.Message
                     },
                 UpdatedAt = UpdatedAt,
                 CreatedAt = CreatedAt,
                 State = State switch
                 {
-                    DepositState.Detected => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Detected,
-                    DepositState.Confirmed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Confirmed,
-                    DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Completed,
-                    DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Failed,
-                    DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.DepositState.Cancelled,
+                    DepositState.Detected => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Detected,
+                    DepositState.Confirmed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Confirmed,
+                    DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
+                    DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
+                    DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 }
             });

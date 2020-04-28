@@ -1,7 +1,7 @@
 ﻿using System;
 using Swisschain.Sirius.Sdk.Primitives;
 
-namespace Swisschain.Sirius.Brokerage.MessagingContract
+namespace Swisschain.Sirius.Brokerage.MessagingContract.Accounts
 {
     public class AccountDetailsAdded
     {

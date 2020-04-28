@@ -12,5 +12,7 @@ namespace Brokerage.Common.Persistence.Accounts
         Task<Account> AddOrGetAsync(Account account);
 
         Task UpdateAsync(Account account);
+
+        Task<long> GetNextIdAsync();
     }
 }

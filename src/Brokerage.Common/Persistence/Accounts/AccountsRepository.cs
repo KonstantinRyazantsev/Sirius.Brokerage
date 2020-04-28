@@ -14,7 +14,14 @@ namespace Brokerage.Common.Persistence.Accounts
         {
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
         }
-        
+
+        public async Task<long> GetNextIdAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            return await context.GetNextId(Tables.Accounts, nameof(AccountEntity.Id));
+        }
+
         public async Task<Account> GetAsync(long accountId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -48,11 +55,11 @@ namespace Brokerage.Common.Persistence.Accounts
             await context.SaveChangesAsync();
         }
 
-        public async Task<Account> AddOrGetAsync(Account brokerAccount)
+        public async Task<Account> AddOrGetAsync(Account account)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var newEntity = MapToEntity(brokerAccount);
+            var newEntity = MapToEntity(account);
 
             context.Accounts.Add(newEntity);
 
@@ -63,12 +70,11 @@ namespace Brokerage.Common.Persistence.Accounts
                 return MapToDomain(newEntity);
             }
             catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx &&
-                                              pgEx.SqlState == "23505" &&
-                                              pgEx.ConstraintName == "IX_Account_RequestId")
+                                              pgEx.SqlState == "23505")
             {
                 var entity = await context
                     .Accounts
-                    .FirstAsync(x => x.RequestId == brokerAccount.RequestId);
+                    .FirstAsync(x => x.Id == account.Id);
 
                 return MapToDomain(entity);
             }
@@ -89,7 +95,6 @@ namespace Brokerage.Common.Persistence.Accounts
             {
                 State = state,
                 CreatedAt = domainModel.CreatedAt,
-                RequestId = domainModel.RequestId,
                 UpdatedAt = domainModel.UpdatedAt,
                 BrokerAccountId = domainModel.BrokerAccountId,
                 ReferenceId = domainModel.ReferenceId,
@@ -113,7 +118,6 @@ namespace Brokerage.Common.Persistence.Accounts
             };
 
             var brokerAccount = Account.Restore(
-                entity.RequestId,
                 entity.Id,
                 entity.BrokerAccountId,
                 entity.ReferenceId,
