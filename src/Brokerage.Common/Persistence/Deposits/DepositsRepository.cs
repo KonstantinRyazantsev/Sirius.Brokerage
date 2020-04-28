@@ -108,7 +108,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 AssetId = deposit.Unit.AssetId,
                 Amount = deposit.Unit.Amount,
                 ConsolidationOperationId = deposit.ConsolidationOperationId,
-                BrokerAccountRequisitesId = deposit.BrokerAccountRequisitesId,
+                BrokerAccountDetailsId = deposit.BrokerAccountDetailsId,
                 Fees = deposit.Fees?.Select((x, index) => new DepositFeeEntity
                 {
                     AssetId = x.AssetId,
@@ -123,7 +123,7 @@ namespace Brokerage.Common.Persistence.Deposits
                     Amount = x.Amount,
                     DepositId = deposit.Id
                 }).ToArray(),
-                AccountRequisitesId = deposit.AccountRequisitesId,
+                AccountDetailsId = deposit.AccountDetailsId,
                 State = depositState,
                 TransactionId = deposit.TransactionInfo.TransactionId,
                 TransactionBlock = deposit.TransactionInfo.TransactionBlock,
@@ -162,8 +162,8 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.TenantId,
                 depositEntity.BlockchainId,
                 depositEntity.BrokerAccountId,
-                depositEntity.BrokerAccountRequisitesId,
-                depositEntity.AccountRequisitesId,
+                depositEntity.BrokerAccountDetailsId,
+                depositEntity.AccountDetailsId,
                 new Unit(depositEntity.AssetId, depositEntity.Amount),
                 depositEntity.ConsolidationOperationId,
                 depositEntity.Fees?

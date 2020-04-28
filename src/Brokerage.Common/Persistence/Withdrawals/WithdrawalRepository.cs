@@ -104,7 +104,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 AssetId = withdrawal.Unit.AssetId,
                 Amount = withdrawal.Unit.Amount,
                 OperationId = withdrawal.OperationId,
-                BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
+                BrokerAccountDetailsId = withdrawal.BrokerAccountDetailsId,
                 Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity
                 {
                     AssetId = x.AssetId,
@@ -120,12 +120,12 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 TransactionDateTime = withdrawal.TransactionInfo?.DateTime,
                 BrokerAccountId = withdrawal.BrokerAccountId,
                 TenantId = withdrawal.TenantId,
-                DestinationTagType = withdrawal.DestinationRequisites.TagType,
+                DestinationTagType = withdrawal.DestinationDetails.TagType,
                 UpdatedAt = withdrawal.UpdatedAt,
                 CreatedAt = withdrawal.CreatedAt,
-                DestinationAddress = withdrawal.DestinationRequisites.Address,
+                DestinationAddress = withdrawal.DestinationDetails.Address,
                 AccountId = withdrawal.AccountId,
-                DestinationTag = withdrawal.DestinationRequisites.Tag,
+                DestinationTag = withdrawal.DestinationDetails.Tag,
                 ReferenceId = withdrawal.ReferenceId
             };
 
@@ -139,7 +139,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 withdrawalEntity.Version,
                 withdrawalEntity.Sequence,
                 withdrawalEntity.BrokerAccountId,
-                withdrawalEntity.BrokerAccountRequisitesId,
+                withdrawalEntity.BrokerAccountDetailsId,
                 withdrawalEntity.AccountId,
                 withdrawalEntity.ReferenceId,
                 new Unit(withdrawalEntity.AssetId, withdrawalEntity.Amount),
@@ -147,7 +147,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 withdrawalEntity.Fees?
                     .Select(x => new Unit(x.AssetId, x.Amount))
                     .ToArray(),
-                new DestinationRequisites(
+                new DestinationDetails(
                     withdrawalEntity.DestinationAddress,
                     withdrawalEntity.DestinationTag,
                     withdrawalEntity.DestinationTagType),

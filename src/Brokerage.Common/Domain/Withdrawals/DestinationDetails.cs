@@ -2,9 +2,9 @@
 
 namespace Brokerage.Common.Domain.Withdrawals
 {
-    public class DestinationRequisites
+    public class DestinationDetails
     {
-        public DestinationRequisites(string address, string tag = null, DestinationTagType? tagType = null)
+        public DestinationDetails(string address, string tag = null, DestinationTagType? tagType = null)
         {
             Address = address;
             Tag = tag;

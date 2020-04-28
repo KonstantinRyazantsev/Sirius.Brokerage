@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brokerage.Common.Persistence.BrokerAccount
 {
-    [Table(name: Tables.BrokerAccountRequisites)]
-    public class BrokerAccountRequisitesEntity
+    [Table(name: Tables.BrokerAccountDetails)]
+    public class BrokerAccountDetailsEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

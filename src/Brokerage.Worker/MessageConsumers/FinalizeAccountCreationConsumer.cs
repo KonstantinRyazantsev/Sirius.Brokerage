@@ -16,7 +16,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
+        private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOutboxManager _outboxManager;
 
@@ -25,7 +25,7 @@ namespace Brokerage.Worker.MessageConsumers
             ILogger<FinalizeAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IAccountRequisitesRepository accountRequisitesRepository,
+            IAccountDetailsRepository accountDetailsRepository,
             IAccountsRepository accountsRepository,
             IOutboxManager outboxManager)
         {
@@ -33,7 +33,7 @@ namespace Brokerage.Worker.MessageConsumers
             _logger = logger;
             _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
-            _accountRequisitesRepository = accountRequisitesRepository;
+            _accountDetailsRepository = accountDetailsRepository;
             _accountsRepository = accountsRepository;
             _outboxManager = outboxManager;
         }
@@ -48,7 +48,7 @@ namespace Brokerage.Worker.MessageConsumers
                 await account.FinalizeCreation(
                     _loggerFactory.CreateLogger<Account>(),
                     _blockchainsRepository,
-                    _accountRequisitesRepository,
+                    _accountDetailsRepository,
                     _vaultAgentClient,
                     _outboxManager);
             }

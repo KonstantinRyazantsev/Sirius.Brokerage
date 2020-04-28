@@ -85,15 +85,15 @@ namespace Brokerage.Common.Domain.Accounts
         public async Task FinalizeCreation(
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
-            IAccountRequisitesRepository requisitesRepository,
+            IAccountDetailsRepository detailsRepository,
             IVaultAgentClient vaultAgentClient,
             IOutboxManager outboxManager)
         {
             if (State == AccountState.Creating)
             {
-                await CreateRequisites(logger,
+                await CreateDetails(logger,
                     blockchainsRepository,
-                    requisitesRepository,
+                    detailsRepository,
                     vaultAgentClient,
                     outboxManager);
 
@@ -101,19 +101,19 @@ namespace Brokerage.Common.Domain.Accounts
             }
             else
             {
-                var requisites = await requisitesRepository.GetByAccountAsync(Id);
+                var accountDetails = await detailsRepository.GetByAccountAsync(Id);
 
-                _events.Add(GetAccountRequisitesAddedEvent(requisites));
+                _events.Add(GetAccountDetailsAddedEvent(accountDetails));
                 
                 // ReSharper disable once PossibleInvalidOperationException
                 _events.Add(GetAccountActivatedEvent(UpdatedAt));
             }
         }
 
-        private async Task CreateRequisites(
+        private async Task CreateDetails(
             ILogger<Account> logger,
             IBlockchainsRepository blockchainsRepository, 
-            IAccountRequisitesRepository requisitesRepository,
+            IAccountDetailsRepository detailsRepository,
             IVaultAgentClient vaultAgentClient,
             IOutboxManager outboxManager)
         {
@@ -133,8 +133,8 @@ namespace Brokerage.Common.Domain.Accounts
                 foreach (var blockchain in blockchains)
                 {
                     var outbox = await outboxManager.Open(
-                        $"AccountRequisites:Create:{Id}_{blockchain.Id}", 
-                        () => requisitesRepository.GetNextIdAsync());
+                        $"AccountDetails:Create:{Id}_{blockchain.Id}", 
+                        () => detailsRepository.GetNextIdAsync());
 
                     if (!outbox.IsStored)
                     {
@@ -143,7 +143,7 @@ namespace Brokerage.Common.Domain.Accounts
                         var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
                             new GenerateWalletRequest
                             {
-                                RequestId = $"Brokerage:AccountRequisites:{outbox.AggregateId}",
+                                RequestId = $"Brokerage:AccountDetails:{outbox.AggregateId}",
                                 BlockchainId = blockchain.Id
                             });
 
@@ -154,16 +154,16 @@ namespace Brokerage.Common.Domain.Accounts
                             throw new InvalidOperationException($"Wallet generation has been failed: {walletGenerationResponse.Error.ErrorMessage}");
                         }
 
-                        var requisites = AccountRequisites.Create(
+                        var accountDetails = AccountDetails.Create(
                             outbox.AggregateId,
-                            new AccountRequisitesId(blockchain.Id, walletGenerationResponse.Response.Address),
+                            new AccountDetailsId(blockchain.Id, walletGenerationResponse.Response.Address),
                             Id,
                             BrokerAccountId);
                         
                         // TODO: Batch
-                        await requisitesRepository.AddOrIgnoreAsync(requisites);
+                        await detailsRepository.AddOrIgnoreAsync(accountDetails);
 
-                        outbox.Publish(GetAccountRequisitesAddedEvent(requisites));
+                        outbox.Publish(GetAccountDetailsAddedEvent(accountDetails));
                     }
 
                     foreach (var evt in outbox.Events)
@@ -191,17 +191,17 @@ namespace Brokerage.Common.Domain.Accounts
             };
         }
 
-        private static AccountRequisitesAdded GetAccountRequisitesAddedEvent(AccountRequisites requisites)
+        private static AccountDetailsAdded GetAccountDetailsAddedEvent(AccountDetails details)
         {
-            return new AccountRequisitesAdded
+            return new AccountDetailsAdded
             {
-                CreatedAt = requisites.CreatedAt,
-                Address = requisites.NaturalId.Address,
-                BlockchainId = requisites.NaturalId.BlockchainId,
-                Tag = requisites.NaturalId.Tag,
-                TagType = requisites.NaturalId.TagType,
-                AccountId = requisites.AccountId,
-                AccountRequisitesId = requisites.Id
+                CreatedAt = details.CreatedAt,
+                Address = details.NaturalId.Address,
+                BlockchainId = details.NaturalId.BlockchainId,
+                Tag = details.NaturalId.Tag,
+                TagType = details.NaturalId.TagType,
+                AccountId = details.AccountId,
+                AccountDetailsId = details.Id
             };
         }
     }

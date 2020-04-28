@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.Operations
         Task<Operation> StartWithdrawal(string tenantId,
             long withdrawalId,
             string brokerAccountAddress,
-            DestinationRequisites destinationRequisites,
+            DestinationDetails destinationDetails,
             Unit unit);
     }
 }

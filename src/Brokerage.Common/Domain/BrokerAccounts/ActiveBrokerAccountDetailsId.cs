@@ -2,9 +2,9 @@
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {
-    public sealed class ActiveBrokerAccountRequisitesId : IEquatable<ActiveBrokerAccountRequisitesId>
+    public sealed class ActiveBrokerAccountDetailsId : IEquatable<ActiveBrokerAccountDetailsId>
     {
-        public ActiveBrokerAccountRequisitesId(string blockchainId, long brokerAccountId)
+        public ActiveBrokerAccountDetailsId(string blockchainId, long brokerAccountId)
         {
             BlockchainId = blockchainId;
             BrokerAccountId = brokerAccountId;
@@ -13,7 +13,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public string BlockchainId { get; }
         public long BrokerAccountId { get; }
 
-        public bool Equals(ActiveBrokerAccountRequisitesId other)
+        public bool Equals(ActiveBrokerAccountDetailsId other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -22,7 +22,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public override bool Equals(object obj)
         {
-            return ReferenceEquals(this, obj) || obj is ActiveBrokerAccountRequisitesId other && Equals(other);
+            return ReferenceEquals(this, obj) || obj is ActiveBrokerAccountDetailsId other && Equals(other);
         }
 
         public override int GetHashCode()

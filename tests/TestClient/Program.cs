@@ -52,7 +52,7 @@ namespace TestClient
                             AssetId = 100_000,
                             Amount = 0.1m,
                             TenantId = "abel-tenant-100",
-                            DestinationRequisites = new DestinationRequisites() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
+                            DestinationDetails = new DestinationDetails() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
                             RequestId = "requestId",
                         });
 

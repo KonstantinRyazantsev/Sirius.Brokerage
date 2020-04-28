@@ -18,23 +18,23 @@
 //        [Fact(Skip = "Broker account deposits are not supported")]
 //        public async Task SingleTransferTest()
 //        {
-//            var accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
-//            var brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
+//            var AccountDetailsRepository = new InMemoryAccountDetailsRepository();
+//            var brokerAccountDetailsRepository = new InMemoryBrokerAccountDetailsRepository();
 //            var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
 //            var publishEndpoint = new InMemoryPublishEndpoint();
 
 //            var balanceUpdateConfirmator = new BalanceUpdateConfirmator(
-//                accountRequisitesRepository,
-//                brokerAccountRequisitesRepository,
+//                AccountDetailsRepository,
+//                brokerAccountDetailsRepository,
 //                brokerAccountsBalancesRepository,
 //                publishEndpoint);
 
 //            var bitcoinRegtest = "bitcoin-regtest";
 //            var brokerAccountId = 100_000;
-//            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
+//            var brokerAccountRequisistes = BrokerAccountDetails.Create("request-1", brokerAccountId, bitcoinRegtest);
 //            brokerAccountRequisistes.Address = "address";
 //            var operationAmount = 15m;
-//            await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
+//            await brokerAccountDetailsRepository.AddOrGetAsync(brokerAccountRequisistes);
 //            var assetId = 100_000;
 //            var detectedTransaction = new TransactionConfirmed
 //            {
@@ -76,14 +76,14 @@
 //        [Fact]
 //        public async Task MultipleTransfersTest()
 //        {
-//            var accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
-//            var brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
+//            var AccountDetailsRepository = new InMemoryAccountDetailsRepository();
+//            var brokerAccountDetailsRepository = new InMemoryBrokerAccountDetailsRepository();
 //            var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
 //            var publishEndpoint = new InMemoryPublishEndpoint();
 
 //            var balanceUpdateConfirmator = new BalanceUpdateConfirmator(
-//                accountRequisitesRepository,
-//                brokerAccountRequisitesRepository,
+//                AccountDetailsRepository,
+//                brokerAccountDetailsRepository,
 //                brokerAccountsBalancesRepository,
 //                publishEndpoint);
 
@@ -91,17 +91,17 @@
 //            var brokerAccountId = 100_000;
 //            var accountId = 100_000;
 //            var address2 = "address2";
-//            var accountRequisistes = AccountRequisites.Create(
+//            var accountRequisistes = AccountDetails.Create(
 //                "request-1", 
 //                accountId, 
 //                brokerAccountId, 
 //                bitcoinRegtest, 
 //                address2);
-//            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
+//            var brokerAccountRequisistes = BrokerAccountDetails.Create("request-1", brokerAccountId, bitcoinRegtest);
 //            brokerAccountRequisistes.Address = "address";
 //            var operationAmount = 15m;
-//            brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
-//            accountRequisistes = await accountRequisitesRepository.AddOrGetAsync(accountRequisistes);
+//            brokerAccountRequisistes = await brokerAccountDetailsRepository.AddOrGetAsync(brokerAccountRequisistes);
+//            accountRequisistes = await AccountDetailsRepository.AddOrGetAsync(accountRequisistes);
 
 //            var assetId = 100_000;
 //            var assetId2 = 200_000;

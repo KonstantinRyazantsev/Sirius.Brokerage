@@ -16,10 +16,10 @@ namespace Brokerage.Common.Persistence
         public static IServiceCollection AddPersistence(this IServiceCollection services, string connectionString)
         {
             services.AddTransient<IBrokerAccountsRepository, BrokerAccountsRepository>();
-            services.AddTransient<IBrokerAccountRequisitesRepository, BrokerAccountRequisitesRepository>();
+            services.AddTransient<IBrokerAccountDetailsRepository, BrokerAccountDetailsRepository>();
             services.AddTransient<IBrokerAccountsBalancesRepository, BrokerAccountsBalancesRepository>();
             services.AddTransient<IAccountsRepository, AccountsRepository>();
-            services.AddTransient<IAccountRequisitesRepository, AccountRequisitesRepository>();
+            services.AddTransient<IAccountDetailsRepository, AccountDetailsRepository>();
             services.AddTransient<IBlockchainsRepository, BlockchainsRepository>();
             services.AddTransient<IDepositsRepository, DepositsRepository>();
             services.AddTransient<IWithdrawalRepository, WithdrawalRepository>();

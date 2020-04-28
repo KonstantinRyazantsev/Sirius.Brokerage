@@ -2,9 +2,9 @@
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
-    public class BrokerAccountRequisitesAdded
+    public class BrokerAccountDetailsAdded
     {
-        public long BrokerAccountRequisitesId { get; set; }
+        public long BrokerAccountDetailsId { get; set; }
         public long BrokerAccountId { get; set; }
         public string BlockchainId { get; set; }
         public string Address { get; set; }

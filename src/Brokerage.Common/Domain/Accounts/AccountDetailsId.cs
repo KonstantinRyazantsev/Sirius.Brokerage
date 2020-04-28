@@ -4,11 +4,11 @@ using Swisschain.Sirius.Sdk.Primitives;
 namespace Brokerage.Common.Domain.Accounts
 {
     /// <summary>
-    /// Natural ID of the account requisites
+    /// Natural ID of the account details
     /// </summary>
-    public sealed class AccountRequisitesId : IEquatable<AccountRequisitesId>
+    public sealed class AccountDetailsId : IEquatable<AccountDetailsId>
     {
-        public AccountRequisitesId(string blockchainId, string address, string tag, DestinationTagType? tagType)
+        public AccountDetailsId(string blockchainId, string address, string tag, DestinationTagType? tagType)
         {
             BlockchainId = blockchainId;
             Address = address;
@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.Accounts
             TagType = tagType;
         }
 
-        public AccountRequisitesId(string blockchainId, string address) :
+        public AccountDetailsId(string blockchainId, string address) :
             this(blockchainId, address, default, default)
         {
         }
@@ -26,7 +26,7 @@ namespace Brokerage.Common.Domain.Accounts
         public string Tag { get; }
         public DestinationTagType? TagType { get; }
 
-        public bool Equals(AccountRequisitesId other)
+        public bool Equals(AccountDetailsId other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -35,7 +35,7 @@ namespace Brokerage.Common.Domain.Accounts
 
         public override bool Equals(object obj)
         {
-            return ReferenceEquals(this, obj) || obj is AccountRequisitesId other && Equals(other);
+            return ReferenceEquals(this, obj) || obj is AccountDetailsId other && Equals(other);
         }
 
         public override int GetHashCode()

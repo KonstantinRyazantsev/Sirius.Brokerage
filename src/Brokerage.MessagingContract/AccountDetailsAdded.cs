@@ -3,9 +3,9 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract
 {
-    public class AccountRequisitesAdded
+    public class AccountDetailsAdded
     {
-        public long AccountRequisitesId { get; set; }
+        public long AccountDetailsId { get; set; }
         public long AccountId { get; set; }
         public string BlockchainId { get; set; }
         public string Address { get; set; }

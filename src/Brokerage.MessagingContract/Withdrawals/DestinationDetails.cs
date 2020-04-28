@@ -2,7 +2,7 @@
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
 {
-    public class DestinationRequisites
+    public class DestinationDetails
     {
         public string Address { get; set; }
 

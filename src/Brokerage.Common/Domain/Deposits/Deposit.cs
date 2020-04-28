@@ -21,8 +21,8 @@ namespace Brokerage.Common.Domain.Deposits
             string tenantId,
             string blockchainId,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
-            long? accountRequisitesId,
+            long brokerAccountDetailsId,
+            long? accountDetailsId,
             Unit unit,
             long? consolidationOperationId,
             IReadOnlyCollection<Unit> fees,
@@ -39,8 +39,8 @@ namespace Brokerage.Common.Domain.Deposits
             TenantId = tenantId;
             BlockchainId = blockchainId;
             BrokerAccountId = brokerAccountId;
-            BrokerAccountRequisitesId = brokerAccountRequisitesId;
-            AccountRequisitesId = accountRequisitesId;
+            BrokerAccountDetailsId = brokerAccountDetailsId;
+            AccountDetailsId = accountDetailsId;
             Unit = unit;
             Fees = fees;
             TransactionInfo = transactionInfo;
@@ -58,8 +58,8 @@ namespace Brokerage.Common.Domain.Deposits
         public string TenantId { get; }
         public string BlockchainId { get; }
         public long BrokerAccountId { get; }
-        public long BrokerAccountRequisitesId { get; }
-        public long? AccountRequisitesId { get; }
+        public long BrokerAccountDetailsId { get; }
+        public long? AccountDetailsId { get; }
         public Unit Unit { get; }
         public IReadOnlyCollection<Unit> Fees { get; }
         public TransactionInfo TransactionInfo { get; }
@@ -72,15 +72,15 @@ namespace Brokerage.Common.Domain.Deposits
 
         public List<object> Events { get; } = new List<object>();
 
-        public bool IsBrokerDeposit => AccountRequisitesId == null;
+        public bool IsBrokerDeposit => AccountDetailsId == null;
         
         public static Deposit Create(
             long id,
             string tenantId,
             string blockchainId,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
-            long? accountRequisitesId,
+            long brokerAccountDetailsId,
+            long? accountDetailsId,
             Unit unit,
             TransactionInfo transactionInfo,
             IReadOnlyCollection<DepositSource> sources)
@@ -93,8 +93,8 @@ namespace Brokerage.Common.Domain.Deposits
                 tenantId,
                 blockchainId,
                 brokerAccountId,
-                brokerAccountRequisitesId,
-                accountRequisitesId,
+                brokerAccountDetailsId,
+                accountDetailsId,
                 unit,
                 null,
                 Array.Empty<Unit>(),
@@ -117,8 +117,8 @@ namespace Brokerage.Common.Domain.Deposits
             string tenantId,
             string blockchainId,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
-            long? accountRequisitesId,
+            long brokerAccountDetailsId,
+            long? accountDetailsId,
             Unit unit,
             long? consolidationOperationId,
             IReadOnlyCollection<Unit> fees,
@@ -136,8 +136,8 @@ namespace Brokerage.Common.Domain.Deposits
                 tenantId,
                 blockchainId,
                 brokerAccountId,
-                brokerAccountRequisitesId,
-                accountRequisitesId,
+                brokerAccountDetailsId,
+                accountDetailsId,
                 unit,
                 consolidationOperationId,
                 fees,
@@ -149,8 +149,8 @@ namespace Brokerage.Common.Domain.Deposits
                 updatedAt);
         }
 
-        public async Task ConfirmRegular(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
-            IAccountRequisitesRepository accountRequisitesRepository, 
+        public async Task ConfirmRegular(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
+            IAccountDetailsRepository accountDetailsRepository, 
             TransactionConfirmed tx, 
             IOperationsExecutor operationsExecutor)
         {
@@ -162,15 +162,15 @@ namespace Brokerage.Common.Domain.Deposits
             if (SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed))
             {
                 // TODO: Optimize this - track in the processingContext, to avoid multiple reading
-                var brokerAccountRequisites = await brokerAccountRequisitesRepository.GetAsync(BrokerAccountRequisitesId);
+                var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
                 // ReSharper disable once PossibleInvalidOperationException
-                var accountRequisites = await accountRequisitesRepository.GetAsync(AccountRequisitesId.Value);
+                var accountDetails = await accountDetailsRepository.GetAsync(AccountDetailsId.Value);
 
                 var operation = await operationsExecutor.StartDepositConsolidation(
                     TenantId,
                     Id,
-                    accountRequisites.NaturalId.Address,
-                    brokerAccountRequisites.NaturalId.Address,
+                    accountDetails.NaturalId.Address,
+                    brokerAccountDetails.NaturalId.Address,
                     Unit,
                     tx.BlockNumber + tx.RequiredConfirmationsCount);
 
@@ -248,7 +248,7 @@ namespace Brokerage.Common.Domain.Deposits
                 BlockchainId = BlockchainId,
                 BrokerAccountId = BrokerAccountId,
                 Unit = Unit,
-                BrokerAccountRequisitesId = BrokerAccountRequisitesId,
+                BrokerAccountDetailsId = BrokerAccountDetailsId,
                 Sources = Sources
                     .Select(x => new Swisschain.Sirius.Brokerage.MessagingContract.DepositSource()
                     {
@@ -256,7 +256,7 @@ namespace Brokerage.Common.Domain.Deposits
                         Address = x.Address
                     })
                     .ToArray(),
-                AccountRequisitesId = AccountRequisitesId,
+                AccountDetailsId = AccountDetailsId,
                 Fees = Fees,
                 TransactionInfo = new Swisschain.Sirius.Brokerage.MessagingContract.TransactionInfo()
                 {

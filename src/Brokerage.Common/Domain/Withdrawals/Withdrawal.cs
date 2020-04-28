@@ -15,13 +15,13 @@ namespace Brokerage.Common.Domain.Withdrawals
             uint version,
             long sequence,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
+            long brokerAccountDetailsId,
             long? accountId,
             string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
-            DestinationRequisites destinationRequisites,
+            DestinationDetails destinationDetails,
             WithdrawalState state,
             TransactionInfo transactionInfo,
             WithdrawalError error,
@@ -31,13 +31,13 @@ namespace Brokerage.Common.Domain.Withdrawals
         {
             Id = id;
             BrokerAccountId = brokerAccountId;
-            BrokerAccountRequisitesId = brokerAccountRequisitesId;
+            BrokerAccountDetailsId = brokerAccountDetailsId;
             AccountId = accountId;
             ReferenceId = referenceId;
             Unit = unit;
             TenantId = tenantId;
             Fees = fees;
-            DestinationRequisites = destinationRequisites;
+            DestinationDetails = destinationDetails;
             State = state;
             TransactionInfo = transactionInfo;
             Error = error;
@@ -53,7 +53,7 @@ namespace Brokerage.Common.Domain.Withdrawals
         public long Sequence { get; set; }
         public long BrokerAccountId { get; }
 
-        public long BrokerAccountRequisitesId { get; }
+        public long BrokerAccountDetailsId { get; }
 
         public long? AccountId { get; }
 
@@ -65,7 +65,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public IReadOnlyCollection<Unit> Fees { get; }
 
-        public DestinationRequisites DestinationRequisites { get; }
+        public DestinationDetails DestinationDetails { get; }
 
         public WithdrawalState State { get; private set; }
 
@@ -84,13 +84,13 @@ namespace Brokerage.Common.Domain.Withdrawals
         public static Withdrawal Create(
             long id,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
+            long brokerAccountDetailsId,
             long? accountId,
             string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
-            DestinationRequisites destinationRequisites)
+            DestinationDetails destinationDetails)
         {
             var createdAt = DateTime.UtcNow;
             var withdrawal = new Withdrawal(
@@ -98,13 +98,13 @@ namespace Brokerage.Common.Domain.Withdrawals
                 0,
                 0,
                 brokerAccountId,
-                brokerAccountRequisitesId,
+                brokerAccountDetailsId,
                 accountId,
                 referenceId,
                 unit,
                 tenantId,
                 fees,
-                destinationRequisites,
+                destinationDetails,
                 WithdrawalState.Processing,
                 null,
                 null,
@@ -122,13 +122,13 @@ namespace Brokerage.Common.Domain.Withdrawals
             uint version,
             long sequence,
             long brokerAccountId,
-            long brokerAccountRequisitesId,
+            long brokerAccountDetailsId,
             long? accountId,
             string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
-            DestinationRequisites destinationRequisites,
+            DestinationDetails destinationDetails,
             WithdrawalState state,
             TransactionInfo transactionInfo,
             WithdrawalError error,
@@ -141,13 +141,13 @@ namespace Brokerage.Common.Domain.Withdrawals
                 version,
                 sequence,
                 brokerAccountId,
-                brokerAccountRequisitesId,
+                brokerAccountDetailsId,
                 accountId,
                 referenceId,
                 unit,
                 tenantId,
                 fees,
-                destinationRequisites,
+                destinationDetails,
                 state,
                 transactionInfo,
                 error,
@@ -156,18 +156,18 @@ namespace Brokerage.Common.Domain.Withdrawals
                 updatedDateTime);
         }
 
-        public async Task Execute(IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+        public async Task Execute(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IOperationsExecutor operationsExecutor)
         {
             if (SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing))
             {
-                var brokerAccountRequisites = await brokerAccountRequisitesRepository.GetAsync(BrokerAccountRequisitesId);
+                var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
 
                 var operation = await operationsExecutor.StartWithdrawal(
                     TenantId,
                     Id,
-                    brokerAccountRequisites.NaturalId.Address,
-                    DestinationRequisites,
+                    brokerAccountDetails.NaturalId.Address,
+                    DestinationDetails,
                     Unit);
 
                 this.OperationId = operation.Id;
@@ -245,14 +245,14 @@ namespace Brokerage.Common.Domain.Withdrawals
                 Sequence = this.Sequence,
                 TenantId = this.TenantId,
                 BrokerAccountId = this.BrokerAccountId,
-                BrokerAccountRequisitesId = this.BrokerAccountRequisitesId,
+                BrokerAccountDetailsId = this.BrokerAccountDetailsId,
                 Fees = this.Fees,
                 Unit = this.Unit,
-                DestinationRequisites = new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.DestinationRequisites()
+                DestinationDetails = new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.DestinationDetails()
                 {
-                    TagType = this.DestinationRequisites.TagType,
-                    Tag = this.DestinationRequisites.Tag,
-                    Address = this.DestinationRequisites.Address
+                    TagType = this.DestinationDetails.TagType,
+                    Tag = this.DestinationDetails.Tag,
+                    Address = this.DestinationDetails.Address
                 },
                 Error = this.Error == null
                     ? null

@@ -23,7 +23,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public long BrokerAccountId { get; set; }
 
-        public long BrokerAccountRequisitesId { get; set; }
+        public long BrokerAccountDetailsId { get; set; }
 
         public long? AccountId { get; set; }
 

@@ -6,20 +6,20 @@ namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class AccountContext
     {
-        public AccountContext(AccountRequisites requisites,
+        public AccountContext(AccountDetails details,
             IReadOnlyCollection<Unit> inputs, 
             IReadOnlyCollection<Unit> outputs,
             IReadOnlyDictionary<long, decimal> income,
             IReadOnlyDictionary<long, decimal> outcome)
         {
-            Requisites = requisites;
+            Details = details;
             Inputs = inputs;
             Outputs = outputs;
             Income = income;
             Outcome = outcome;
         }
 
-        public AccountRequisites Requisites { get; }
+        public AccountDetails Details { get; }
 
         /// <summary>
         /// Inputs to the particular account in the given tx

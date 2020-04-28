@@ -1,6 +1,6 @@
 ﻿namespace Brokerage.Common.ServiceFunctions
 {
-    public class PublishAccountRequisites
+    public class PublishAccountDetails
     {
     }
 }

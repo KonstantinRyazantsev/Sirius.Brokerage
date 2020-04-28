@@ -16,12 +16,12 @@ namespace Brokerage.Common.Domain.Processing.Context
         public BrokerAccountBalances Balances { get; }
         
         /// <summary>
-        /// Income to all broker account requisites in the given transaction and asset. Asset matches the balances asset
+        /// Income to all broker account details in the given transaction and asset. Asset matches the balances asset
         /// </summary>
         public decimal Income { get; }
 
         /// <summary>
-        /// Income from all broker account requisites in the given transaction and asset. Asset matches the balances asset
+        /// Income from all broker account details in the given transaction and asset. Asset matches the balances asset
         /// </summary>
         public decimal Outcome { get; }
     }

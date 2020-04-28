@@ -67,7 +67,7 @@ namespace Brokerage.Common.Domain.Operations
         public async Task<Operation> StartWithdrawal(string tenantId,
             long withdrawalId,
             string brokerAccountAddress,
-            DestinationRequisites destinationRequisites,
+            DestinationDetails destinationDetails,
             Unit unit)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest
@@ -85,9 +85,9 @@ namespace Brokerage.Common.Domain.Operations
                     {
                         Amount = unit.Amount,
                         SourceAddress = brokerAccountAddress,
-                        DestinationAddress = destinationRequisites.Address,
-                        DestinationTag = destinationRequisites.Tag,
-                        DestinationTagType = destinationRequisites.TagType switch {
+                        DestinationAddress = destinationDetails.Address,
+                        DestinationTag = destinationDetails.Tag,
+                        DestinationTagType = destinationDetails.TagType switch {
                             DestinationTagType.Text => new NullableDestinationTagType
                             {
                                 Value = Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Text

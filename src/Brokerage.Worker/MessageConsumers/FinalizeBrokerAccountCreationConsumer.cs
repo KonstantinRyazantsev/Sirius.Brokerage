@@ -19,7 +19,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
+        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IOutboxManager _outboxManager;
 
@@ -27,14 +27,14 @@ namespace Brokerage.Worker.MessageConsumers
             ILogger<FinalizeBrokerAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsRepository brokerAccountsRepository,
             IOutboxManager outboxManager)
         {
             _logger = logger;
             _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
+            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _brokerAccountsRepository = brokerAccountsRepository;
             _outboxManager = outboxManager;
         }
@@ -45,7 +45,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             var message = context.Message;
             var brokerAccount = await _brokerAccountsRepository.GetAsync(message.BrokerAccountId);
-            var brokerAccountRequisites = new List<BrokerAccountRequisites>(20);
+            var brokerAccountDetails = new List<BrokerAccountDetails>(20);
 
             if (brokerAccount.State == BrokerAccountState.Creating)
             {
@@ -63,8 +63,8 @@ namespace Brokerage.Worker.MessageConsumers
                     foreach (var blockchain in blockchains)
                     {
                         var outbox = await _outboxManager.Open(
-                            $"BrokerAccountRequisites:Create:{message.RequestId}_{blockchain.Id}",
-                            () => _brokerAccountRequisitesRepository.GetNextIdAsync());
+                            $"BrokerAccountDetails:Create:{message.RequestId}_{blockchain.Id}",
+                            () => _brokerAccountDetailsRepository.GetNextIdAsync());
 
                         var requestIdForGeneration = $"{message.RequestId}_{outbox.AggregateId}";
 
@@ -86,15 +86,15 @@ namespace Brokerage.Worker.MessageConsumers
                                                                 $"has been failed with {response.Error.ErrorMessage}");
                         }
 
-                        var requisites = BrokerAccountRequisites.Create(
+                        var details = BrokerAccountDetails.Create(
                             outbox.AggregateId,
-                            new BrokerAccountRequisitesId(blockchain.Id, response.Response.Address),
+                            new BrokerAccountDetailsId(blockchain.Id, response.Response.Address),
                             message.TenantId,
                             message.BrokerAccountId);
 
-                        await _brokerAccountRequisitesRepository.AddOrIgnoreAsync(requisites);
+                        await _brokerAccountDetailsRepository.AddOrIgnoreAsync(details);
 
-                        brokerAccountRequisites.Add(requisites);
+                        brokerAccountDetails.Add(details);
                     }
 
                 } while (true);
@@ -104,35 +104,35 @@ namespace Brokerage.Worker.MessageConsumers
                 await _brokerAccountsRepository.UpdateAsync(brokerAccount);
             }
 
-            if (brokerAccountRequisites.Count == 0)
+            if (brokerAccountDetails.Count == 0)
             {
-                long? requisitesCursor = null;
+                long? detailsCursor = null;
 
                 do
                 {
-                    var result = await _brokerAccountRequisitesRepository.GetByBrokerAccountAsync(
+                    var result = await _brokerAccountDetailsRepository.GetByBrokerAccountAsync(
                         brokerAccount.Id,
                         1000,
-                        requisitesCursor);
+                        detailsCursor);
 
                     if (!result.Any())
                         break;
 
-                    brokerAccountRequisites.AddRange(result);
-                    requisitesCursor = result.Last()?.Id;
+                    brokerAccountDetails.AddRange(result);
+                    detailsCursor = result.Last()?.Id;
 
-                } while (requisitesCursor != null);
+                } while (detailsCursor != null);
             }
 
-            foreach (var requisites in brokerAccountRequisites)
+            foreach (var details in brokerAccountDetails)
             {
-                await context.Publish(new BrokerAccountRequisitesAdded
+                await context.Publish(new BrokerAccountDetailsAdded
                 {
-                    CreatedAt = requisites.CreatedAt,
-                    Address = requisites.NaturalId.Address,
-                    BlockchainId = requisites.NaturalId.BlockchainId,
-                    BrokerAccountId = requisites.BrokerAccountId,
-                    BrokerAccountRequisitesId = requisites.Id
+                    CreatedAt = details.CreatedAt,
+                    Address = details.NaturalId.Address,
+                    BlockchainId = details.NaturalId.BlockchainId,
+                    BrokerAccountId = details.BrokerAccountId,
+                    BrokerAccountDetailsId = details.Id
                 });
             }
 

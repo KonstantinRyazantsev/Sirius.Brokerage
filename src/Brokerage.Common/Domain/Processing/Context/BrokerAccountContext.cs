@@ -7,7 +7,7 @@ namespace Brokerage.Common.Domain.Processing.Context
     {
         public BrokerAccountContext(string tenantId,
             long brokerAccountId,
-            BrokerAccountRequisites activeRequisites,
+            BrokerAccountDetails activeDetails,
             IReadOnlyCollection<AccountContext> accounts,
             IReadOnlyCollection<BrokerAccountBalancesContext> balances,
             IReadOnlyCollection<BrokerAccountContextEndpoint> inputs,
@@ -23,7 +23,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             Outcome = outcome;
             TenantId = tenantId;
             BrokerAccountId = brokerAccountId;
-            ActiveRequisites = activeRequisites;
+            ActiveDetails = activeDetails;
         }
 
         public string TenantId { get; }
@@ -31,39 +31,39 @@ namespace Brokerage.Common.Domain.Processing.Context
         public long BrokerAccountId { get; }
 
         /// <summary>
-        /// Active broker account requisites
+        /// Active broker account details
         /// </summary>
-        public BrokerAccountRequisites ActiveRequisites { get; }
+        public BrokerAccountDetails ActiveDetails { get; }
 
         /// <summary>
         /// Broker account accounts touched by the transaction. There is an input or an output to/from
-        /// the account requisites
+        /// the account details
         /// </summary>
         public IReadOnlyCollection<AccountContext> Accounts { get; }
 
         /// <summary>
         /// All broker account balances touched by the transaction. There is an input or an output to/from
-        /// the account or broker account requisites in the given asset 
+        /// the account or broker account details in the given asset 
         /// </summary>
         public IReadOnlyCollection<BrokerAccountBalancesContext> Balances { get; }
-        
+
         /// <summary>
-        /// Inputs to all broker account requisites in the given tx
+        /// Inputs to all broker account details in the given tx
         /// </summary>
         public IReadOnlyCollection<BrokerAccountContextEndpoint> Inputs { get; }
-        
+
         /// <summary>
-        /// Outputs from all broker account requisites in the given tx
+        /// Outputs from all broker account details in the given tx
         /// </summary>
         public IReadOnlyCollection<BrokerAccountContextEndpoint> Outputs { get; }
 
         /// <summary>
-        /// Income to all broker account requisites in the given transaction, indexed by asset ID
+        /// Income to all broker account details in the given transaction, indexed by asset ID
         /// </summary>
         public IReadOnlyDictionary<long, decimal> Income { get; }
-        
+
         /// <summary>
-        /// Outcome from all broker account requisites in the given transaction, indexed by asset ID
+        /// Outcome from all broker account details in the given transaction, indexed by asset ID
         /// </summary>
         public IReadOnlyDictionary<long, decimal> Outcome { get; }
     }

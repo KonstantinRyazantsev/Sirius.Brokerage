@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
 using Swisschain.Sirius.Brokerage.ApiContract.Common;
-using DestinationRequisites = Brokerage.Common.Domain.Withdrawals.DestinationRequisites;
+using DestinationDetails = Brokerage.Common.Domain.Withdrawals.DestinationDetails;
 using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 using ErrorResponseBody = Swisschain.Sirius.Brokerage.ApiContract.ErrorResponseBody;
 
@@ -24,7 +24,7 @@ namespace Brokerage.GrpcServices
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOutboxManager _outbox;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
+        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IAssetsRepository _assetsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly ILogger<WithdrawalsService> _logger;
@@ -34,7 +34,7 @@ namespace Brokerage.GrpcServices
             IBrokerAccountsRepository brokerAccountsRepository,
             IAccountsRepository accountsRepository,
             IOutboxManager outbox,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IAssetsRepository assetsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             ILogger<WithdrawalsService> logger)
@@ -43,7 +43,7 @@ namespace Brokerage.GrpcServices
             _brokerAccountsRepository = brokerAccountsRepository;
             _accountsRepository = accountsRepository;
             _outbox = outbox;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
+            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _assetsRepository = assetsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _logger = logger;
@@ -65,7 +65,7 @@ namespace Brokerage.GrpcServices
                     "The Request ID is not specified");
             }
 
-            if (string.IsNullOrEmpty(request.DestinationRequisites?.Address))
+            if (string.IsNullOrEmpty(request.DestinationDetails?.Address))
             {
                 return GetErrorResponseExecuteWithdrawalWrapperResponse(
                     ErrorResponseBody.Types.ErrorCode.InvalidParameters,
@@ -143,32 +143,32 @@ namespace Brokerage.GrpcServices
 
             if (!outbox.IsStored)
             {
-                var brokerAccountRequisites = await _brokerAccountRequisitesRepository
-                    .GetActiveAsync(new ActiveBrokerAccountRequisitesId(asset.BlockchainId, brokerAccount.Id));
+                var brokerAccountDetails = await _brokerAccountDetailsRepository
+                    .GetActiveAsync(new ActiveBrokerAccountDetailsId(asset.BlockchainId, brokerAccount.Id));
 
                 var withdrawal = Withdrawal.Create(
                     outbox.AggregateId,
                     request.BrokerAccountId,
-                    brokerAccountRequisites.Id,
+                    brokerAccountDetails.Id,
                     request.AccountId,
                     request.ReferenceId,
                     new Swisschain.Sirius.Sdk.Primitives.Unit(request.AssetId, amount),
                     request.TenantId,
                     Array.Empty<Swisschain.Sirius.Sdk.Primitives.Unit>(),
-                    new DestinationRequisites(
-                        request.DestinationRequisites.Address,
-                        request.DestinationRequisites.Tag,
-                        request.DestinationRequisites.TagType== null
+                    new DestinationDetails(
+                        request.DestinationDetails.Address,
+                        request.DestinationDetails.Tag,
+                        request.DestinationDetails.TagType== null
                             ? (DestinationTagType?) null
-                            : request.DestinationRequisites.TagType.Value switch
+                            : request.DestinationDetails.TagType.Value switch
                             {
                                 Swisschain.Sirius.Brokerage.ApiContract.Common.DestinationTagType.Text =>
                                 DestinationTagType.Text,
                                 Swisschain.Sirius.Brokerage.ApiContract.Common.DestinationTagType.Number =>
                                 DestinationTagType.Number,
                                 _ => throw new ArgumentOutOfRangeException(
-                                    nameof(request.DestinationRequisites.TagType.Value),
-                                    request.DestinationRequisites.TagType, 
+                                    nameof(request.DestinationDetails.TagType.Value),
+                                    request.DestinationDetails.TagType, 
                                     null)
                             }));
 
@@ -179,7 +179,7 @@ namespace Brokerage.GrpcServices
                         Id = withdrawal.Id,
                         Sequence = withdrawal.Sequence,
                         BrokerAccountId = withdrawal.BrokerAccountId,
-                        BrokerAccountRequisitesId = withdrawal.BrokerAccountRequisitesId,
+                        BrokerAccountDetailsId = withdrawal.BrokerAccountDetailsId,
                         TenantId = withdrawal.TenantId,
                         AccountId = withdrawal.AccountId,
                         State = withdrawal.State switch
@@ -199,24 +199,24 @@ namespace Brokerage.GrpcServices
                             AssetId = withdrawal.Unit.AssetId
                         },
                         ReferenceId = withdrawal.ReferenceId,
-                        DestinationRequisites = new Swisschain.Sirius.Brokerage.ApiContract.DestinationRequisites()
+                        DestinationDetails = new Swisschain.Sirius.Brokerage.ApiContract.DestinationDetails()
                         {
-                            Address = withdrawal.DestinationRequisites.Address,
-                            TagType = withdrawal.DestinationRequisites.TagType == null ? new NullableDestinationTagType()
+                            Address = withdrawal.DestinationDetails.Address,
+                            TagType = withdrawal.DestinationDetails.TagType == null ? new NullableDestinationTagType()
                             {
                                 Null = NullValue.NullValue
                             } : new NullableDestinationTagType()
                             {
-                                Value = withdrawal.DestinationRequisites.TagType.Value switch{
+                                Value = withdrawal.DestinationDetails.TagType.Value switch{
                                     DestinationTagType.Text => Swisschain.Sirius.Brokerage.ApiContract.Common.DestinationTagType.Text,
                                     DestinationTagType.Number => Swisschain.Sirius.Brokerage.ApiContract.Common.DestinationTagType.Number,
                                     _ => throw new ArgumentOutOfRangeException(
-                                        nameof(withdrawal.DestinationRequisites.TagType),
-                                        withdrawal.DestinationRequisites.TagType, 
+                                        nameof(withdrawal.DestinationDetails.TagType),
+                                        withdrawal.DestinationDetails.TagType, 
                                         null)
                                 }
                             },
-                            Tag = withdrawal.DestinationRequisites.Tag
+                            Tag = withdrawal.DestinationDetails.Tag
                         }
                     }
                 };

@@ -82,9 +82,9 @@ namespace Brokerage.Worker
                         e.Consumer(provider.GetRequiredService<FinalizeAccountCreationConsumer>);
                     });
                     
-                    cfg.ReceiveEndpoint("sirius-brokerage-publish-account-requisites", e =>
+                    cfg.ReceiveEndpoint("sirius-brokerage-publish-account-details", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<PublishAccountRequisitesConsumer>);
+                        e.Consumer(provider.GetRequiredService<PublishAccountDetailsConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-transaction-detection", e =>

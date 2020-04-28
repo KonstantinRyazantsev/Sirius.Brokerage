@@ -19,15 +19,15 @@
 //        [Fact(Skip = "Broker account deposits are not supported")]
 //        public async Task SingleTransferTest()
 //        {
-//            var accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
-//            var brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
+//            var AccountDetailsRepository = new InMemoryAccountDetailsRepository();
+//            var brokerAccountDetailsRepository = new InMemoryBrokerAccountDetailsRepository();
 //            var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
 //            var publishEndpoint = new InMemoryPublishEndpoint();
 //            var depositRepository = new InMemoryDepositRepository();
 
 //            var depositDetector = new DepositsDetector(
-//                accountRequisitesRepository,
-//                brokerAccountRequisitesRepository,
+//                AccountDetailsRepository,
+//                brokerAccountDetailsRepository,
 //                brokerAccountsBalancesRepository,
 //                publishEndpoint,
 //                depositRepository);
@@ -35,10 +35,10 @@
 //            var bitcoinRegtest = "bitcoin-regtest";
 //            var brokerAccountId = 100_000;
 //            var senderAddress = "sender-address";
-//            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
+//            var brokerAccountRequisistes = BrokerAccountDetails.Create("request-1", brokerAccountId, bitcoinRegtest);
 //            brokerAccountRequisistes.Address = "receiver-address";
 //            var operationAmount = 15m;
-//            brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
+//            brokerAccountRequisistes = await brokerAccountDetailsRepository.AddOrGetAsync(brokerAccountRequisistes);
 //            var assetId = 100_000;
 //            var detectedTransaction = new TransactionDetected
 //            {
@@ -88,9 +88,9 @@
 
 //            depositUpdated.ShouldNotBeNull();
 //            depositUpdated.AssetId.ShouldBe(assetId);
-//            depositUpdated.AccountRequisitesId.ShouldBeNull();
+//            depositUpdated.AccountDetailsId.ShouldBeNull();
 //            depositUpdated.Amount.ShouldBe(operationAmount);
-//            depositUpdated.BrokerAccountRequisitesId.ShouldBe(brokerAccountRequisistes.Id);
+//            depositUpdated.BrokerAccountDetailsId.ShouldBe(brokerAccountRequisistes.Id);
 //            depositUpdated.DepositId.ShouldBe(deposit.Id);
 //            depositUpdated.State.ShouldBe(DepositState.Detected);
 //            depositUpdated.Sources.ShouldNotBeNull();
@@ -105,15 +105,15 @@
 //        [Fact]
 //        public async Task MultipleTransfersTest()
 //        {
-//            var accountRequisitesRepository = new InMemoryAccountRequisitesRepository();
-//            var brokerAccountRequisitesRepository = new InMemoryBrokerAccountRequisitesRepository();
+//            var AccountDetailsRepository = new InMemoryAccountDetailsRepository();
+//            var brokerAccountDetailsRepository = new InMemoryBrokerAccountDetailsRepository();
 //            var brokerAccountsBalancesRepository = new InMemoryBrokerAccountsBalancesRepository();
 //            var publishEndpoint = new InMemoryPublishEndpoint();
 //            var depositRepository = new InMemoryDepositRepository();
 
 //            var depositDetector = new DepositsDetector(
-//                accountRequisitesRepository,
-//                brokerAccountRequisitesRepository,
+//                AccountDetailsRepository,
+//                brokerAccountDetailsRepository,
 //                brokerAccountsBalancesRepository,
 //                publishEndpoint,
 //                depositRepository);
@@ -121,9 +121,9 @@
 //            var bitcoinRegtest = "bitcoin-regtest";
 //            var brokerAccountId = 100_000;
 //            var accountId = 100_000;
-//            var brokerAccountRequisistes = BrokerAccountRequisites.Create("request-1", brokerAccountId, bitcoinRegtest);
+//            var brokerAccountRequisistes = BrokerAccountDetails.Create("request-1", brokerAccountId, bitcoinRegtest);
 //            var address2 = "address2";
-//            var accountRequisistes = AccountRequisites.Create(
+//            var accountRequisistes = AccountDetails.Create(
 //                "request-1",
 //                accountId,
 //                brokerAccountId,
@@ -131,8 +131,8 @@
 //                address2);
 //            brokerAccountRequisistes.Address = "address";
 //            var operationAmount = 15m;
-//            brokerAccountRequisistes = await brokerAccountRequisitesRepository.AddOrGetAsync(brokerAccountRequisistes);
-//            accountRequisistes = await accountRequisitesRepository.AddOrGetAsync(accountRequisistes);
+//            brokerAccountRequisistes = await brokerAccountDetailsRepository.AddOrGetAsync(brokerAccountRequisistes);
+//            accountRequisistes = await AccountDetailsRepository.AddOrGetAsync(accountRequisistes);
 
 //            var assetId = 100_000;
 //            var assetId2 = 200_000;
@@ -203,21 +203,21 @@
 //                var depositUpdateFromStorage = await depositRepository.GetOrDefaultAsync(
 //                    depositUpdate.TransactionInfo.TransactionId,
 //                    depositUpdate.AssetId,
-//                    depositUpdate.BrokerAccountRequisitesId,
-//                    depositUpdate.AccountRequisitesId);
+//                    depositUpdate.BrokerAccountDetailsId,
+//                    depositUpdate.AccountDetailsId);
 
 //                depositUpdateFromStorage.ShouldNotBeNull();
 //                depositUpdate.AssetId.ShouldBe(depositUpdateFromStorage.AssetId);
 //                depositUpdate.Sequence.ShouldBe(depositUpdateFromStorage.Sequence);
-//                depositUpdate.AccountRequisitesId.ShouldBe(depositUpdateFromStorage.AccountRequisitesId);
-//                depositUpdate.BrokerAccountRequisitesId.ShouldBe(depositUpdateFromStorage.BrokerAccountRequisitesId);
+//                depositUpdate.AccountDetailsId.ShouldBe(depositUpdateFromStorage.AccountDetailsId);
+//                depositUpdate.BrokerAccountDetailsId.ShouldBe(depositUpdateFromStorage.BrokerAccountDetailsId);
 //                depositUpdate.State.ShouldBe(DepositState.Detected);
 //                depositUpdate.Amount.ShouldBe(depositUpdateFromStorage.Amount);
 //                depositUpdate.DetectedAt.ShouldBe(depositUpdateFromStorage.DetectedAt);
 //                depositUpdate.TransactionInfo.TransactionId.ShouldBe(depositUpdateFromStorage.TransactionInfo.TransactionId);
 //                depositUpdate.TransactionInfo.TransactionBlock.ShouldBe(depositUpdateFromStorage.TransactionInfo.TransactionBlock);
 //                depositUpdate.TransactionInfo.RequiredConfirmationsCount.ShouldBe(depositUpdateFromStorage.TransactionInfo.RequiredConfirmationsCount);
-//                depositUpdate.BrokerAccountRequisitesId.ShouldBe(depositUpdateFromStorage.BrokerAccountRequisitesId);
+//                depositUpdate.BrokerAccountDetailsId.ShouldBe(depositUpdateFromStorage.BrokerAccountDetailsId);
 //            }
 //        }
 //    }

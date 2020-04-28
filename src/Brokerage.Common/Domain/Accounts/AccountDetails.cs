@@ -2,11 +2,11 @@
 
 namespace Brokerage.Common.Domain.Accounts
 {
-    public sealed class AccountRequisites
+    public sealed class AccountDetails
     {
-        private AccountRequisites(
+        private AccountDetails(
             long id,
-            AccountRequisitesId naturalId,
+            AccountDetailsId naturalId,
             long accountId,
             long brokerAccountId,
             DateTime createdAt)
@@ -19,17 +19,17 @@ namespace Brokerage.Common.Domain.Accounts
         }
 
         public long Id { get; }
-        public AccountRequisitesId NaturalId { get; }
+        public AccountDetailsId NaturalId { get; }
         public long AccountId { get; }
         public long BrokerAccountId { get; }
         public DateTime CreatedAt { get; }
         
-        public static AccountRequisites Create(long id,
-            AccountRequisitesId naturalId, 
+        public static AccountDetails Create(long id,
+            AccountDetailsId naturalId, 
             long accountId,
             long brokerAccountId)
         {
-            return new AccountRequisites(
+            return new AccountDetails(
                 id,
                 naturalId,
                 accountId,
@@ -37,13 +37,13 @@ namespace Brokerage.Common.Domain.Accounts
                 DateTime.UtcNow);
         }
 
-        public static AccountRequisites Restore(long id,
-            AccountRequisitesId naturalId,
+        public static AccountDetails Restore(long id,
+            AccountDetailsId naturalId,
             long accountId,
             long brokerAccountId,
             DateTime createdAt)
         {
-            return new AccountRequisites(
+            return new AccountDetails(
                 id,
                 naturalId,
                 accountId,

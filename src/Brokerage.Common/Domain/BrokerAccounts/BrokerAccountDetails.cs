@@ -2,11 +2,11 @@
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {
-    public class BrokerAccountRequisites
+    public class BrokerAccountDetails
     {
-        private BrokerAccountRequisites(
+        private BrokerAccountDetails(
             long id,
-            BrokerAccountRequisitesId naturalId,
+            BrokerAccountDetailsId naturalId,
             string tenantId,
             long brokerAccountId,
             DateTime createdAt)
@@ -20,26 +20,26 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         }
 
         public long Id { get; }
-        public BrokerAccountRequisitesId NaturalId { get; }
+        public BrokerAccountDetailsId NaturalId { get; }
         public string TenantId { get; }
         public long BrokerAccountId { get; }
         public DateTime CreatedAt { get; }
         
-        public static BrokerAccountRequisites Create(long id,
-            BrokerAccountRequisitesId naturalId,
+        public static BrokerAccountDetails Create(long id,
+            BrokerAccountDetailsId naturalId,
             string tenantId,
             long brokerAccountId)
         {
-            return new BrokerAccountRequisites(id, naturalId, tenantId, brokerAccountId, DateTime.UtcNow);
+            return new BrokerAccountDetails(id, naturalId, tenantId, brokerAccountId, DateTime.UtcNow);
         }
 
-        public static BrokerAccountRequisites Restore(long id, 
-            BrokerAccountRequisitesId naturalId,
+        public static BrokerAccountDetails Restore(long id, 
+            BrokerAccountDetailsId naturalId,
             string tenantId,
             long brokerAccountId, 
             DateTime createdAt)
         {
-            return new BrokerAccountRequisites(id, naturalId, tenantId, brokerAccountId, createdAt);
+            return new BrokerAccountDetails(id, naturalId, tenantId, brokerAccountId, createdAt);
         }
     }
 }

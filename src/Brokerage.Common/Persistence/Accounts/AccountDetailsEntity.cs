@@ -5,8 +5,8 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
-    [Table(name: Tables.AccountRequisites)]
-    public class AccountRequisitesEntity
+    [Table(name: Tables.AccountDetails)]
+    public class AccountDetailsEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

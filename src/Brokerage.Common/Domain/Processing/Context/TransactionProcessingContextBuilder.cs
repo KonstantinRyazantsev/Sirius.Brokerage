@@ -14,22 +14,22 @@ namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class TransactionProcessingContextBuilder
     {
-        private readonly IAccountRequisitesRepository _accountRequisitesRepository;
-        private readonly IBrokerAccountRequisitesRepository _brokerAccountRequisitesRepository;
+        private readonly IAccountDetailsRepository _accountDetailsRepository;
+        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
         private readonly IOperationsRepository _operationsRepository;
         private readonly IOutboxManager _outboxManager;
 
-        public TransactionProcessingContextBuilder(IAccountRequisitesRepository accountRequisitesRepository,
-            IBrokerAccountRequisitesRepository brokerAccountRequisitesRepository,
+        public TransactionProcessingContextBuilder(IAccountDetailsRepository accountDetailsRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
             IOutboxManager outboxManager)
         {
-            _accountRequisitesRepository = accountRequisitesRepository;
-            _brokerAccountRequisitesRepository = brokerAccountRequisitesRepository;
+            _accountDetailsRepository = accountDetailsRepository;
+            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _depositsRepository = depositsRepository;
             _operationsRepository = operationsRepository;
@@ -46,45 +46,45 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => x.Address)
                 .Distinct()
                 .ToHashSet();
-            var sourceAccountRequisitesIds = sourceAddresses
-                .Select(x => new AccountRequisitesId(blockchainId, x))
+            var sourceAccountDetailsIds = sourceAddresses
+                .Select(x => new AccountDetailsId(blockchainId, x))
                 .ToHashSet();
-            var sourceBrokerAccountRequisitesIds = sourceAddresses
-                .Select(x => new BrokerAccountRequisitesId(blockchainId, x))
+            var sourceBrokerAccountDetailsIds = sourceAddresses
+                .Select(x => new BrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
-            var destinationAccountRequisitesIds = destinations
-                .Select(x => new AccountRequisitesId(blockchainId, x.Address, x.Tag, x.TagType))
+            var destinationAccountDetailsIds = destinations
+                .Select(x => new AccountDetailsId(blockchainId, x.Address, x.Tag, x.TagType))
                 .Distinct()
                 .ToHashSet();
-            var destinationAddresses = destinationAccountRequisitesIds
+            var destinationAddresses = destinationAccountDetailsIds
                 .Select(x => x.Address)
                 .Distinct()
                 .ToHashSet();
-            var destinationBrokerAccountRequisitesIds = destinationAddresses
-                .Select(x => new BrokerAccountRequisitesId(blockchainId, x))
+            var destinationBrokerAccountDetailsIds = destinationAddresses
+                .Select(x => new BrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
             
-            var allAccountRequisitesIds = sourceAccountRequisitesIds
-                .Union(destinationAccountRequisitesIds)
+            var allAccountDetailsIds = sourceAccountDetailsIds
+                .Union(destinationAccountDetailsIds)
                 .ToHashSet();
-            var allBrokerAccountRequisitesIds = sourceBrokerAccountRequisitesIds
-                .Union(destinationBrokerAccountRequisitesIds)
+            var allBrokerAccountDetailsIds = sourceBrokerAccountDetailsIds
+                .Union(destinationBrokerAccountDetailsIds)
                 .ToHashSet();
 
-            var (matchedAccountRequisites, matchedBrokerAccountRequisites, matchedOperation) = await TaskExecution.WhenAll(
-                _accountRequisitesRepository.GetAnyOfAsync(allAccountRequisitesIds),
-                _brokerAccountRequisitesRepository.GetAnyOfAsync(allBrokerAccountRequisitesIds),
+            var (matchedAccountDetails, matchedBrokerAccountDetails, matchedOperation) = await TaskExecution.WhenAll(
+                _accountDetailsRepository.GetAnyOfAsync(allAccountDetailsIds),
+                _brokerAccountDetailsRepository.GetAnyOfAsync(allBrokerAccountDetailsIds),
                 _operationsRepository.GetOrDefaultAsync(operationId));
 
-            var matchedBrokerAccountIds = matchedBrokerAccountRequisites
+            var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
-                .Union(matchedAccountRequisites.Select(x => x.BrokerAccountId))
+                .Union(matchedAccountDetails.Select(x => x.BrokerAccountId))
                 .ToArray();
 
-            var matchedAddress = matchedAccountRequisites
+            var matchedAddress = matchedAccountDetails
                 .Select(x => x.NaturalId.Address)
-                .Union(matchedBrokerAccountRequisites.Select(x => x.NaturalId.Address))
+                .Union(matchedBrokerAccountDetails.Select(x => x.NaturalId.Address))
                 .ToHashSet();
 
             var matchedSources = sources
@@ -96,18 +96,18 @@ namespace Brokerage.Common.Domain.Processing.Context
 
             var brokerAccountBalancesIds = BuildBrokerAccountBalancesIds(
                 matchedBrokerAccountIds, 
-                matchedAccountRequisites, 
-                matchedBrokerAccountRequisites,
+                matchedAccountDetails, 
+                matchedBrokerAccountDetails,
                 matchedSources,
                 matchedDestinations);
 
-            var activeBrokerAccountRequisitesIds = matchedBrokerAccountIds
-                .Select(x => new ActiveBrokerAccountRequisitesId(blockchainId, x))
+            var activeBrokerAccountDetailsIds = matchedBrokerAccountIds
+                .Select(x => new ActiveBrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
-            var (existingBrokerAccountBalances, activeBrokerAccountRequisites, deposits) = await TaskExecution.WhenAll(
+            var (existingBrokerAccountBalances, activeBrokerAccountDetails, deposits) = await TaskExecution.WhenAll(
                 _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds),
-                _brokerAccountRequisitesRepository.GetActiveAsync(activeBrokerAccountRequisitesIds),
+                _brokerAccountDetailsRepository.GetActiveAsync(activeBrokerAccountDetailsIds),
                 _depositsRepository.GetAllByTransactionAsync(blockchainId, transactionInfo.TransactionId));
             var newBrokerAccountBalances = await BuildNewBrokerAccountBalances(existingBrokerAccountBalances, brokerAccountBalancesIds);
             var brokerAccountBalances = existingBrokerAccountBalances
@@ -117,12 +117,12 @@ namespace Brokerage.Common.Domain.Processing.Context
             var brokerAccountsContext = matchedBrokerAccountIds
                 .Select(x => BuildBrokerAccountContext(x,
                     blockchainId,
-                    activeBrokerAccountRequisites,
+                    activeBrokerAccountDetails,
                     brokerAccountBalances,
-                    matchedBrokerAccountRequisites,
+                    matchedBrokerAccountDetails,
                     matchedDestinations,
                     matchedSources,
-                    matchedAccountRequisites))
+                    matchedAccountDetails))
                 .ToArray();
 
             return new TransactionProcessingContext(
@@ -134,33 +134,33 @@ namespace Brokerage.Common.Domain.Processing.Context
 
         private BrokerAccountContext BuildBrokerAccountContext(long brokerAccountId,
             string blockchainId,
-            IReadOnlyDictionary<ActiveBrokerAccountRequisitesId, BrokerAccountRequisites> allActiveRequisites,
+            IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails> allActiveDetails,
             IReadOnlyCollection<BrokerAccountBalances> brokerAccountBalances,
-            IReadOnlyCollection<BrokerAccountRequisites> matchedBrokerAccountRequisites,
+            IReadOnlyCollection<BrokerAccountDetails> matchedBrokerAccountDetails,
             IReadOnlyCollection<DestinationContext> matchedDestinations,
             IReadOnlyCollection<SourceContext> matchedSources,
-            IReadOnlyCollection<AccountRequisites> matchedAccountRequisites)
+            IReadOnlyCollection<AccountDetails> matchedAccountDetails)
         {
-            var brokerAccountRequisites = matchedBrokerAccountRequisites
+            var brokerAccountDetails = matchedBrokerAccountDetails
                 .Where(x => x.BrokerAccountId == brokerAccountId)
                 .ToArray();
 
             var inputs = new List<BrokerAccountContextEndpoint>();
             var outputs = new List<BrokerAccountContextEndpoint>();
 
-            foreach (var requisites in brokerAccountRequisites)
+            foreach (var accountDetails in brokerAccountDetails)
             {
-                var requisitesInputs = matchedDestinations
-                    .Where(x => x.Address == requisites.NaturalId.Address)
-                    .Select(x => new BrokerAccountContextEndpoint(requisites, x.Unit))
+                var detailsInput = matchedDestinations
+                    .Where(x => x.Address == accountDetails.NaturalId.Address)
+                    .Select(x => new BrokerAccountContextEndpoint(accountDetails, x.Unit))
                     .ToArray();
-                var requisitesOutputs = matchedSources
-                    .Where(x => x.Address == requisites.NaturalId.Address)
-                    .Select(x => new BrokerAccountContextEndpoint(requisites, x.Unit))
+                var detailsOutput = matchedSources
+                    .Where(x => x.Address == accountDetails.NaturalId.Address)
+                    .Select(x => new BrokerAccountContextEndpoint(accountDetails, x.Unit))
                     .ToArray();
 
-                inputs.AddRange(requisitesInputs);
-                outputs.AddRange(requisitesOutputs);
+                inputs.AddRange(detailsInput);
+                outputs.AddRange(detailsOutput);
             }
 
             var income = inputs
@@ -170,7 +170,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .GroupBy(x => x.Unit.AssetId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
 
-            var accounts = matchedAccountRequisites
+            var accounts = matchedAccountDetails
                 .Select(x => BuildAccountContext(
                     matchedDestinations, 
                     matchedSources, 
@@ -184,12 +184,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                     outcome.GetValueOrDefault(x.NaturalId.AssetId)))
                 .ToArray();
 
-            var activeRequisites = allActiveRequisites[new ActiveBrokerAccountRequisitesId(blockchainId, brokerAccountId)];
+            var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
 
             return new BrokerAccountContext(
-                activeRequisites.TenantId,
-                activeRequisites.BrokerAccountId,
-                activeRequisites,
+                activeDetails.TenantId,
+                activeDetails.BrokerAccountId,
+                activeDetails,
                 accounts,
                 balances,
                 inputs,
@@ -201,14 +201,14 @@ namespace Brokerage.Common.Domain.Processing.Context
         private static AccountContext BuildAccountContext(
             IReadOnlyCollection<DestinationContext> matchedDestinations,
             IReadOnlyCollection<SourceContext> matchedSources,
-            AccountRequisites requisites)
+            AccountDetails details)
         {
             var inputs = matchedDestinations
-                .Where(x => x.Address == requisites.NaturalId.Address)
+                .Where(x => x.Address == details.NaturalId.Address)
                 .Select(x => x.Unit)
                 .ToArray();
             var outputs = matchedSources
-                .Where(x => x.Address == requisites.NaturalId.Address)
+                .Where(x => x.Address == details.NaturalId.Address)
                 .Select(x => x.Unit)
                 .ToArray();
             var income = inputs
@@ -218,7 +218,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .GroupBy(x => x.AssetId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
 
-            return new AccountContext(requisites, inputs, outputs, income, outcome);
+            return new AccountContext(details, inputs, outputs, income, outcome);
         }
 
         private async Task<IReadOnlyCollection<BrokerAccountBalances>> BuildNewBrokerAccountBalances(
@@ -246,8 +246,8 @@ namespace Brokerage.Common.Domain.Processing.Context
 
         private static ISet<BrokerAccountBalancesId> BuildBrokerAccountBalancesIds(
             IReadOnlyCollection<long> matchedBrokerAccountIds,
-            IReadOnlyCollection<AccountRequisites> matchedAccountRequisites,
-            IReadOnlyCollection<BrokerAccountRequisites> matchedBrokerAccountRequisites,
+            IReadOnlyCollection<AccountDetails> matchedAccountDetails,
+            IReadOnlyCollection<BrokerAccountDetails> matchedBrokerAccountDetails,
             IReadOnlyCollection<SourceContext> matchedSources,
             IReadOnlyCollection<DestinationContext> matchedDestinations)
         {
@@ -255,10 +255,10 @@ namespace Brokerage.Common.Domain.Processing.Context
 
             foreach (var brokerAccountId in matchedBrokerAccountIds)
             {
-                var accountAddressesOfTheBrokerAccount = matchedAccountRequisites
+                var accountAddressesOfTheBrokerAccount = matchedAccountDetails
                     .Where(x => x.BrokerAccountId == brokerAccountId)
                     .Select(x => x.NaturalId.Address);
-                var brokerAccountAddressesOfTheBrokerAccount = matchedBrokerAccountRequisites
+                var brokerAccountAddressesOfTheBrokerAccount = matchedBrokerAccountDetails
                     .Where(x => x.BrokerAccountId == brokerAccountId)
                     .Select(x => x.NaturalId.Address);
                 var allAddressesOfTheBrokerAccount = accountAddressesOfTheBrokerAccount
