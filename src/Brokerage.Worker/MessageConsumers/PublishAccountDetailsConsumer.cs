@@ -4,6 +4,7 @@ using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.ServiceFunctions;
 using MassTransit;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
 namespace Brokerage.Worker.MessageConsumers
 {

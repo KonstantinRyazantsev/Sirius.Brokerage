@@ -262,11 +262,6 @@ namespace Brokerage.Common.Persistence
                 .HasKey(c => new { Id = c.Id });
 
             modelBuilder.Entity<AccountEntity>()
-                .HasIndex(x => x.RequestId)
-                .IsUnique(true)
-                .HasName("IX_Account_RequestId");
-
-            modelBuilder.Entity<AccountEntity>()
                 .Property(b => b.Id)
                 .HasIdentityOptions(startValue: 10200000);
 

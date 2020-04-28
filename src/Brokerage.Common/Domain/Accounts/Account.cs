@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
@@ -17,7 +19,6 @@ namespace Brokerage.Common.Domain.Accounts
         private readonly List<object> _events;
 
         private Account(
-            string requestId,
             long id,
             long brokerAccountId,
             string referenceId,
@@ -25,7 +26,6 @@ namespace Brokerage.Common.Domain.Accounts
             DateTime createdAt,
             DateTime updatedAt)
         {
-            RequestId = requestId;
             Id = id;
             BrokerAccountId = brokerAccountId;
             ReferenceId = referenceId;
@@ -37,9 +37,6 @@ namespace Brokerage.Common.Domain.Accounts
         }
 
         public IReadOnlyCollection<object> Events => _events;
-
-        // TODO: This is here only because of EF - we can't update DB record without having entire entity
-        public string RequestId { get; }
         public long Id { get; }
         public long BrokerAccountId { get; }
         public string ReferenceId { get; }
@@ -48,23 +45,30 @@ namespace Brokerage.Common.Domain.Accounts
         public DateTime UpdatedAt { get; private set; }
         
         public static Account Create(
-            string requestId,
+            long id,
             long brokerAccountId,
             string referenceId)
         {
             var createdAt = DateTime.UtcNow;
-            return new Account(
-                requestId,
-                default,
+            var account = new Account(
+                id,
                 brokerAccountId,
                 referenceId,
                 AccountState.Creating,
                 createdAt,
                 createdAt);
+
+            account._events.Add(new AccountAdded()
+            {
+                BrokerAccountId = account.BrokerAccountId,
+                CreatedAt = account.CreatedAt,
+                AccountId = account.Id
+            });
+
+            return account;
         }
 
         public static Account Restore(
-            string requestId,
             long accountId,
             long brokerAccountId,
             string referenceId,
@@ -73,7 +77,6 @@ namespace Brokerage.Common.Domain.Accounts
             DateTime updatedAt)
         {
             return new Account(
-                requestId,
                 accountId,
                 brokerAccountId,
                 referenceId,

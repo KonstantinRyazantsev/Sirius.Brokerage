@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Swisschain.Sirius.Brokerage.MessagingContract
+namespace Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts
 {
     public class BrokerAccountDetailsAdded
     {

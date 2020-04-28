@@ -56,6 +56,7 @@ namespace Brokerage
                     return new DatabaseContext(optionsBuilder.Options);
                 });
             });
+
             services.AddMassTransit(x =>
             {
                 EndpointConvention.Map<FinalizeBrokerAccountCreation>(

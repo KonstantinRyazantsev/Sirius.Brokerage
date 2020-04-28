@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Swisschain.Sirius.Brokerage.MessagingContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {

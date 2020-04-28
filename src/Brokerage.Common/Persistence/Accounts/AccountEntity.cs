@@ -14,8 +14,6 @@ namespace Brokerage.Common.Persistence.Accounts
             AccountDetails = new HashSet<AccountDetailsEntity>();
         }
 
-        public string RequestId { get; set; }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }

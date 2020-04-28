@@ -13,7 +13,7 @@ namespace TestClient
         {
             Console.WriteLine("Press enter to start");
             Console.ReadLine();
-            var client = new BrokerageClient("http://localhost:5001", true);
+            var client = new BrokerageClient("http://localhost:5031", true);
             var requestId = Guid.NewGuid().ToString();
 
             while (true)
@@ -26,35 +26,36 @@ namespace TestClient
 
                     {
                         var tenantId = "Tenant_1";
-                        //var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
-                        //{
-                        //    Name = "Broker_1",
-                        //    RequestId = requestId,
-                        //    TenantId = tenantId,
-                        //});
-
-                        //var account = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        //{
-                        //    RequestId = requestId,
-                        //    ReferenceId = "some ref",
-                        //    BrokerAccountId = brokerAccount.Response.BrokerAccountId
-                        //});
-
-                        //var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        //{
-                        //    RequestId = requestId,
-                        //    ReferenceId = "some ref",
-                        //    BrokerAccountId = 1
-                        //});
-                        var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
+                        var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
-                            BrokerAccountId = 999_999,
-                            AssetId = 100_000,
-                            Amount = 0.1m,
-                            TenantId = "abel-tenant-100",
-                            DestinationDetails = new DestinationDetails() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
-                            RequestId = "requestId",
+                            Name = "Broker_1",
+                            RequestId = requestId,
+                            TenantId = tenantId,
                         });
+
+                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        {
+                            RequestId = requestId,
+                            ReferenceId = "some ref",
+                            BrokerAccountId = brokerAccount.Response.Id
+                        });
+
+                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        {
+                            RequestId = requestId,
+                            ReferenceId = "some ref",
+                            BrokerAccountId = 1
+                        });
+
+                        //var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
+                        //{
+                        //    BrokerAccountId = 999_999,
+                        //    AssetId = 100_000,
+                        //    Amount = 0.1m,
+                        //    TenantId = "abel-tenant-100",
+                        //    DestinationDetails = new DestinationDetails() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
+                        //    RequestId = "requestId",
+                        //});
 
                         //var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
                         //var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
