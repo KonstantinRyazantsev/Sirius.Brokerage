@@ -27,7 +27,7 @@ namespace Brokerage.GrpcServices
             try
             {
                 var outbox = await _outboxManager.Open(
-                    $"API:Accounts.Create:{request.RequestId}",
+                    $"Accounts.Create:{request.RequestId}",
                     () => _accountsRepository.GetNextIdAsync());
 
                 if (!outbox.IsStored)

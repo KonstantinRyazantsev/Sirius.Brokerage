@@ -67,7 +67,7 @@ namespace Brokerage.Worker.MessageConsumers
                             $"BrokerAccountDetails:Create:{message.RequestId}_{blockchain.Id}",
                             () => _brokerAccountDetailsRepository.GetNextIdAsync());
 
-                        var requestIdForGeneration = $"{message.RequestId}_{outbox.AggregateId}";
+                        var requestIdForGeneration = $"Brokerage:BrokerAccountDetails:{outbox.AggregateId}";
 
                         var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
                         {
