@@ -138,7 +138,7 @@ namespace Brokerage.GrpcServices
             }
 
             var outbox = await _outbox.Open(
-                $"API:Withdrawals.Execute:{request.RequestId}",
+                $"Withdrawals.Execute:{request.RequestId}",
                 () => _withdrawalRepository.GetNextIdAsync());
 
             if (!outbox.IsStored)
