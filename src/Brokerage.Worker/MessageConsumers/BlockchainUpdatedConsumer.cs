@@ -3,24 +3,24 @@ using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.ReadModels.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Sirius.Integrations.MessagingContract;
+using Swisschain.Sirius.Integrations.MessagingContract.Blockchains;
 
 namespace Brokerage.Worker.MessageConsumers
 {
-    public class BlockchainUpdatesConsumer : IConsumer<BlockchainAdded>
+    public class BlockchainUpdatedConsumer : IConsumer<BlockchainUpdated>
     {
-        private readonly ILogger<BlockchainUpdatesConsumer> _logger;
+        private readonly ILogger<BlockchainUpdatedConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
 
-        public BlockchainUpdatesConsumer(
-            ILogger<BlockchainUpdatesConsumer> logger, 
+        public BlockchainUpdatedConsumer(
+            ILogger<BlockchainUpdatedConsumer> logger,
             IBlockchainsRepository blockchainsRepository)
         {
             _logger = logger;
             this._blockchainsRepository = blockchainsRepository;
         }
 
-        public async Task Consume(ConsumeContext<BlockchainAdded> context)
+        public async Task Consume(ConsumeContext<BlockchainUpdated> context)
         {
             var evt = context.Message;
 
@@ -31,7 +31,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             await _blockchainsRepository.AddOrReplaceAsync(model);
 
-            _logger.LogInformation("BlockchainAdded command has been processed {@context}", evt);
+            _logger.LogInformation("BlockchainUpdated command has been processed {@context}", evt);
         }
     }
 }

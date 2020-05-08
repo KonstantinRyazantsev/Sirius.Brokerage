@@ -69,7 +69,12 @@ namespace Brokerage.Worker
                     
                     cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updates", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<BlockchainUpdatesConsumer>);
+                        e.Consumer(provider.GetRequiredService<BlockchainAddedConsumer>);
+                    });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updated", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<BlockchainAddedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-finalize-broker-account-creation", e =>
