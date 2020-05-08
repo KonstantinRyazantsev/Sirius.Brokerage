@@ -40,12 +40,12 @@ namespace TestClient
                             BrokerAccountId = brokerAccount.Response.Id
                         });
 
-                        var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        {
-                            RequestId = requestId,
-                            ReferenceId = "some ref",
-                            BrokerAccountId = 1
-                        });
+                        //var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        //{
+                        //    RequestId = requestId,
+                        //    ReferenceId = "some ref",
+                        //    BrokerAccountId = 1
+                        //});
 
                         //var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
                         //{
@@ -63,29 +63,6 @@ namespace TestClient
                         //Console.WriteLine(serializedBrokerAccount);
                         //Console.WriteLine();
                         //Console.WriteLine(serializedAccount);
-                    }
-
-                    {
-                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest
-                        {
-                            Name = "Broker_1",
-                            RequestId = requestId,
-                            TenantId = "Tenant_2",
-                        });
-
-                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                        Console.WriteLine(serialized);
-                    }
-
-                    {
-                        var response = await client.BrokerAccounts.CreateAsync(new CreateRequest
-                        {
-                            RequestId = requestId,
-                            TenantId = "Tenant_2",
-                        });
-
-                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                        Console.WriteLine(serialized);
                     }
 
                     sw.Stop();
