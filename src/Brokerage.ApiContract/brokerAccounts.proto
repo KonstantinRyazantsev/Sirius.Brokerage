@@ -17,6 +17,8 @@ message CreateRequest {
   string requestId = 2;
 
   string name = 3;
+
+  int64 vaultId = 4;
 }
 
 message CreateResponseBody {
@@ -30,6 +32,8 @@ message CreateResponseBody {
   google.protobuf.Timestamp createdAt = 4;
 
   google.protobuf.Timestamp updatedAt = 5;
+
+  int64 vaultId = 6;
 
   enum BrokerAccountStatus {
     CREATING = 0;

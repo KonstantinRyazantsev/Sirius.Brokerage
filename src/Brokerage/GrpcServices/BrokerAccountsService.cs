@@ -38,7 +38,7 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId);
+                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId, request.VaultId);
                 var createdBrokerAccount = await _brokerAccountsRepository.AddOrGetAsync(newBrokerAccount);
 
                 if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
@@ -68,7 +68,8 @@ namespace Brokerage.GrpcServices
                         Name = createdBrokerAccount.Name,
                         Status = MapToResponse(createdBrokerAccount.State),
                         CreatedAt = Timestamp.FromDateTime(createdBrokerAccount.CreatedAt),
-                        UpdatedAt = Timestamp.FromDateTime(createdBrokerAccount.UpdatedAt)
+                        UpdatedAt = Timestamp.FromDateTime(createdBrokerAccount.UpdatedAt),
+                        VaultId = createdBrokerAccount.VaultId
                     }
                 };
             }

@@ -94,6 +94,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 TenantId = brokerAccount.TenantId,
                 RequestId = brokerAccount.RequestId,
                 UpdatedAt = brokerAccount.UpdatedAt,
+                VaultId = brokerAccount.VaultId,
                 Id = brokerAccount.Id
             };
             return newEntity;
@@ -116,7 +117,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountEntity.CreatedAt.UtcDateTime,
                 brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
-                brokerAccountEntity.RequestId
+                brokerAccountEntity.RequestId,
+                brokerAccountEntity.VaultId
             );
 
             return brokerAccount;

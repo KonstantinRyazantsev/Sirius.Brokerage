@@ -31,14 +31,15 @@ namespace TestClient
                             Name = "Broker_1",
                             RequestId = requestId,
                             TenantId = tenantId,
+                            VaultId = 1
                         });
 
-                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        {
-                            RequestId = requestId,
-                            ReferenceId = "some ref",
-                            BrokerAccountId = brokerAccount.Response.Id
-                        });
+                        //var account = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        //{
+                        //    RequestId = requestId,
+                        //    ReferenceId = "some ref",
+                        //    BrokerAccountId = brokerAccount.Response.Id
+                        //});
 
                         //var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
                         //{
