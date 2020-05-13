@@ -4,17 +4,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public class BrokerAccount
     {
-        private BrokerAccount(string name, string tenantId, string requestId)
-        {
-            var createdAt = DateTime.UtcNow;
-            Name = name;
-            TenantId = tenantId;
-            RequestId = requestId;
-            State = BrokerAccountState.Creating;
-            CreatedAt = createdAt;
-            UpdatedAt = createdAt;
-        }
-
         private BrokerAccount(
             long id, 
             string name,
@@ -22,7 +11,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt, 
             DateTime updatedAt, 
             BrokerAccountState state,
-            string requestId)
+            string requestId,
+            long vaultId)
         {
             Id = id;
             Name = name;
@@ -31,6 +21,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             UpdatedAt = updatedAt;
             State = state;
             RequestId = requestId;
+            VaultId = vaultId;
         }
         
         public long Id { get; }
@@ -42,14 +33,25 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
 
+        public long VaultId { get; }
+
         public bool IsOwnedBy(string tenantId)
         {
             return TenantId == tenantId;
         }
 
-        public static BrokerAccount Create(string name, string tenantId, string requestId)
+        public static BrokerAccount Create(string name, string tenantId, string requestId, long vaultId)
         {
-            return new BrokerAccount(name, tenantId, requestId);
+            var utcNow = DateTime.UtcNow;
+            return new BrokerAccount(
+                default,
+                name, 
+                tenantId,
+                utcNow, 
+                utcNow, 
+                BrokerAccountState.Creating, 
+                requestId, 
+                vaultId);
         }
 
         public static BrokerAccount Restore(
@@ -59,7 +61,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt,
             DateTime updatedAt,
             BrokerAccountState state,
-            string requestId)
+            string requestId,
+            long vaultId)
         {
             return new BrokerAccount(
                 id, 
@@ -68,7 +71,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 createdAt, 
                 updatedAt, 
                 state, 
-                requestId);
+                requestId,
+                vaultId);
         }
 
         public void Activate()

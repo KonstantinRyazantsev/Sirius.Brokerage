@@ -30,6 +30,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
 
         public DateTimeOffset UpdatedAt { get; set; }
 
+        public long VaultId { get; set; }
+
         public ICollection<AccountEntity> Accounts { get; set; }
     }
 }

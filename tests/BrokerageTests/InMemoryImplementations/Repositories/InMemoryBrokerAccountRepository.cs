@@ -34,7 +34,8 @@ namespace BrokerageTests.InMemoryImplementations.Repositories
                 brokerAccount.CreatedAt,
                 brokerAccount.UpdatedAt,
                 brokerAccount.State,
-                brokerAccount.RequestId);
+                brokerAccount.RequestId,
+                brokerAccount.VaultId);
             _storage.Add(account);
 
             return Task.FromResult(account);
