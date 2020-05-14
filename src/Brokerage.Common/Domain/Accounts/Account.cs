@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ namespace Brokerage.Common.Domain.Accounts
         public AccountState State { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
-        
+
         public static Account Create(
             long id,
             long brokerAccountId,
@@ -87,40 +88,31 @@ namespace Brokerage.Common.Domain.Accounts
 
         public async Task FinalizeCreation(
             ILogger<Account> logger,
-            IBlockchainsRepository blockchainsRepository, 
-            IAccountDetailsRepository detailsRepository,
-            IVaultAgentClient vaultAgentClient,
-            IOutboxManager outboxManager)
+            BrokerAccount brokerAccount,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
         {
             if (State == AccountState.Creating)
             {
-                await CreateDetails(logger,
+                await RequestWalletGeneration(logger,
+                    brokerAccount,
                     blockchainsRepository,
-                    detailsRepository,
-                    vaultAgentClient,
-                    outboxManager);
-
-                Activate();
-            }
-            else
-            {
-                var accountDetails = await detailsRepository.GetByAccountAsync(Id);
-
-                _events.Add(GetAccountDetailsAddedEvent(accountDetails));
-                
-                // ReSharper disable once PossibleInvalidOperationException
-                _events.Add(GetAccountActivatedEvent(UpdatedAt));
+                    vaultAgentClient);
             }
         }
 
-        private async Task CreateDetails(
+        private async Task RequestWalletGeneration(
             ILogger<Account> logger,
-            IBlockchainsRepository blockchainsRepository, 
-            IAccountDetailsRepository detailsRepository,
-            IVaultAgentClient vaultAgentClient,
-            IOutboxManager outboxManager)
+            BrokerAccount brokerAccount,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
         {
             string cursor = null;
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
+            {
+                AggregateId = this.Id,
+                AggregateType = AggregateType.Account
+            });
 
             do
             {
@@ -135,43 +127,24 @@ namespace Brokerage.Common.Domain.Accounts
 
                 foreach (var blockchain in blockchains)
                 {
-                    var outbox = await outboxManager.Open(
-                        $"AccountDetails:Create:{Id}_{blockchain.Id}", 
-                        () => detailsRepository.GetNextIdAsync());
+                    // TODO: Decide if address or tag should be generated
 
-                    if (!outbox.IsStored)
-                    {
-                        // TODO: Decide if address or tag should be generated
-
-                        var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
-                            new GenerateWalletRequest
-                            {
-                                RequestId = $"Brokerage:AccountDetails:{outbox.AggregateId}",
-                                BlockchainId = blockchain.Id
-                            });
-
-                        if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
+                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
+                        new GenerateWalletRequest
                         {
-                            logger.LogWarning("Wallet generation failed {@context}", walletGenerationResponse);
+                            RequestId = $"Brokerage:AccountDetails:{Id}_{blockchain.Id}",
+                            BlockchainId = blockchain.Id,
+                            TenantId = brokerAccount.TenantId,
+                            VaultId = brokerAccount.VaultId,
+                            Component = nameof(Brokerage),
+                            Context = requesterContext
+                        });
 
-                            throw new InvalidOperationException($"Wallet generation has been failed: {walletGenerationResponse.Error.ErrorMessage}");
-                        }
-
-                        var accountDetails = AccountDetails.Create(
-                            outbox.AggregateId,
-                            new AccountDetailsId(blockchain.Id, walletGenerationResponse.Response.Address),
-                            Id,
-                            BrokerAccountId);
-                        
-                        // TODO: Batch
-                        await detailsRepository.AddOrIgnoreAsync(accountDetails);
-
-                        outbox.Publish(GetAccountDetailsAddedEvent(accountDetails));
-                    }
-
-                    foreach (var evt in outbox.Events)
+                    if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
                     {
-                        _events.Add(evt);
+                        logger.LogWarning("Wallet generation failed {@context}", walletGenerationResponse);
+
+                        throw new InvalidOperationException($"Wallet generation has been failed: {walletGenerationResponse.Error.ErrorMessage}");
                     }
                 }
             } while (true);

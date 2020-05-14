@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
+using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -19,6 +20,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOutboxManager _outboxManager;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
@@ -27,7 +29,8 @@ namespace Brokerage.Worker.MessageConsumers
             IVaultAgentClient vaultAgentClient,
             IAccountDetailsRepository accountDetailsRepository,
             IAccountsRepository accountsRepository,
-            IOutboxManager outboxManager)
+            IOutboxManager outboxManager,
+            IBrokerAccountsRepository brokerAccountsRepository)
         {
             _loggerFactory = loggerFactory;
             _logger = logger;
@@ -36,21 +39,22 @@ namespace Brokerage.Worker.MessageConsumers
             _accountDetailsRepository = accountDetailsRepository;
             _accountsRepository = accountsRepository;
             _outboxManager = outboxManager;
+            _brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
         {
             var command = context.Message;
             var account = await _accountsRepository.GetAsync(command.AccountId);
+            var brokerAccount = await _brokerAccountsRepository.GetAsync(account.BrokerAccountId);
 
             try
             {
                 await account.FinalizeCreation(
                     _loggerFactory.CreateLogger<Account>(),
+                    brokerAccount,
                     _blockchainsRepository,
-                    _accountDetailsRepository,
-                    _vaultAgentClient,
-                    _outboxManager);
+                    _vaultAgentClient);
             }
             catch (Exception ex)
             {
