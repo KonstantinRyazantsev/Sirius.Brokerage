@@ -108,7 +108,7 @@ namespace Brokerage.Common.Domain.Accounts
             IVaultAgentClient vaultAgentClient)
         {
             string cursor = null;
-            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new RequesterContext()
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
             {
                 AggregateId = this.Id,
                 AggregateType = AggregateType.Account
@@ -132,7 +132,7 @@ namespace Brokerage.Common.Domain.Accounts
                     var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
                         new GenerateWalletRequest
                         {
-                            RequestId = $"{Id}_{blockchain.Id}",
+                            RequestId = $"Brokerage:AccountDetails:{Id}_{blockchain.Id}",
                             BlockchainId = blockchain.Id,
                             TenantId = brokerAccount.TenantId,
                             VaultId = brokerAccount.VaultId,

@@ -56,9 +56,9 @@ namespace Brokerage.Worker.MessageConsumers
 
                     foreach (var blockchain in blockchains)
                     {
-                        var requestIdForGeneration = $"{message.RequestId}_{blockchain.Id}";
+                        var requestIdForGeneration = $"Brokerage:BrokerAccountDetails:{message.RequestId}_{blockchain.Id}";
 
-                        var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new RequesterContext()
+                        var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
                         {
                             AggregateId = brokerAccount.Id,
                             AggregateType = AggregateType.BrokerAccount
