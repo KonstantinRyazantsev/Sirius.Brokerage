@@ -45,5 +45,10 @@ namespace BrokerageTests.InMemoryImplementations.Repositories
         {
             throw new System.NotImplementedException();
         }
+
+        public Task<long> GetCountByBrokerAccountIdAsync(long brokerAccountId)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -34,6 +34,15 @@ namespace Brokerage.Common.Persistence.Blockchains
                 .ToListAsync();
         }
 
+        public async Task<long> GetCountAsync()
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var count = await context.Blockchains.CountAsync();
+
+            return count;
+        }
+
         public async Task AddOrReplaceAsync(Blockchain blockchain)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

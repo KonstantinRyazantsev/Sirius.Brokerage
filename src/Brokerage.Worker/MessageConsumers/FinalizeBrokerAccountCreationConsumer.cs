@@ -40,6 +40,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             var message = context.Message;
             var brokerAccount = await _brokerAccountsRepository.GetAsync(message.BrokerAccountId);
+            var blockchainsCount = await _blockchainsRepository.GetCountAsync();
 
             if (brokerAccount.State == BrokerAccountState.Creating)
             {
@@ -61,7 +62,8 @@ namespace Brokerage.Worker.MessageConsumers
                         var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
                         {
                             AggregateId = brokerAccount.Id,
-                            AggregateType = AggregateType.BrokerAccount
+                            AggregateType = AggregateType.BrokerAccount,
+                            ExpectedCount = blockchainsCount
                         });
 
                         var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
