@@ -42,14 +42,14 @@ namespace Brokerage.Worker.MessageConsumers
 
             if (evt.Component != nameof(Brokerage))
             {
-                _logger.LogWarning("WalletAdded has been skipped due to component value {@context}", evt);
+                _logger.LogInformation("WalletAdded has been skipped due to component value {@context}", evt);
 
                 return;
             }
 
             if (string.IsNullOrEmpty(evt.Context))
             {
-                _logger.LogWarning("WalletAdded has been skipped due to context value {@context}", evt);
+                _logger.LogError("WalletAdded has been skipped due to context value {@context}", evt);
 
                 return;
             }
@@ -125,7 +125,10 @@ namespace Brokerage.Worker.MessageConsumers
                         break;
                     }
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(requesterContext.AggregateType), "This should not happen at all!");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(requesterContext.AggregateType), 
+                        requesterContext.AggregateType, 
+                        "This should not happen at all!");
             }
 
             _logger.LogInformation("WalletAdded has been added {@context}", evt);
