@@ -9,5 +9,7 @@ namespace Brokerage.Common.Domain
         public long AggregateId { get; set; }
 
         public AggregateType AggregateType { get; set; }
+
+        public long ExpectedCount { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,15 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             context.BrokerAccounts.Update(entity);
             
             await context.SaveChangesAsync();
+        }
+
+        public async Task<long> GetCountByBrokerAccountIdAsync(long brokerAccountId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var count = await context.BrokerAccountsDetails.Where(x => x.BrokerAccountId == brokerAccountId).CountAsync();
+
+            return count;
         }
 
         public async Task<Domain.BrokerAccounts.BrokerAccount> AddOrGetAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount)

@@ -51,6 +51,15 @@ namespace Brokerage.Common.Persistence.Accounts
             return MapToDomain(accountDetailsEntity);
         }
 
+        public async Task<long> GetCountByAccountIdAsync(long accountId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var count = await context.AccountDetails.Where(x => x.AccountId == accountId).CountAsync();
+
+            return count;
+        }
+
         public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOfAsync(ISet<AccountDetailsId> ids)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);

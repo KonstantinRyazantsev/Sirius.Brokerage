@@ -111,7 +111,8 @@ namespace Brokerage.Common.Domain.Accounts
             var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
             {
                 AggregateId = this.Id,
-                AggregateType = AggregateType.Account
+                AggregateType = AggregateType.Account,
+                ExpectedCount = await blockchainsRepository.GetCountAsync()
             });
 
             do
@@ -150,7 +151,7 @@ namespace Brokerage.Common.Domain.Accounts
             } while (true);
         }
 
-        private void Activate()
+        public void Activate()
         {
             State = AccountState.Active;
             UpdatedAt = DateTime.UtcNow;
@@ -179,6 +180,25 @@ namespace Brokerage.Common.Domain.Accounts
                 AccountId = details.AccountId,
                 AccountDetailsId = details.Id
             };
+        }
+
+        public async Task AddAccountDetails(
+            IAccountDetailsRepository accountDetailsRepository,
+            IAccountsRepository accountsRepository,
+            AccountDetails accountDetails,
+            long expectedCount)
+        {
+            await accountDetailsRepository.AddOrIgnoreAsync(accountDetails);
+            this._events.Add(GetAccountDetailsAddedEvent(accountDetails));
+
+            var accountDetailsCount =
+                await accountDetailsRepository.GetCountByAccountIdAsync(this.Id);
+
+            if (accountDetailsCount >= expectedCount)
+            {
+                this.Activate();
+                await accountsRepository.UpdateAsync(this);
+            }
         }
     }
 }

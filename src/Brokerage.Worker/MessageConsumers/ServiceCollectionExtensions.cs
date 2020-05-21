@@ -18,6 +18,7 @@ namespace Brokerage.Worker.MessageConsumers
             services.AddTransient<OperationFailedConsumer>();
             services.AddTransient<AssetAddedConsumer>();
             services.AddTransient<ExecuteWithdrawalConsumer>();
+            services.AddTransient<WalletAddedConsumer>();
 
             return services;
         }

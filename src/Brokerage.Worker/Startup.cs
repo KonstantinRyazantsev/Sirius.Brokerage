@@ -126,6 +126,12 @@ namespace Brokerage.Worker
                     {
                         e.Consumer(provider.GetRequiredService<ExecuteWithdrawalConsumer>);
                     });
+
+                    cfg.ReceiveEndpoint("sirius-brokerage-wallet-added", e =>
+                    {
+                        e.Consumer(provider.GetRequiredService<WalletAddedConsumer>);
+                    });
+
                 }));
             
                 services.AddHostedService<BusHost>();

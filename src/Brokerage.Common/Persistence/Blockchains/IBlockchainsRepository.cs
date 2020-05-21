@@ -6,6 +6,8 @@ namespace Brokerage.Common.Persistence.Blockchains
 {
     public interface IBlockchainsRepository
     {
+        Task<long> GetCountAsync();
+
         Task AddOrReplaceAsync(Blockchain blockchain);
 
         Task<IReadOnlyCollection<Blockchain>> GetAllAsync(string cursor, int limit);

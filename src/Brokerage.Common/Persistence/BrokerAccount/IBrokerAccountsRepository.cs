@@ -11,5 +11,6 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         Task<Domain.BrokerAccounts.BrokerAccount> AddOrGetAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount);
 
         Task UpdateAsync(Domain.BrokerAccounts.BrokerAccount brokerAccount);
+        Task<long> GetCountByBrokerAccountIdAsync(long brokerAccountId);
     }
 }
