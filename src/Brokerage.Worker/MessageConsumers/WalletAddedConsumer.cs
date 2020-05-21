@@ -51,7 +51,7 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 _logger.LogError("WalletAdded has been skipped due to context value {@context}", evt);
 
-                return;
+                throw new ArgumentException("Context is empty", nameof(evt.Context));
             }
 
             var requesterContext = Newtonsoft.Json.JsonConvert.DeserializeObject<WalletGenerationRequesterContext>(evt.Context);
