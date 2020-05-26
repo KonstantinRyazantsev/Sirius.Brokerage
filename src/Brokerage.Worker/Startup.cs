@@ -67,14 +67,9 @@ namespace Brokerage.Worker
             
                     cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
                     
-                    cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updates", e =>
-                    {
-                        e.Consumer(provider.GetRequiredService<BlockchainAddedConsumer>);
-                    });
-
                     cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updated", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<BlockchainAddedConsumer>);
+                        e.Consumer(provider.GetRequiredService<BlockchainUpdatedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-finalize-broker-account-creation", e =>

@@ -6,7 +6,6 @@ namespace Brokerage.Worker.MessageConsumers
     {
         public static IServiceCollection AddMessageConsumers(this IServiceCollection services)
         {
-            services.AddTransient<BlockchainAddedConsumer>();
             services.AddTransient<BlockchainUpdatedConsumer>();
             services.AddTransient<FinalizeBrokerAccountCreationConsumer>();
             services.AddTransient<FinalizeAccountCreationConsumer>();

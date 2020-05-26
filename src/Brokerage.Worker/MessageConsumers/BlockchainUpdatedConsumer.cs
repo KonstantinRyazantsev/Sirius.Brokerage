@@ -31,7 +31,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             await _blockchainsRepository.AddOrReplaceAsync(model);
 
-            _logger.LogInformation("BlockchainUpdated command has been processed {@context}", evt);
+            _logger.LogInformation("BlockchainUpdated event has been processed {@context}", evt);
         }
     }
 }
