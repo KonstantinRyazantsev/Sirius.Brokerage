@@ -15,14 +15,17 @@ namespace Brokerage.Common.Domain.Deposits.Processors
         private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IOperationsExecutor _operationsExecutor;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
 
         public ConfirmedDepositProcessor(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IAccountDetailsRepository accountDetailsRepository,
-            IOperationsExecutor operationsExecutor)
+            IOperationsExecutor operationsExecutor,
+            IBrokerAccountsRepository brokerAccountsRepository)
         {
             _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _accountDetailsRepository = accountDetailsRepository;
             _operationsExecutor = operationsExecutor;
+            _brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
@@ -40,6 +43,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             foreach (var deposit in regularDeposits)
             {
                 await deposit.ConfirmRegular(
+                    _brokerAccountsRepository,
                     _brokerAccountDetailsRepository, 
                     _accountDetailsRepository, 
                     tx,

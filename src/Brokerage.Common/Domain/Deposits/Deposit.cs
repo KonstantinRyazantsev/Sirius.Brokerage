@@ -150,7 +150,9 @@ namespace Brokerage.Common.Domain.Deposits
                 updatedAt);
         }
 
-        public async Task ConfirmRegular(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
+        public async Task ConfirmRegular(
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IAccountDetailsRepository accountDetailsRepository, 
             TransactionConfirmed tx, 
             IOperationsExecutor operationsExecutor)
@@ -166,6 +168,7 @@ namespace Brokerage.Common.Domain.Deposits
                 var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
                 // ReSharper disable once PossibleInvalidOperationException
                 var accountDetails = await accountDetailsRepository.GetAsync(AccountDetailsId.Value);
+                var brokerAccount = await brokerAccountsRepository.GetAsync(this.BrokerAccountId);
 
                 var operation = await operationsExecutor.StartDepositConsolidation(
                     TenantId,
@@ -173,7 +176,8 @@ namespace Brokerage.Common.Domain.Deposits
                     accountDetails.NaturalId.Address,
                     brokerAccountDetails.NaturalId.Address,
                     Unit,
-                    tx.BlockNumber + tx.RequiredConfirmationsCount);
+                    tx.BlockNumber + tx.RequiredConfirmationsCount,
+                    brokerAccount.VaultId);
 
                 ConsolidationOperationId = operation.Id;
                 UpdatedAt = DateTime.UtcNow;
