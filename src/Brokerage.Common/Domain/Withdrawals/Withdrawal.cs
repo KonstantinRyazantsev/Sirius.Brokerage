@@ -156,19 +156,23 @@ namespace Brokerage.Common.Domain.Withdrawals
                 updatedDateTime);
         }
 
-        public async Task Execute(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
+        public async Task Execute(
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IOperationsExecutor operationsExecutor)
         {
             if (SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing))
             {
                 var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
+                var brokerAccount = await brokerAccountsRepository.GetAsync(this.BrokerAccountId);
 
                 var operation = await operationsExecutor.StartWithdrawal(
                     TenantId,
                     Id,
                     brokerAccountDetails.NaturalId.Address,
                     DestinationDetails,
-                    Unit);
+                    Unit,
+                    brokerAccount.VaultId);
 
                 this.OperationId = operation.Id;
                 this.UpdatedAt = DateTime.UtcNow;

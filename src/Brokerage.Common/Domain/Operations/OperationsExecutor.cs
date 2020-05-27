@@ -28,7 +28,8 @@ namespace Brokerage.Common.Domain.Operations
             string accountAddress,
             string brokerAccountAddress,
             Unit unit,
-            long asAtBlockNumber)
+            long asAtBlockNumber,
+            long vaultId)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
@@ -49,7 +50,10 @@ namespace Brokerage.Common.Domain.Operations
                             DestinationAddress = brokerAccountAddress,
                             Amount = unit.Amount,
                         }
-                    }
+                    },
+                    Component = nameof(Brokerage),
+                    OperationType = "Deposit consolidation",
+                    VaultId = vaultId
                 }));
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
@@ -68,7 +72,8 @@ namespace Brokerage.Common.Domain.Operations
             long withdrawalId,
             string brokerAccountAddress,
             DestinationDetails destinationDetails,
-            Unit unit)
+            Unit unit,
+            long vaultId)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest
             {
@@ -103,7 +108,10 @@ namespace Brokerage.Common.Domain.Operations
                             _ => throw new ArgumentOutOfRangeException()
                         }
                     }
-                }
+                },
+                Component = nameof(Brokerage),
+                OperationType = "Withdrawal",
+                VaultId = vaultId
             });
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
