@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: brokerage-worker
-        image: docker.io/swisschains/sirius-brokerage-worker:latest
+        image: docker.io/swisschains/sirius-brokerage-worker:dev
         imagePullPolicy: Always
         lifecycle:
           postStart:
