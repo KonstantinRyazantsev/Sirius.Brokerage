@@ -2,8 +2,8 @@ name: Validate master
 
 on:
   push:
-    branches-ignore:    
-    - dev-*
+    branches:    
+    - master
 
 jobs:
   build:
