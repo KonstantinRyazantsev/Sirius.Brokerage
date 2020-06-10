@@ -65,66 +65,66 @@ namespace Brokerage.Worker
                             TimeSpan.FromMilliseconds(10_000), 
                             TimeSpan.FromMilliseconds(100)));
             
-                    cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
+                    cfg.SetLoggerFactory(provider.Container.GetRequiredService<ILoggerFactory>());
                     
                     cfg.ReceiveEndpoint("sirius-brokerage-blockchain-updated", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<BlockchainUpdatedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<BlockchainUpdatedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-finalize-broker-account-creation", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<FinalizeBrokerAccountCreationConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<FinalizeBrokerAccountCreationConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-finalize-account-creation", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<FinalizeAccountCreationConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<FinalizeAccountCreationConsumer>);
                     });
                     
                     cfg.ReceiveEndpoint("sirius-brokerage-publish-account-details", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<PublishAccountDetailsConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<PublishAccountDetailsConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-transaction-detection", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<TransactionDetectedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<TransactionDetectedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-transaction-confirmation", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<TransactionConfirmedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<TransactionConfirmedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-operation-sending", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<OperationSentConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<OperationSentConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-operation-completion", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<OperationCompletedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<OperationCompletedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-operation-failure", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<OperationFailedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<OperationFailedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-asset-added", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<AssetAddedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<AssetAddedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-execute-withdrawal", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<ExecuteWithdrawalConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<ExecuteWithdrawalConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-wallet-added", e =>
                     {
-                        e.Consumer(provider.GetRequiredService<WalletAddedConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<WalletAddedConsumer>);
                     });
 
                 }));

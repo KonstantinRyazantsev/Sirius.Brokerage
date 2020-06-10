@@ -75,7 +75,7 @@ namespace Brokerage
                         host.Password(Config.RabbitMq.Password);
                     });
             
-                    cfg.SetLoggerFactory(provider.GetRequiredService<ILoggerFactory>());
+                    cfg.SetLoggerFactory(provider.Container.GetRequiredService<ILoggerFactory>());
                 }));
             
                 services.AddSingleton<IHostedService, BusHost>();
