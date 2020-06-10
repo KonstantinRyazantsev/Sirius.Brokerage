@@ -1,12 +1,9 @@
-name: Validate Commit
+name: Validate master
 
 on:
   push:
-    branches:    
-    - '!dev-*'
-  pull_request:
-    branches:    
-    - '!dev-*'
+    branches-ignore:    
+    - dev-*
 
 jobs:
   build:
