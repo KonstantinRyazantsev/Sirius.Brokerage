@@ -53,10 +53,11 @@ namespace Brokerage.Worker.MessageConsumers
             var tagGenerator = _destinationTagGeneratorFactory.Create(blockchain);
 
             var tag = tagGenerator.Generate();
+            //TODO: It fails sometimes when there is no active br
             var brokerAccountDetails = await _brokerAccountDetailsRepository
                 .GetActiveAsync(new ActiveBrokerAccountDetailsId(blockchain.Id, brokerAccount.Id));
 
-            var outbox = await _outboxManager.Open($"AccountDetails:Create:{brokerAccountDetails.BrokerAccountId}:{blockchain.Id}",
+            var outbox = await _outboxManager.Open($"AccountDetails:Create:{account.Id}:{blockchain.Id}",
                 () => _accountDetailsRepository.GetNextIdAsync());
             if (!outbox.IsStored)
             {
