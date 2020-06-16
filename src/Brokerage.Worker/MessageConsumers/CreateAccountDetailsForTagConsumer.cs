@@ -9,11 +9,10 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Sdk.Primitives;
-using Swisschain.Sirius.VaultAgent.ApiClient;
 
 namespace Brokerage.Worker.MessageConsumers
 {
-    public class FinalizeAccountCreationForTagConsumer : IConsumer<FinalizeAccountCreationForTag>
+    public class CreateAccountDetailsForTagConsumer : IConsumer<CreateAccountDetailsForTag>
     {
         private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
@@ -24,7 +23,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
         private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
 
-        public FinalizeAccountCreationForTagConsumer(
+        public CreateAccountDetailsForTagConsumer(
             ILogger<FinalizeAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IAccountDetailsRepository accountDetailsRepository,
@@ -44,14 +43,14 @@ namespace Brokerage.Worker.MessageConsumers
             _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
         }
 
-        public async Task Consume(ConsumeContext<FinalizeAccountCreationForTag> context)
+        public async Task Consume(ConsumeContext<CreateAccountDetailsForTag> context)
         {
             var command = context.Message;
             var account = await _accountsRepository.GetAsync(command.AccountId);
             var brokerAccount = await _brokerAccountsRepository.GetAsync(account.BrokerAccountId);
             var blockchain = await _blockchainsRepository.GetAsync(command.BlockchainId);
             var destinationTagType = DestinationTagType.Number;
-            var tagGenerator = _destinationTagGeneratorFactory.Create(blockchain, destinationTagType);
+            var tagGenerator = _destinationTagGeneratorFactory.Create(blockchain);
 
             var tag = tagGenerator.Generate();
             var brokerAccountDetails = await _brokerAccountDetailsRepository

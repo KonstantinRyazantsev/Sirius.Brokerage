@@ -96,28 +96,28 @@ namespace Brokerage.Common.Domain.Accounts
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            IPublishEndpoint publishEndpoint)
+            ISendEndpointProvider sendEndpoint)
         {
             if (State == AccountState.Creating)
             {
-                await RequestWalletGeneration(
+                await RequestDetailsGeneration(
                     logger,
                     brokerAccount,
                     blockchainsRepository,
                     vaultAgentClient,
                     destinationTagGeneratorFactory,
-                    publishEndpoint
+                    sendEndpoint
                 );
             }
         }
 
-        private async Task RequestWalletGeneration(
+        private async Task RequestDetailsGeneration(
             ILogger<Account> logger,
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            IPublishEndpoint publishEndpoint)
+            ISendEndpointProvider sendEndpoint)
         {
             string cursor = null;
             var expectedCount = await blockchainsRepository.GetCountAsync();
@@ -125,8 +125,7 @@ namespace Brokerage.Common.Domain.Accounts
             {
                 AggregateId = this.Id,
                 AggregateType = AggregateType.Account,
-                ExpectedCount = expectedCount,
-                Tag = null
+                ExpectedCount = expectedCount
             });
 
             do
@@ -142,11 +141,11 @@ namespace Brokerage.Common.Domain.Accounts
 
                 foreach (var blockchain in blockchains)
                 {
-                    var tagGenerator = destinationTagGeneratorFactory.Create(blockchain, DestinationTagType.Number);
+                    var tagGenerator = destinationTagGeneratorFactory.CreateOrDefault(blockchain);
 
                     if (tagGenerator != null)
                     {
-                        await publishEndpoint.Publish(new FinalizeAccountCreationForTag()
+                        await sendEndpoint.Send(new CreateAccountDetailsForTag()
                         {
                             AccountId = this.Id,
                             BlockchainId = blockchain.Id,

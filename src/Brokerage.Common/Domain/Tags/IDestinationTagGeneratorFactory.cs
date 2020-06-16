@@ -6,6 +6,8 @@ namespace Brokerage.Common.Domain.Tags
 {
     public interface IDestinationTagGeneratorFactory
     {
-        IDestinationTagGenerator Create(Blockchain blockchain, DestinationTagType tagType);
+        IDestinationTagGenerator CreateOrDefault(Blockchain blockchain);
+
+        IDestinationTagGenerator Create(Blockchain blockchain);
     }
 }

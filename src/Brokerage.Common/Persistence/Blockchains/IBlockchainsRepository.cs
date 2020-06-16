@@ -16,8 +16,5 @@ namespace Brokerage.Common.Persistence.Blockchains
 
         Task<Blockchain> GetOrDefaultAsync(string blockchainId);
 
-        Task Add(Blockchain blockchain);
-
-        Task Update(Blockchain blockchain);
     }
 }

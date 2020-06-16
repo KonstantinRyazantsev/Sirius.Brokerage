@@ -231,15 +231,10 @@ namespace Brokerage.Common.Persistence
                     c =>
                     {
                         c.Property(p => p.Code).HasColumnName("ProtocolCode");
-                        c.Property(p => p.Name).HasColumnName("ProtocolName");
-                        c.Property(p => p.StartBlockNumber).HasColumnName("StartBlockNumber");
-                        c.Property(p => p.DoubleSpendingProtectionType).HasColumnName("DoubleSpendingProtectionType");
 
-                            // TODO: Include BlockchainID to the index
+                        // TODO: Include BlockchainID to the index
                             c.HasIndex(x => x.Code).HasName("IX_Blockchain_ProtocolCode");
-                        c.HasIndex(x => x.Name).HasName("IX_Blockchain_ProtocolName");
 
-                        c.OwnsOne<Requirements>(x => x.Requirements);
                         c.OwnsOne<Capabilities>(x => x.Capabilities,
                             z =>
                             {
@@ -251,22 +246,6 @@ namespace Brokerage.Common.Persistence
                                     });
                             });
                     });
-
-            modelBuilder.Entity<Blockchain>()
-                .HasIndex(x => x.Name)
-                .HasName("IX_Blockchain_Name");
-
-            modelBuilder.Entity<Blockchain>()
-                .HasIndex(x => x.NetworkType)
-                .HasName("IX_Blockchain_NetworkType");
-
-            modelBuilder.Entity<Blockchain>()
-                .HasIndex(x => x.TenantId)
-                .HasName("IX_Blockchain_TenantId");
-
-            modelBuilder.Entity<Blockchain>()
-                .HasIndex(x => x.ChainSequence)
-                .HasName("IX_Blockchain_ChainSequence");
 
             modelBuilder.Entity<Blockchain>()
                 .Property(x => x.Version)

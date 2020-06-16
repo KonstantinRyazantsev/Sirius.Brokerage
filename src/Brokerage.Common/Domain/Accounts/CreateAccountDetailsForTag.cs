@@ -1,6 +1,6 @@
 ﻿namespace Brokerage.Common.Domain.Accounts
 {
-    public class FinalizeAccountCreationForTag
+    public class CreateAccountDetailsForTag
     {
         public long AccountId { get; set; }
 

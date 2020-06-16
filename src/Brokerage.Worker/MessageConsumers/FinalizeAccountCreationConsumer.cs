@@ -23,7 +23,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IOutboxManager _outboxManager;
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ISendEndpointProvider _sendEndpoint;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
@@ -35,7 +35,7 @@ namespace Brokerage.Worker.MessageConsumers
             IOutboxManager outboxManager,
             IBrokerAccountsRepository brokerAccountsRepository,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            IPublishEndpoint publishEndpoint)
+            ISendEndpointProvider sendEndpoint)
         {
             _loggerFactory = loggerFactory;
             _logger = logger;
@@ -46,7 +46,7 @@ namespace Brokerage.Worker.MessageConsumers
             _outboxManager = outboxManager;
             _brokerAccountsRepository = brokerAccountsRepository;
             _destinationTagGeneratorFactory = destinationTagGeneratorFactory;
-            _publishEndpoint = publishEndpoint;
+            _sendEndpoint = sendEndpoint;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
@@ -63,7 +63,7 @@ namespace Brokerage.Worker.MessageConsumers
                     _blockchainsRepository,
                     _vaultAgentClient,
                     _destinationTagGeneratorFactory,
-                    _publishEndpoint);
+                    _sendEndpoint);
             }
             catch (Exception ex)
             {

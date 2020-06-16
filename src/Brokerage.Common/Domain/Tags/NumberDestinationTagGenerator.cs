@@ -6,31 +6,29 @@ namespace Brokerage.Common.Domain.Tags
 {
     public class NumberDestinationTagGenerator : IDestinationTagGenerator
     {
-        private NumberDestinationTagsCapabilities _number;
-        private readonly BlockchainConfig _blockchainConfig;
-        private static readonly Random _random = new Random();
+        private NumberDestinationTagsCapabilities capabilities;
+        private static Random _random = new Random();
         private readonly long _max;
 
         public NumberDestinationTagGenerator(
-            NumberDestinationTagsCapabilities number,
-            BlockchainConfig blockchainConfig)
+            NumberDestinationTagsCapabilities capabilities,
+            BlockchainProtocolConfig blockchainProtocolConfig)
         {
-            this._number = number;
-            _blockchainConfig = blockchainConfig;
+            this.capabilities = capabilities;
 
-            if (_blockchainConfig?.DesiredMaxNumberTag == null)
+            if (blockchainProtocolConfig?.DesiredMaxNumberTag == null)
             {
-                _max = _number.Max;
+                _max = capabilities.Max;
             }
             else
             {
-                _max = _blockchainConfig.DesiredMaxNumberTag.Value;
+                _max = blockchainProtocolConfig.DesiredMaxNumberTag.Value;
             }
         }
 
         public string Generate()
         {
-            var result = LongRandom(_number.Min, _number.Max).ToString();
+            var result = LongRandom(capabilities.Min, _max).ToString();
 
             return result;
         }

@@ -11,7 +11,5 @@ namespace Brokerage.Common.Domain
         public AggregateType AggregateType { get; set; }
 
         public long ExpectedCount { get; set; }
-
-        public string Tag { get; set; }
     }
 }

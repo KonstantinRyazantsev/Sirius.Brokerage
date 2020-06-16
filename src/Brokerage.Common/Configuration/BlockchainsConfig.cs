@@ -2,6 +2,6 @@
 {
     public class BlockchainsConfig
     {
-        public BlockchainConfig[] Blockchains { get; set; }
+        public BlockchainProtocolConfig[] Blockchains { get; set; }
     }
 }

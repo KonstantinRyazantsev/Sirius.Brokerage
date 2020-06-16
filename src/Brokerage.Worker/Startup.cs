@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
@@ -51,6 +52,9 @@ namespace Brokerage.Worker
 
             services.AddMassTransit(x =>
             {
+                EndpointConvention.Map<CreateAccountDetailsForTag>(
+                    new Uri("queue:sirius-brokerage-create-account-details-for-tag"));
+
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {
                     cfg.Host(Config.RabbitMq.HostUrl, host =>
@@ -77,9 +81,9 @@ namespace Brokerage.Worker
                         e.Consumer(provider.Container.GetRequiredService<FinalizeBrokerAccountCreationConsumer>);
                     });
 
-                    cfg.ReceiveEndpoint("sirius-brokerage-finalize-broker-account-creation-for-tag", e =>
+                    cfg.ReceiveEndpoint("sirius-brokerage-create-account-details-for-tag", e =>
                     {
-                        e.Consumer(provider.Container.GetRequiredService<FinalizeAccountCreationForTagConsumer>);
+                        e.Consumer(provider.Container.GetRequiredService<CreateAccountDetailsForTagConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-finalize-account-creation", e =>
