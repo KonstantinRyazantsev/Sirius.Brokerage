@@ -23,15 +23,41 @@ namespace Brokerage.Worker.MessageConsumers
         public async Task Consume(ConsumeContext<BlockchainUpdated> context)
         {
             var evt = context.Message;
-
-            var model = new Blockchain
+            var blockchain = new Blockchain
             {
                 Id = evt.BlockchainId,
+                Protocol = new Common.ReadModels.Blockchains.Protocol
+                {
+                    Code = evt.Protocol.Code,
+                    Capabilities = new Common.ReadModels.Blockchains.Capabilities
+                    {
+                        DestinationTag = evt.Protocol.Capabilities.DestinationTag == null
+                                ? null
+                                : new Common.ReadModels.Blockchains.DestinationTagCapabilities
+                                {
+                                    Text =
+                                        evt.Protocol.Capabilities.DestinationTag.Text == null
+                                            ? null
+                                            : new Common.ReadModels.Blockchains.TextDestinationTagsCapabilities
+                                            {
+                                                MaxLength = evt.Protocol.Capabilities.DestinationTag.Text.MaxLength
+                                            },
+                                    Number = evt.Protocol.Capabilities.DestinationTag.Number == null
+                                        ? null
+                                        : new Common.ReadModels.Blockchains.NumberDestinationTagsCapabilities
+                                        {
+                                            Max = evt.Protocol.Capabilities.DestinationTag.Number.Max,
+                                            Min = evt.Protocol.Capabilities.DestinationTag.Number.Min
+                                        }
+                                }
+                    },
+                }
             };
 
-            await _blockchainsRepository.AddOrReplaceAsync(model);
+            await _blockchainsRepository.AddOrReplaceAsync(blockchain);
 
-            _logger.LogInformation("BlockchainUpdated event has been processed {@context}", evt);
+
+            _logger.LogInformation("Blockchain has been updated {@context}", evt);
         }
     }
 }

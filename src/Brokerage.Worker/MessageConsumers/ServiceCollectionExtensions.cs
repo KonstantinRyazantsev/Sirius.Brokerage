@@ -18,6 +18,7 @@ namespace Brokerage.Worker.MessageConsumers
             services.AddTransient<AssetAddedConsumer>();
             services.AddTransient<ExecuteWithdrawalConsumer>();
             services.AddTransient<WalletAddedConsumer>();
+            services.AddTransient<CreateAccountDetailsForTagConsumer>();
 
             return services;
         }

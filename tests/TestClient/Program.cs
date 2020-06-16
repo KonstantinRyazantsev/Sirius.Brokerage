@@ -25,21 +25,22 @@ namespace TestClient
                     var result = await client.Monitoring.IsAliveAsync(new IsAliveRequest());
 
                     {
-                        var tenantId = "Tenant_1";
+                        var tenantId = "cbb04866-eeb7-4c13-abc0-eae7c73bbc94";
+
                         var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
                             Name = "Broker_1",
                             RequestId = requestId,
                             TenantId = tenantId,
-                            VaultId = 1
+                            VaultId = 100007
                         });
 
-                        //var account = await client.Accounts.CreateAsync(new CreateAccountRequest
-                        //{
-                        //    RequestId = requestId,
-                        //    ReferenceId = "some ref",
-                        //    BrokerAccountId = brokerAccount.Response.Id
-                        //});
+                        var account = await client.Accounts.CreateAsync(new CreateAccountRequest
+                        {
+                            RequestId = requestId,
+                            ReferenceId = "some ref",
+                            BrokerAccountId = brokerAccount.Response.Id
+                        });
 
                         //var account2 = await client.Accounts.CreateAsync(new CreateAccountRequest
                         //{

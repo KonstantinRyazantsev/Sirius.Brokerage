@@ -1,4 +1,6 @@
-﻿namespace Brokerage.Common.Configuration
+﻿using System.Collections.Generic;
+
+namespace Brokerage.Common.Configuration
 {
     public class AppConfig
     {
@@ -7,5 +9,7 @@
         public VaultAgentConfig VaultAgent { get; set; }
 
         public ExecutorConfig Executor { get; set; }
+
+        public IReadOnlyDictionary<string, BlockchainProtocolConfig> BlockchainProtocols { get; set; }
     }
 }

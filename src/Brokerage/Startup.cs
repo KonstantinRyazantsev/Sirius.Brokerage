@@ -66,6 +66,8 @@ namespace Brokerage
                 EndpointConvention.Map<PublishAccountDetails>(
                     new Uri("queue:sirius-brokerage-publish-account-details"));
                 EndpointConvention.Map<ExecuteWithdrawal>(new Uri("queue:sirius-brokerage-execute-withdrawal"));
+                EndpointConvention.Map<CreateAccountDetailsForTag>(
+                    new Uri("queue:sirius-brokerage-create-account-details-for-tag"));
 
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {

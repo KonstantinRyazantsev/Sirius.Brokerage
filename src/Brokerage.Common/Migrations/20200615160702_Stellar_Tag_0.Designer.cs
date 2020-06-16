@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200615160702_Stellar_Tag_0")]
+    partial class Stellar_Tag_0
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -519,6 +521,27 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<long>("ChainSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("LatestBlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("NetworkType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TenantId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -526,6 +549,18 @@ namespace Brokerage.Common.Migrations
                         .HasColumnType("xid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChainSequence")
+                        .HasName("IX_Blockchain_ChainSequence");
+
+                    b.HasIndex("Name")
+                        .HasName("IX_Blockchain_Name");
+
+                    b.HasIndex("NetworkType")
+                        .HasName("IX_Blockchain_NetworkType");
+
+                    b.HasIndex("TenantId")
+                        .HasName("IX_Blockchain_TenantId");
 
                     b.ToTable("blockchains");
                 });
@@ -626,10 +661,25 @@ namespace Brokerage.Common.Migrations
                                 .HasColumnName("ProtocolCode")
                                 .HasColumnType("text");
 
+                            b1.Property<int>("DoubleSpendingProtectionType")
+                                .HasColumnName("DoubleSpendingProtectionType")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Name")
+                                .HasColumnName("ProtocolName")
+                                .HasColumnType("text");
+
+                            b1.Property<long>("StartBlockNumber")
+                                .HasColumnName("StartBlockNumber")
+                                .HasColumnType("bigint");
+
                             b1.HasKey("BlockchainId");
 
                             b1.HasIndex("Code")
                                 .HasName("IX_Blockchain_ProtocolCode");
+
+                            b1.HasIndex("Name")
+                                .HasName("IX_Blockchain_ProtocolName");
 
                             b1.ToTable("blockchains");
 
@@ -671,6 +721,9 @@ namespace Brokerage.Common.Migrations
                                                     b4.Property<long>("Min")
                                                         .HasColumnType("bigint");
 
+                                                    b4.Property<string>("Name")
+                                                        .HasColumnType("text");
+
                                                     b4.HasKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
 
                                                     b4.ToTable("blockchains");
@@ -687,6 +740,9 @@ namespace Brokerage.Common.Migrations
                                                     b4.Property<long>("MaxLength")
                                                         .HasColumnType("bigint");
 
+                                                    b4.Property<string>("Name")
+                                                        .HasColumnType("text");
+
                                                     b4.HasKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
 
                                                     b4.ToTable("blockchains");
@@ -695,6 +751,22 @@ namespace Brokerage.Common.Migrations
                                                         .HasForeignKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
                                                 });
                                         });
+                                });
+
+                            b1.OwnsOne("Brokerage.Common.ReadModels.Blockchains.Requirements", "Requirements", b2 =>
+                                {
+                                    b2.Property<string>("ProtocolBlockchainId")
+                                        .HasColumnType("text");
+
+                                    b2.Property<bool>("PublicKey")
+                                        .HasColumnType("boolean");
+
+                                    b2.HasKey("ProtocolBlockchainId");
+
+                                    b2.ToTable("blockchains");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ProtocolBlockchainId");
                                 });
                         });
                 });

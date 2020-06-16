@@ -60,5 +60,23 @@ namespace Brokerage.Common.Persistence.Blockchains
                 await context.SaveChangesAsync();
             }
         }
+        
+        public async Task<Blockchain> GetAsync(string blockchainId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var blockchain = await context.Blockchains.FirstAsync(x => x.Id == blockchainId);
+
+            return blockchain;
+        }
+
+        public async Task<Blockchain> GetOrDefaultAsync(string blockchainId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var blockchain = await context.Blockchains.FirstOrDefaultAsync(x => x.Id == blockchainId);
+
+            return blockchain;
+        }
     }
 }

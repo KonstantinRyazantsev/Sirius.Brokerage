@@ -11,5 +11,10 @@ namespace Brokerage.Common.Persistence.Blockchains
         Task AddOrReplaceAsync(Blockchain blockchain);
 
         Task<IReadOnlyCollection<Blockchain>> GetAllAsync(string cursor, int limit);
+
+        Task<Blockchain> GetAsync(string blockchainId);
+
+        Task<Blockchain> GetOrDefaultAsync(string blockchainId);
+
     }
 }

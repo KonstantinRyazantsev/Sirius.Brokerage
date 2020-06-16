@@ -2,6 +2,7 @@
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
+using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Domain.Withdrawals.Processors;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,7 @@ namespace Brokerage.Common.Domain
             services.AddTransient<CompletedWithdrawalProcessor>();
             services.AddTransient<FailedDepositProcessor>();
             services.AddTransient<FailedWithdrawalProcessor>();
+            services.AddSingleton<IDestinationTagGeneratorFactory, DestinationTagGeneratorFactory>();
 
             return services;
         }

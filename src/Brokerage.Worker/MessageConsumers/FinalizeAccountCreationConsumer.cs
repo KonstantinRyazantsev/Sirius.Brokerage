@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
+using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
@@ -21,6 +22,8 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOutboxManager _outboxManager;
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
+        private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
+        private readonly ISendEndpointProvider _sendEndpoint;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
@@ -30,7 +33,9 @@ namespace Brokerage.Worker.MessageConsumers
             IAccountDetailsRepository accountDetailsRepository,
             IAccountsRepository accountsRepository,
             IOutboxManager outboxManager,
-            IBrokerAccountsRepository brokerAccountsRepository)
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
+            ISendEndpointProvider sendEndpoint)
         {
             _loggerFactory = loggerFactory;
             _logger = logger;
@@ -40,6 +45,8 @@ namespace Brokerage.Worker.MessageConsumers
             _accountsRepository = accountsRepository;
             _outboxManager = outboxManager;
             _brokerAccountsRepository = brokerAccountsRepository;
+            _destinationTagGeneratorFactory = destinationTagGeneratorFactory;
+            _sendEndpoint = sendEndpoint;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
@@ -54,7 +61,9 @@ namespace Brokerage.Worker.MessageConsumers
                     _loggerFactory.CreateLogger<Account>(),
                     brokerAccount,
                     _blockchainsRepository,
-                    _vaultAgentClient);
+                    _vaultAgentClient,
+                    _destinationTagGeneratorFactory,
+                    _sendEndpoint);
             }
             catch (Exception ex)
             {

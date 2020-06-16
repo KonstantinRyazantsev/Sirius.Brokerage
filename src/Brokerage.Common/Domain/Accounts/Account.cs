@@ -4,12 +4,16 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
+using Brokerage.Common.Persistence.BrokerAccount;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
+using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
@@ -90,29 +94,38 @@ namespace Brokerage.Common.Domain.Accounts
             ILogger<Account> logger,
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
-            IVaultAgentClient vaultAgentClient)
+            IVaultAgentClient vaultAgentClient,
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
+            ISendEndpointProvider sendEndpoint)
         {
             if (State == AccountState.Creating)
             {
-                await RequestWalletGeneration(logger,
+                await RequestDetailsGeneration(
+                    logger,
                     brokerAccount,
                     blockchainsRepository,
-                    vaultAgentClient);
+                    vaultAgentClient,
+                    destinationTagGeneratorFactory,
+                    sendEndpoint
+                );
             }
         }
 
-        private async Task RequestWalletGeneration(
+        private async Task RequestDetailsGeneration(
             ILogger<Account> logger,
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
-            IVaultAgentClient vaultAgentClient)
+            IVaultAgentClient vaultAgentClient,
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
+            ISendEndpointProvider sendEndpoint)
         {
             string cursor = null;
+            var expectedCount = await blockchainsRepository.GetCountAsync();
             var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
             {
                 AggregateId = this.Id,
                 AggregateType = AggregateType.Account,
-                ExpectedCount = await blockchainsRepository.GetCountAsync()
+                ExpectedCount = expectedCount
             });
 
             do
@@ -128,7 +141,19 @@ namespace Brokerage.Common.Domain.Accounts
 
                 foreach (var blockchain in blockchains)
                 {
-                    // TODO: Decide if address or tag should be generated
+                    var tagGenerator = destinationTagGeneratorFactory.CreateOrDefault(blockchain);
+
+                    if (tagGenerator != null)
+                    {
+                        await sendEndpoint.Send(new CreateAccountDetailsForTag()
+                        {
+                            AccountId = this.Id,
+                            BlockchainId = blockchain.Id,
+                            ExpectedCount = expectedCount
+                        });
+
+                        continue;
+                    }
 
                     var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
                         new GenerateWalletRequest

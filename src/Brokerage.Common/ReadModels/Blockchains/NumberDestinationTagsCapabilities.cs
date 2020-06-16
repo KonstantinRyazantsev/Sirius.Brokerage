@@ -1,0 +1,9 @@
+﻿namespace Brokerage.Common.ReadModels.Blockchains
+{
+    public sealed class NumberDestinationTagsCapabilities
+    {
+        public long Min { get; set; }
+
+        public long Max { get; set; }
+    }
+}
