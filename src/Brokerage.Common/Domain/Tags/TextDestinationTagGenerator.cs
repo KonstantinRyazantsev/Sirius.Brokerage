@@ -8,7 +8,10 @@ namespace Brokerage.Common.Domain.Tags
 {
     public class TextDestinationTagGenerator : IDestinationTagGenerator
     {
-        private static char[] alphabet = Enumerable.Range('a', 26).Select(x => (char) x).ToArray();
+        private static char[] alphabet = 
+            Enumerable
+                .Range('a', 26).Select(x => (char) x)
+                .Concat(Enumerable.Range('0', 10).Select(x => (char)x)).ToArray();
         private static Random _random = new Random();
         private readonly long _max;
 
