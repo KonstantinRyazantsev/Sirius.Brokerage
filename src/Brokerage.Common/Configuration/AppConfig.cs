@@ -7,5 +7,7 @@
         public VaultAgentConfig VaultAgent { get; set; }
 
         public ExecutorConfig Executor { get; set; }
+
+        public BlockchainsConfig Blockchains { get; set; }
     }
 }

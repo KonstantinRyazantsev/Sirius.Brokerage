@@ -52,10 +52,10 @@ namespace Brokerage.Common.Persistence
             BuildBrokerAccounts(modelBuilder);
             BuildBrokerAccountDetails(modelBuilder);
             BuildBrokerAccountBalances(modelBuilder);
-            
+
             BuildAccounts(modelBuilder);
             BuildAccountDetails(modelBuilder);
-            
+
             BuildDeposits(modelBuilder);
             BuildWithdrawals(modelBuilder);
 
@@ -142,8 +142,8 @@ namespace Brokerage.Common.Persistence
                 .ToTable(Tables.DepositSources)
                 .HasKey(x => new
                 {
-                     x.DepositId,
-                     x.Address
+                    x.DepositId,
+                    x.Address
                 });
 
             modelBuilder.Entity<DepositFeeEntity>()
@@ -179,7 +179,7 @@ namespace Brokerage.Common.Persistence
                 .HasIndex(x => x.ConsolidationOperationId)
                 .IsUnique()
                 .HasName("IX_Deposit_ConsolidationOperationId");
-            
+
             modelBuilder.Entity<DepositEntity>()
                 .HasMany(x => x.Fees)
                 .WithOne(x => x.DepositEntity)
@@ -225,6 +225,55 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<Blockchain>()
                 .ToTable(Tables.Blockchains)
                 .HasKey(x => x.Id);
+
+            modelBuilder.Entity<Blockchain>()
+                .OwnsOne<Protocol>(x => x.Protocol,
+                    c =>
+                    {
+                        c.Property(p => p.Code).HasColumnName("ProtocolCode");
+                        c.Property(p => p.Name).HasColumnName("ProtocolName");
+                        c.Property(p => p.StartBlockNumber).HasColumnName("StartBlockNumber");
+                        c.Property(p => p.DoubleSpendingProtectionType).HasColumnName("DoubleSpendingProtectionType");
+
+                            // TODO: Include BlockchainID to the index
+                            c.HasIndex(x => x.Code).HasName("IX_Blockchain_ProtocolCode");
+                        c.HasIndex(x => x.Name).HasName("IX_Blockchain_ProtocolName");
+
+                        c.OwnsOne<Requirements>(x => x.Requirements);
+                        c.OwnsOne<Capabilities>(x => x.Capabilities,
+                            z =>
+                            {
+                                z.OwnsOne(x => x.DestinationTag,
+                                    y =>
+                                    {
+                                        y.OwnsOne(x => x.Text);
+                                        y.OwnsOne(x => x.Number);
+                                    });
+                            });
+                    });
+
+            modelBuilder.Entity<Blockchain>()
+                .HasIndex(x => x.Name)
+                .HasName("IX_Blockchain_Name");
+
+            modelBuilder.Entity<Blockchain>()
+                .HasIndex(x => x.NetworkType)
+                .HasName("IX_Blockchain_NetworkType");
+
+            modelBuilder.Entity<Blockchain>()
+                .HasIndex(x => x.TenantId)
+                .HasName("IX_Blockchain_TenantId");
+
+            modelBuilder.Entity<Blockchain>()
+                .HasIndex(x => x.ChainSequence)
+                .HasName("IX_Blockchain_ChainSequence");
+
+            modelBuilder.Entity<Blockchain>()
+                .Property(x => x.Version)
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
         }
 
         private static void BuildAccountDetails(ModelBuilder modelBuilder)
@@ -235,7 +284,8 @@ namespace Brokerage.Common.Persistence
 
             modelBuilder.Entity<AccountDetailsEntity>()
                 .HasIndex(x => x.NaturalId)
-                .HasName("IX_AccountDetails_NaturalId");
+                .HasName("IX_AccountDetails_NaturalId")
+                .IsUnique(true);
 
             modelBuilder.Entity<AccountDetailsEntity>()
                 .Property(b => b.Id)
