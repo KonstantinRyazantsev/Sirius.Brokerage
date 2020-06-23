@@ -42,7 +42,6 @@ namespace Brokerage.Worker.MessageConsumers
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
-                // TODO: Required confirmations count
                 new TransactionInfo(tx.TransactionId, tx.BlockNumber, -1, tx.BlockMinedAt),
                 tx.Sources
                     .Select(x => new SourceContext(x.Address, x.Unit))

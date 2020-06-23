@@ -63,7 +63,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long? AccountDetailsId { get; }
         public Unit Unit { get; }
         public IReadOnlyCollection<Unit> Fees { get; }
-        public TransactionInfo TransactionInfo { get; }
+        public TransactionInfo TransactionInfo { get; private set; }
         public DepositError Error { get; private set; }
         public DepositState State { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
@@ -176,10 +176,11 @@ namespace Brokerage.Common.Domain.Deposits
                     accountDetails.NaturalId.Address,
                     brokerAccountDetails.NaturalId.Address,
                     Unit,
-                    tx.BlockNumber + tx.RequiredConfirmationsCount,
+                    tx.BlockNumber + tx.RequiredConfirmationsCount - 1,
                     brokerAccount.VaultId);
 
                 ConsolidationOperationId = operation.Id;
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
                 UpdatedAt = DateTime.UtcNow;
             }
 
