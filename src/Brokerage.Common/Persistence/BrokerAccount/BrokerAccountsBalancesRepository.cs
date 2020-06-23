@@ -40,6 +40,7 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             var entities = balances
                 .Select(MapToEntity);
 
+            // TODO: Use Sequence instead of the update ID for the balances
             foreach (var balance in balances)
             {
                 context.BrokerAccountBalancesUpdate.Add(new BrokerAccountBalancesUpdateEntity
