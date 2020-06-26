@@ -41,13 +41,6 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var tx = context.Message;
 
-            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
-            {
-                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}...", tx);
-
-                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
-            }
-
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
@@ -69,6 +62,13 @@ namespace Brokerage.Worker.MessageConsumers
                 _logger.LogDebug("There is nothing to process in the transaction {@context}", tx);
 
                 return;
+            }
+
+            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
+            {
+                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}...", tx);
+
+                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
             }
 
             foreach (var processor in _processorsFactory.GetConfirmedTransactionProcessors())
