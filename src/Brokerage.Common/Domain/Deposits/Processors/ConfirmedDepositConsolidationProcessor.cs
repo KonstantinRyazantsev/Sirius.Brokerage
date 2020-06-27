@@ -11,8 +11,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     {
         public Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
         {
-            if (processingContext.Operation?.Type == OperationType.DepositProvisioning ||
-                processingContext.Operation?.Type == OperationType.Withdrawal)
+            if (processingContext.Operation?.Type != OperationType.DepositConsolidation)
             {
                 return Task.CompletedTask;
             }
