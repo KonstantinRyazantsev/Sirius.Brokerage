@@ -25,14 +25,40 @@ namespace Brokerage.Common.Persistence.Deposits
             return await context.GetNextId(Tables.Deposits, nameof(DepositEntity.Id));
         }
 
-        public async Task<IReadOnlyCollection<Deposit>> GetAllByTransactionAsync(string blockchainId, string transactionId)
+        public async Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, 
+            string transactionId,
+            long? consolidationOperationId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var deposits = context
                 .Deposits
                 .Include(x => x.Sources)
                 .Include(x => x.Fees)
-                .Where(x => x.BlockchainId == blockchainId && x.TransactionId == transactionId);
+                .AsQueryable();
+
+            if (blockchainId != null)
+            {
+                deposits = deposits.Where(x => x.BlockchainId == blockchainId);
+            }
+
+            if (transactionId != null)
+            {
+                if (consolidationOperationId != null)
+                {
+                    deposits = deposits.Where(x => x.TransactionId == transactionId || x.ConsolidationOperationId == consolidationOperationId);
+                }
+                else
+                {
+                    deposits = deposits.Where(x => x.TransactionId == transactionId);
+                }
+            }
+            else
+            {
+                if (consolidationOperationId != null)
+                {
+                    deposits = deposits.Where(x => x.ConsolidationOperationId == consolidationOperationId);
+                }
+            }
 
             await deposits.LoadAsync();
 
@@ -40,19 +66,6 @@ namespace Brokerage.Common.Persistence.Deposits
                 .AsEnumerable()
                 .Select(MapToDomain)
                 .ToArray();
-        }
-
-        public async Task<Deposit> GetByConsolidationIdOrDefaultAsync(long operationId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
-                .Deposits
-                .Include(x => x.Sources)
-                .Include(x => x.Fees)
-                .FirstOrDefaultAsync(x => x.ConsolidationOperationId == operationId);
-
-            return entity != null ? MapToDomain(entity) : null;
         }
 
         public async Task SaveAsync(IReadOnlyCollection<Deposit> deposits)

@@ -8,7 +8,6 @@ namespace Brokerage.Common.Persistence.Deposits
     {
         Task<long> GetNextIdAsync();
         Task SaveAsync(IReadOnlyCollection<Deposit> deposits);
-        Task<IReadOnlyCollection<Deposit>> GetAllByTransactionAsync(string blockchainId, string transactionId);
-        Task<Deposit> GetByConsolidationIdOrDefaultAsync(long operationId);
+        Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, string transactionId, long? consolidationOperationId);
     }
 }

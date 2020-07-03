@@ -168,16 +168,15 @@ namespace Brokerage.Common.Persistence
             });
 
             modelBuilder.Entity<DepositEntity>()
-                .HasIndex(x => new
-                {
-                    x.BlockchainId,
-                    x.TransactionId
-                })
-                .HasName("IX_Deposit_BlockchainId_TransactionId");
+                .HasIndex(x => x.BlockchainId)
+                .HasName("IX_Deposit_BlockchainId");
+
+            modelBuilder.Entity<DepositEntity>()
+                .HasIndex(x => x.TransactionId)
+                .HasName("IX_Deposit_TransactionId");
 
             modelBuilder.Entity<DepositEntity>()
                 .HasIndex(x => x.ConsolidationOperationId)
-                .IsUnique()
                 .HasName("IX_Deposit_ConsolidationOperationId");
 
             modelBuilder.Entity<DepositEntity>()

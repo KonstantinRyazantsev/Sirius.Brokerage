@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
@@ -108,7 +109,10 @@ namespace Brokerage.Common.Domain.Processing.Context
             var (existingBrokerAccountBalances, activeBrokerAccountDetails, deposits) = await TaskExecution.WhenAll(
                 _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds),
                 _brokerAccountDetailsRepository.GetActiveAsync(activeBrokerAccountDetailsIds),
-                _depositsRepository.GetAllByTransactionAsync(blockchainId, transactionInfo.TransactionId));
+                _depositsRepository.Search(
+                    blockchainId,
+                    transactionInfo.TransactionId,
+                    consolidationOperationId: matchedOperation?.Type == OperationType.DepositConsolidation ? (long?)matchedOperation.Id : null));
             var newBrokerAccountBalances = await BuildNewBrokerAccountBalances(existingBrokerAccountBalances, brokerAccountBalancesIds);
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)
@@ -181,7 +185,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => new BrokerAccountBalancesContext(
                     x,
                     income.GetValueOrDefault(x.NaturalId.AssetId),
-                    outcome.GetValueOrDefault(x.NaturalId.AssetId)))
+                    outcome.GetValueOrDefault(x.NaturalId.AssetId),
+                    x.NaturalId.AssetId))
                 .ToArray();
 
             var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
