@@ -245,13 +245,6 @@ namespace Brokerage.Common.Persistence
                                     });
                             });
                     });
-
-            modelBuilder.Entity<Blockchain>()
-                .Property(x => x.Version)
-                .HasColumnName("xmin")
-                .HasColumnType("xid")
-                .ValueGeneratedOnAddOrUpdate()
-                .IsConcurrencyToken();
         }
 
         private static void BuildAccountDetails(ModelBuilder modelBuilder)
