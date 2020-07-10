@@ -1,7 +1,4 @@
-﻿using System;
-using Swisschain.Sirius.Sdk.Primitives;
-
-namespace Brokerage.Common.ReadModels.Blockchains
+﻿namespace Brokerage.Common.ReadModels.Blockchains
 {
     public sealed class Blockchain
     {

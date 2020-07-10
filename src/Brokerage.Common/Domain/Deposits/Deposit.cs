@@ -189,7 +189,25 @@ namespace Brokerage.Common.Domain.Deposits
             AddDepositUpdatedEvent();
         }
 
-        public void ConfirmBroker()
+        public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
+        {
+            if (IsBrokerDeposit)
+            {
+                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
+            }
+
+            if (SwitchState(new[] {DepositState.Detected}, DepositState.Completed))
+            {
+                var date = DateTime.UtcNow;
+
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+                UpdatedAt = date;
+            }
+
+            AddDepositUpdatedEvent();
+        }
+
+        public void ConfirmBroker(TransactionConfirmed tx)
         {
             if (!IsBrokerDeposit)
             {
@@ -200,6 +218,7 @@ namespace Brokerage.Common.Domain.Deposits
             {
                 var date = DateTime.UtcNow;
 
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
                 UpdatedAt = date;
             }
 

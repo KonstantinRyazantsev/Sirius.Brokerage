@@ -4,6 +4,7 @@ using System.Linq;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Domain.Operations;
+using Brokerage.Common.ReadModels.Blockchains;
 
 namespace Brokerage.Common.Domain.Processing.Context
 {
@@ -14,11 +15,13 @@ namespace Brokerage.Common.Domain.Processing.Context
         public TransactionProcessingContext(IReadOnlyCollection<BrokerAccountContext> brokerAccounts, 
             Operation operation,
             TransactionInfo transactionInfo,
-            IReadOnlyCollection<Deposit> deposits)
+            IReadOnlyCollection<Deposit> deposits,
+            Blockchain blockchain)
         {
             BrokerAccounts = brokerAccounts;
             Operation = operation;
             TransactionInfo = transactionInfo;
+            Blockchain = blockchain;
 
             _deposits = new ConcurrentBag<Deposit>(deposits);
             
@@ -31,6 +34,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         public IReadOnlyCollection<BrokerAccountContext> BrokerAccounts { get; }
         public Operation Operation { get; }
         public TransactionInfo TransactionInfo { get; }
+        public Blockchain Blockchain { get; }
         public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances  {  get; }
 
         public bool IsEmpty => !Deposits.Any() &&

@@ -40,16 +40,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 .Where(x => !x.IsBrokerDeposit)
                 .ToArray();
 
-            foreach (var deposit in regularDeposits)
-            {
-                await deposit.ConfirmRegular(
-                    _brokerAccountsRepository,
-                    _brokerAccountDetailsRepository, 
-                    _accountDetailsRepository, 
-                    tx,
-                    _operationsExecutor);
-            }
-
             var balanceChanges = regularDeposits
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                 .Select(x => new
@@ -58,11 +48,38 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     Amount = x.Sum(d => d.Unit.Amount)
                 });
 
-            foreach (var change in balanceChanges)
+            if (processingContext.Blockchain.Protocol.Capabilities.DestinationTag != null)
             {
-                var balances = processingContext.BrokerAccountBalances[change.Id];
+                foreach (var deposit in regularDeposits)
+                {
+                    deposit.ConfirmRegularWithDestinationTag(tx);
+                }
 
-                balances.ConfirmRegularPendingBalance(change.Amount);
+                foreach (var change in balanceChanges)
+                {
+                    var balances = processingContext.BrokerAccountBalances[change.Id];
+
+                    balances.ConfirmBrokerWithDestinationTagPendingBalance(change.Amount);
+                }
+            }
+            else
+            {
+                foreach (var deposit in regularDeposits)
+                {
+                    await deposit.ConfirmRegular(
+                        _brokerAccountsRepository,
+                        _brokerAccountDetailsRepository,
+                        _accountDetailsRepository,
+                        tx,
+                        _operationsExecutor);
+                }
+
+                foreach (var change in balanceChanges)
+                {
+                    var balances = processingContext.BrokerAccountBalances[change.Id];
+
+                    balances.ConfirmRegularPendingBalance(change.Amount);
+                }
             }
         }
     }

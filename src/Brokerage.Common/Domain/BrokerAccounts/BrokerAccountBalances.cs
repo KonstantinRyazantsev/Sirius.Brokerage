@@ -130,6 +130,24 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             GenerateEvent();
         }
 
+        public void ConfirmBrokerWithDestinationTagPendingBalance(decimal amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            PendingBalance -= amount;
+            OwnedBalance += amount;
+            AvailableBalance += amount;
+
+            var updateDateTime = DateTime.UtcNow;
+
+            UpdatedAt = updateDateTime;
+
+            GenerateEvent();
+        }
+
         public void ConsolidateBalance(decimal receivedAmount, decimal fee)
         {
             if (receivedAmount <= 0 || fee <= 0)
