@@ -24,7 +24,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             foreach (var deposit in brokerDeposits)
             {
-                deposit.ConfirmBroker();
+                deposit.ConfirmBroker(tx);
             }
 
             var balanceChanges = brokerDeposits

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
@@ -43,18 +44,21 @@ namespace Brokerage.Common.Domain.Processing.Context
             {
                 case OperationType.DepositConsolidation:
                 {
-                    var deposit = await _depositsRepository.GetByConsolidationIdOrDefaultAsync(operationId);
-                    var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(
-                        new BrokerAccountBalancesId(deposit.BrokerAccountId, deposit.Unit.AssetId));
+                    var deposits = await _depositsRepository.Search(
+                        blockchainId: null,
+                        transactionId: null,
+                        consolidationOperationId: operation.Id);
+                    var brokerAccountIds = deposits
+                        .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
+                        .ToHashSet();
+                    var brokerAccountBalances = (await _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountIds))
+                        .ToDictionary(x => x.NaturalId);
 
                     return new OperationProcessingContext(
                         operation,
-                        new[] {deposit},
+                        deposits,
                         Array.Empty<Withdrawal>(),
-                        new Dictionary<BrokerAccountBalancesId, BrokerAccountBalances>
-                        {
-                            [brokerAccountBalances.NaturalId] = brokerAccountBalances
-                        });
+                        brokerAccountBalances);
                 }
 
                 // TODO:

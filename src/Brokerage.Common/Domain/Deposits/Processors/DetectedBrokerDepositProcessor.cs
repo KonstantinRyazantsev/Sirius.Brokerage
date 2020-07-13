@@ -33,7 +33,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             var deposits = new List<Deposit>();
 
-            foreach (var brokerAccountContext in processingContext.BrokerAccounts)
+            foreach (var brokerAccountContext in processingContext.BrokerAccounts.Where(x => !x.Accounts.Any()))
             {
                 foreach (var input in brokerAccountContext.Inputs)
                 {

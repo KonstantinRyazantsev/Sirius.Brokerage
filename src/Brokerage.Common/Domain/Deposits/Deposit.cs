@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
-using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
@@ -62,8 +61,8 @@ namespace Brokerage.Common.Domain.Deposits
         public long BrokerAccountDetailsId { get; }
         public long? AccountDetailsId { get; }
         public Unit Unit { get; }
-        public IReadOnlyCollection<Unit> Fees { get; }
-        public TransactionInfo TransactionInfo { get; }
+        public IReadOnlyCollection<Unit> Fees { get; private set; }
+        public TransactionInfo TransactionInfo { get; private set; }
         public DepositError Error { get; private set; }
         public DepositState State { get; private set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
@@ -102,7 +101,10 @@ namespace Brokerage.Common.Domain.Deposits
                 transactionInfo,
                 null,
                 DepositState.Detected,
-                sources,
+                sources
+                    .GroupBy(x => x.Address)
+                    .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
+                    .ToArray(),
                 createdAt,
                 createdAt);
 
@@ -176,17 +178,36 @@ namespace Brokerage.Common.Domain.Deposits
                     accountDetails.NaturalId.Address,
                     brokerAccountDetails.NaturalId.Address,
                     Unit,
-                    tx.BlockNumber + tx.RequiredConfirmationsCount,
+                    tx.BlockNumber + tx.RequiredConfirmationsCount - 1,
                     brokerAccount.VaultId);
 
                 ConsolidationOperationId = operation.Id;
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
                 UpdatedAt = DateTime.UtcNow;
             }
 
             AddDepositUpdatedEvent();
         }
 
-        public void ConfirmBroker()
+        public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
+        {
+            if (IsBrokerDeposit)
+            {
+                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
+            }
+
+            if (SwitchState(new[] {DepositState.Detected}, DepositState.Completed))
+            {
+                var date = DateTime.UtcNow;
+
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+                UpdatedAt = date;
+            }
+
+            AddDepositUpdatedEvent();
+        }
+
+        public void ConfirmBroker(TransactionConfirmed tx)
         {
             if (!IsBrokerDeposit)
             {
@@ -197,16 +218,18 @@ namespace Brokerage.Common.Domain.Deposits
             {
                 var date = DateTime.UtcNow;
 
+                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
                 UpdatedAt = date;
             }
 
             AddDepositUpdatedEvent();
         }
 
-        public void Complete()
+        public void Complete(IReadOnlyCollection<Unit> fees)
         {
             if (SwitchState(new[] {DepositState.Confirmed}, DepositState.Completed))
             {
+                Fees = fees;
                 UpdatedAt = DateTime.UtcNow;
             }
 

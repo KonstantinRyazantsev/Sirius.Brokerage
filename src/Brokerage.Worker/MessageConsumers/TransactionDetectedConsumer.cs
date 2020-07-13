@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
@@ -43,9 +42,7 @@ namespace Brokerage.Worker.MessageConsumers
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
-                // TODO: Required confirmations count
-                // TODO: Add timestamp to the tx event
-                new TransactionInfo(tx.TransactionId, tx.BlockNumber, -1, DateTime.UtcNow),
+                new TransactionInfo(tx.TransactionId, tx.BlockNumber, -1, tx.BlockMinedAt),
                 tx.Sources
                     .Select(x => new SourceContext(x.Address, x.Unit))
                     .ToArray(),
@@ -57,17 +54,13 @@ namespace Brokerage.Worker.MessageConsumers
                         x.Unit))
                     .ToArray());
 
-            // TODO: Hack ignore incoming transaction to the broker accounts generated from the BIL v1 balances
-            if (tx.TransactionId.Length < 5 && processingContext.BrokerAccounts.SelectMany(x => x.Inputs).Any())
-            {
-                _logger.LogInformation("There is a BIL v1 transaction to a broker account based on balances. It will be skipped to avoid duplication {@context}", tx);
-
-                return;
-            }
-
             if (processingContext.IsEmpty)
             {
-                _logger.LogInformation("There is nothing to process in the transaction {@context}", tx);
+                _logger.LogDebug("There is nothing to process in the transaction {@context}", new
+                {
+                    BlockchainId = tx.BlockchainId,
+                    TransactionId = tx.TransactionId
+                });
 
                 return;
             }
@@ -85,7 +78,6 @@ namespace Brokerage.Worker.MessageConsumers
                 .Where(x => x.Events.Any())
                 .ToArray();
 
-            // TODO: Use Sequence instead of the update ID for the balances
             await Task.WhenAll(
                 _brokerAccountsBalancesRepository.SaveAsync(
                     $"{BalanceChangingReason.TransactionDetected}_{tx.BlockchainId}_{tx.TransactionId}", 

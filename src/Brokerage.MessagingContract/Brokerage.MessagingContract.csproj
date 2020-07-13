@@ -9,8 +9,18 @@
     <Product>Sirius</Product>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Swisschain.Sirius.Sdk" Version="5.0.0-beta.3" />
+    <PackageReference Include="Swisschain.Sirius.Sdk" Version="5.0.0-beta.7" />
   </ItemGroup>
 
 </Project>

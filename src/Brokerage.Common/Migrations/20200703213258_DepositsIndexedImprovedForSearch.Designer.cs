@@ -3,15 +3,17 @@ using System;
 using Brokerage.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200703213258_DepositsIndexedImprovedForSearch")]
+    partial class DepositsIndexedImprovedForSearch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -520,6 +522,12 @@ namespace Brokerage.Common.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnName("xmin")
+                        .HasColumnType("xid");
 
                     b.HasKey("Id");
 

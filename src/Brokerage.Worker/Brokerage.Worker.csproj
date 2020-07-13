@@ -8,14 +8,24 @@
     <UserSecretsId>7d88be4e-26a3-459c-a157-20854f1df8c2</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.3.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="6.3.2" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.1" />
     <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.1.0" />
-    <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="3.0.1" />
+    <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0-beta.1" />
     <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="8.1.0" />
-    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="1.7.0" />
+    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="1.8.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
@@ -87,6 +86,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public void AddPendingBalance(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
             PendingBalance += amount;
             UpdatedAt = DateTime.UtcNow;
 
@@ -95,18 +99,26 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public void ConfirmRegularPendingBalance(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
             PendingBalance -= amount;
             OwnedBalance += amount;
 
-            var updateDateTime = DateTime.UtcNow;
-
-            UpdatedAt = updateDateTime;
+            UpdatedAt = DateTime.UtcNow;
 
             GenerateEvent();
         }
 
         public void ConfirmBrokerPendingBalance(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
             PendingBalance -= amount;
             OwnedBalance += amount;
             AvailableBalance += amount;
@@ -118,9 +130,33 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             GenerateEvent();
         }
 
-        public void ConsolidateBalance(decimal amount)
+        public void ConfirmBrokerWithDestinationTagPendingBalance(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            PendingBalance -= amount;
+            OwnedBalance += amount;
             AvailableBalance += amount;
+
+            var updateDateTime = DateTime.UtcNow;
+
+            UpdatedAt = updateDateTime;
+
+            GenerateEvent();
+        }
+
+        public void ConsolidateBalance(decimal receivedAmount, decimal fee)
+        {
+            if (receivedAmount <= 0 || fee <= 0)
+            {
+                return;
+            }
+
+            AvailableBalance += receivedAmount;
+            OwnedBalance -= fee;
 
             UpdatedAt = DateTime.UtcNow;
             
@@ -129,6 +165,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public void ReserveBalance(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
             AvailableBalance -= amount;
             ReservedBalance += amount;
 
@@ -141,6 +182,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public void Withdraw(decimal amount)
         {
+            if (amount <= 0)
+            {
+                return;
+            }
+
             ReservedBalance -= amount;
             OwnedBalance -= amount;
 

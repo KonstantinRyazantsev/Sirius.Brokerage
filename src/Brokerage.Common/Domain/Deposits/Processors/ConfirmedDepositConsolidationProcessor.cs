@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
@@ -11,17 +12,24 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     {
         public Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
         {
-            if (processingContext.Operation?.Type == OperationType.DepositProvisioning ||
-                processingContext.Operation?.Type == OperationType.Withdrawal)
+            if (processingContext.Operation?.Type != OperationType.DepositConsolidation)
             {
                 return Task.CompletedTask;
             }
 
+            if (processingContext.Deposits.Count != 1)
+            {
+                throw new InvalidOperationException("Only one deposit per consolidation transaction is supported for now");
+            }
+
             foreach (var brokerAccountContext in processingContext.BrokerAccounts)
             {
-                foreach (var balancesContext in brokerAccountContext.Balances.Where(x => x.Income > 0))
+                foreach (var balancesContext in brokerAccountContext.Balances)
                 {
-                    balancesContext.Balances.ConsolidateBalance(balancesContext.Income);
+                    var assetId = balancesContext.AssetId;
+                    var fee = tx.Fees.SingleOrDefault(x => x.AssetId == assetId)?.Amount ?? 0m;
+                    
+                    balancesContext.Balances.ConsolidateBalance(balancesContext.Income, fee);
                 }
             }
 

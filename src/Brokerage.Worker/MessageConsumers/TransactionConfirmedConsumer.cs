@@ -41,16 +41,6 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var tx = context.Message;
 
-            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
-            {
-                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}. Waiting 10 seconds before retry...", tx);
-
-                // TODO: Remove this hack
-                await Task.Delay(TimeSpan.FromSeconds(10));
-
-                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
-            }
-
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
@@ -67,19 +57,22 @@ namespace Brokerage.Worker.MessageConsumers
                         x.Unit))
                     .ToArray());
 
-            // TODO: Hack ignore incoming transaction to the broker accounts generated from the BIL v1 balances
-            if (tx.TransactionId.Length < 5 && processingContext.BrokerAccounts.SelectMany(x => x.Inputs).Any())
+            if (processingContext.IsEmpty)
             {
-                _logger.LogInformation("There is a BIL v1 transaction to a broker account based on balances. It will be skipped to avoid duplication {@context}", tx);
+                _logger.LogDebug("There is nothing to process in the transaction {@context}", new
+                {
+                    BlockchainId = tx.BlockchainId,
+                    TransactionId = tx.TransactionId
+                });
 
                 return;
             }
 
-            if (processingContext.IsEmpty)
+            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
             {
-                _logger.LogInformation("There is nothing to process in the transaction {@context}", tx);
+                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}...", tx);
 
-                return;
+                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
             }
 
             foreach (var processor in _processorsFactory.GetConfirmedTransactionProcessors())
@@ -95,7 +88,6 @@ namespace Brokerage.Worker.MessageConsumers
                 .Where(x => x.Events.Any())
                 .ToArray();
 
-            // TODO: Use Sequence instead of the update ID for the balances
             await Task.WhenAll(
                 _brokerAccountsBalancesRepository.SaveAsync(
                     $"{BalanceChangingReason.TransactionConfirmed}_{tx.BlockchainId}_{tx.TransactionId}", 

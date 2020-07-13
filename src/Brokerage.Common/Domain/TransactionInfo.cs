@@ -17,5 +17,14 @@ namespace Brokerage.Common.Domain
         public long TransactionBlock { get; }
         public long RequiredConfirmationsCount { get; }
         public DateTime DateTime { get; }
+
+        public TransactionInfo UpdateRequiredConfirmationsCount(long requiredConfirmationsCount)
+        {
+            return new TransactionInfo(
+                TransactionId,
+                TransactionBlock,
+                requiredConfirmationsCount,
+                DateTime);
+        }
     }
 }

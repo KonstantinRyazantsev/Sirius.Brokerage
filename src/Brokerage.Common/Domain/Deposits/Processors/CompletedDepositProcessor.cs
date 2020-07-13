@@ -17,7 +17,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             foreach (var deposit in processingContext.Deposits)
             {
-                deposit.Complete();    
+                deposit.Complete(evt.ActualFees);
             }
 
             return Task.CompletedTask;

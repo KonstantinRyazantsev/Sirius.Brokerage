@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
@@ -20,13 +22,15 @@ namespace Brokerage.Common.Domain.Processing.Context
         private readonly IDepositsRepository _depositsRepository;
         private readonly IOperationsRepository _operationsRepository;
         private readonly IOutboxManager _outboxManager;
+        private readonly IBlockchainsRepository _blockchainsRepository;
 
         public TransactionProcessingContextBuilder(IAccountDetailsRepository accountDetailsRepository,
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
-            IOutboxManager outboxManager)
+            IOutboxManager outboxManager,
+            IBlockchainsRepository blockchainsRepository)
         {
             _accountDetailsRepository = accountDetailsRepository;
             _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
@@ -34,6 +38,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             _depositsRepository = depositsRepository;
             _operationsRepository = operationsRepository;
             _outboxManager = outboxManager;
+            _blockchainsRepository = blockchainsRepository;
         }
 
         public async Task<TransactionProcessingContext> Build(string blockchainId,
@@ -105,10 +110,14 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => new ActiveBrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
-            var (existingBrokerAccountBalances, activeBrokerAccountDetails, deposits) = await TaskExecution.WhenAll(
+            var (existingBrokerAccountBalances, activeBrokerAccountDetails, deposits, blockchain) = await TaskExecution.WhenAll(
                 _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds),
                 _brokerAccountDetailsRepository.GetActiveAsync(activeBrokerAccountDetailsIds),
-                _depositsRepository.GetAllByTransactionAsync(blockchainId, transactionInfo.TransactionId));
+                _depositsRepository.Search(
+                    blockchainId,
+                    transactionInfo.TransactionId,
+                    consolidationOperationId: matchedOperation?.Type == OperationType.DepositConsolidation ? (long?)matchedOperation.Id : null),
+                _blockchainsRepository.GetAsync(blockchainId));
             var newBrokerAccountBalances = await BuildNewBrokerAccountBalances(existingBrokerAccountBalances, brokerAccountBalancesIds);
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)
@@ -129,7 +138,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 brokerAccountsContext,
                 matchedOperation,
                 transactionInfo,
-                deposits);
+                deposits,
+                blockchain);
         }
 
         private BrokerAccountContext BuildBrokerAccountContext(long brokerAccountId,
@@ -181,7 +191,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => new BrokerAccountBalancesContext(
                     x,
                     income.GetValueOrDefault(x.NaturalId.AssetId),
-                    outcome.GetValueOrDefault(x.NaturalId.AssetId)))
+                    outcome.GetValueOrDefault(x.NaturalId.AssetId),
+                    x.NaturalId.AssetId))
                 .ToArray();
 
             var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
