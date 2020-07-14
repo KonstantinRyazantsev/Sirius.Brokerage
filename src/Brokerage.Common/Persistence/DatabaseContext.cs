@@ -7,6 +7,7 @@ using Brokerage.Common.Persistence.Withdrawals;
 using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
 using DepositSourceEntity = Brokerage.Common.Persistence.Deposits.DepositSourceEntity;
@@ -225,26 +226,14 @@ namespace Brokerage.Common.Persistence
                 .ToTable(Tables.Blockchains)
                 .HasKey(x => x.Id);
 
+            
+            var jsonSerializingSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+
             modelBuilder.Entity<Blockchain>()
-                .OwnsOne<Protocol>(x => x.Protocol,
-                    c =>
-                    {
-                        c.Property(p => p.Code).HasColumnName("ProtocolCode");
-
-                        // TODO: Include BlockchainID to the index
-                            c.HasIndex(x => x.Code).HasName("IX_Blockchain_ProtocolCode");
-
-                        c.OwnsOne<Capabilities>(x => x.Capabilities,
-                            z =>
-                            {
-                                z.OwnsOne(x => x.DestinationTag,
-                                    y =>
-                                    {
-                                        y.OwnsOne(x => x.Text);
-                                        y.OwnsOne(x => x.Number);
-                                    });
-                            });
-                    });
+                .Property(e => e.Protocol)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v, jsonSerializingSettings),
+                    v => JsonConvert.DeserializeObject<Protocol>(v, jsonSerializingSettings));
         }
 
         private static void BuildAccountDetails(ModelBuilder modelBuilder)
