@@ -98,15 +98,15 @@ namespace Brokerage.Worker
 
                     cfg.ReceiveEndpoint("sirius-brokerage-transaction-detection", e =>
                     {
-                        e.PrefetchCount = 1000;
-                        e.UseConcurrencyLimit(8);
+                        e.PrefetchCount = 100;
+                        e.UseConcurrencyLimit(4);
                         e.Consumer(provider.Container.GetRequiredService<TransactionDetectedConsumer>);
                     });
 
                     cfg.ReceiveEndpoint("sirius-brokerage-transaction-confirmation", e =>
                     {
-                        e.PrefetchCount = 1000;
-                        e.UseConcurrencyLimit(8);
+                        e.PrefetchCount = 100;
+                        e.UseConcurrencyLimit(4);
                         e.Consumer(provider.Container.GetRequiredService<TransactionConfirmedConsumer>);
                     });
 
