@@ -39,6 +39,7 @@
     <PackageReference Include="Swisschain.Sirius.Executor.MessagingContract" Version="1.1.1" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0-beta.1" />
     <PackageReference Include="Swisschain.Sirius.Sdk" Version="5.0.0-beta.7" />
+    <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.2.3" />
     <PackageReference Include="Swisschain.Sirius.VaultAgent.ApiClient" Version="2.12.0" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.0.49" />
   </ItemGroup>
