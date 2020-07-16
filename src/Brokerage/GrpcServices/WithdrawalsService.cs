@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Assets;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Withdrawals;
 using Google.Protobuf.WellKnownTypes;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
 using Swisschain.Sirius.Brokerage.ApiContract.Common;
+using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
 using DestinationDetails = Brokerage.Common.Domain.Withdrawals.DestinationDetails;
 using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 using ErrorResponseBody = Swisschain.Sirius.Brokerage.ApiContract.ErrorResponseBody;
@@ -28,6 +31,8 @@ namespace Brokerage.GrpcServices
         private readonly IAssetsRepository _assetsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly ILogger<WithdrawalsService> _logger;
+        private readonly IBlockchainsRepository _blockchainsRepository;
+        private readonly IAddressFormatterFactory _addressFormatterFactory;
 
         public WithdrawalsService(
             IWithdrawalRepository withdrawalRepository,
@@ -37,7 +42,9 @@ namespace Brokerage.GrpcServices
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IAssetsRepository assetsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            ILogger<WithdrawalsService> logger)
+            ILogger<WithdrawalsService> logger,
+            IBlockchainsRepository blockchainsRepository,
+            IAddressFormatterFactory addressFormatterFactory)
         {
             _withdrawalRepository = withdrawalRepository;
             _brokerAccountsRepository = brokerAccountsRepository;
@@ -47,6 +54,8 @@ namespace Brokerage.GrpcServices
             _assetsRepository = assetsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _logger = logger;
+            _blockchainsRepository = blockchainsRepository;
+            _addressFormatterFactory = addressFormatterFactory;
         }
 
         public override async Task<ExecuteWithdrawalWrapperResponse> Execute(ExecuteWithdrawalRequest request, ServerCallContext context)
@@ -102,6 +111,35 @@ namespace Brokerage.GrpcServices
                 return GetErrorResponseExecuteWithdrawalWrapperResponse(
                     ErrorResponseBody.Types.ErrorCode.InvalidParameters,
                     "Asset does not exist");
+            }
+
+            var blockchain = await _blockchainsRepository.GetOrDefaultAsync(asset.BlockchainId);
+
+            if (blockchain == null)
+            {
+                return GetErrorResponseExecuteWithdrawalWrapperResponse(
+                    ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    "Blockchain is not supported");
+            }
+
+            AddressFormat addressFormat = null;
+            try
+            {
+                var addressFormatter = _addressFormatterFactory.Create(blockchain.Protocol.Code);
+                addressFormat = addressFormatter.GetFormats(request.DestinationDetails.Address, blockchain.NetworkType).FirstOrDefault();
+            }
+            catch (ArgumentOutOfRangeException) 
+            {
+                return GetErrorResponseExecuteWithdrawalWrapperResponse(
+                    ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    "Address formatter is not supported");
+            }
+
+            if (string.IsNullOrEmpty(addressFormat?.Address))
+            {
+                return GetErrorResponseExecuteWithdrawalWrapperResponse(
+                    ErrorResponseBody.Types.ErrorCode.InvalidParameters,
+                    "The Destination address is not valid");
             }
 
             if (request.AccountId != null)

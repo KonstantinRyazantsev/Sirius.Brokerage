@@ -51,11 +51,13 @@ namespace Brokerage.Worker.MessageConsumers
                                         }
                                 }
                     },
-                }
+                },
+                CreatedAt = evt.CreatedAt,
+                NetworkType = evt.NetworkType,
+                UpdatedAt = evt.UpdatedAt
             };
 
             await _blockchainsRepository.AddOrReplaceAsync(blockchain);
-
 
             _logger.LogInformation("Blockchain has been updated {@context}", evt);
         }

@@ -5,6 +5,7 @@ using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Domain.Withdrawals.Processors;
 using Microsoft.Extensions.DependencyInjection;
+using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
 
 namespace Brokerage.Common.Domain
 {
@@ -29,6 +30,7 @@ namespace Brokerage.Common.Domain
             services.AddTransient<FailedDepositProcessor>();
             services.AddTransient<FailedWithdrawalProcessor>();
             services.AddSingleton<IDestinationTagGeneratorFactory, DestinationTagGeneratorFactory>();
+            services.AddSingleton<IAddressFormatterFactory, AddressFormatterFactory>();
 
             return services;
         }
