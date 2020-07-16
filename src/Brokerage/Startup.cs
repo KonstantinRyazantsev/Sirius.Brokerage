@@ -20,6 +20,7 @@ using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.EfCore;
 using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sdk.Server.Common;
+using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
 
 namespace Brokerage
 {
@@ -57,6 +58,7 @@ namespace Brokerage
                 });
             });
 
+            services.AddTransient<IAddressFormatterFactory, AddressFormatterFactory>();
             services.AddMassTransit(x =>
             {
                 EndpointConvention.Map<FinalizeBrokerAccountCreation>(
