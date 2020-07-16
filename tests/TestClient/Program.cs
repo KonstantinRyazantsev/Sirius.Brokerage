@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
 using Swisschain.Sirius.Brokerage.ApiClient;
 using Swisschain.Sirius.Brokerage.ApiContract;
+using Swisschain.Sirius.Brokerage.ApiContract.Common;
 
 namespace TestClient
 {
@@ -49,19 +51,27 @@ namespace TestClient
                         //    BrokerAccountId = 1
                         //});
 
-                        //var resultx = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
-                        //{
-                        //    BrokerAccountId = 999_999,
-                        //    AssetId = 100_000,
-                        //    Amount = 0.1m,
-                        //    TenantId = "abel-tenant-100",
-                        //    DestinationDetails = new DestinationDetails() {Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b" },
-                        //    RequestId = "requestId",
-                        //});
+                        var resultч = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
+                        {
+                            BrokerAccountId = 10000007,
+                            AssetId = 100_000,
+                            Amount = 0.1m,
+                            TenantId = "c06c3f79-7e34-44f9-aac9-94c6ef438f58",
+                            DestinationDetails = new DestinationDetails()
+                            {
+                                Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b",
+                                Tag = null,
+                                TagType = new NullableDestinationTagType()
+                                {
+                                    Null = NullValue.NullValue,
+                                }
+                            },
+                            RequestId = "Api:c06c3f79-7e34-44f9-aac9-94c6ef438f58:jhk,uib",
+                        });
 
                         //var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
                         //var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
-                        
+
                         //Console.WriteLine(serializedBrokerAccount);
                         //Console.WriteLine();
                         //Console.WriteLine(serializedAccount);

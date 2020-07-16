@@ -196,7 +196,7 @@ namespace Brokerage.GrpcServices
                     new DestinationDetails(
                         request.DestinationDetails.Address,
                         request.DestinationDetails.Tag,
-                        request.DestinationDetails.TagType== null
+                        request.DestinationDetails.TagType.KindCase == NullableDestinationTagType.KindOneofCase.Null
                             ? (DestinationTagType?) null
                             : request.DestinationDetails.TagType.Value switch
                             {
