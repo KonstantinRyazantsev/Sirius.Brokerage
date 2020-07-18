@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Brokerage.Common.Domain.BrokerAccounts;
 
 namespace Brokerage.Common.Domain.Processing.Context
@@ -12,7 +13,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IReadOnlyCollection<BrokerAccountBalancesContext> balances,
             IReadOnlyCollection<BrokerAccountContextEndpoint> inputs,
             IReadOnlyCollection<BrokerAccountContextEndpoint> outputs,
-            IReadOnlyDictionary<long, decimal> income,
+            // (long brokerAccountDetailsId, long assetId)
+            IReadOnlyDictionary<Tuple<long, long>, decimal> income,
             IReadOnlyDictionary<long, decimal> outcome)
         {
             Accounts = accounts;
@@ -60,7 +62,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         /// <summary>
         /// Income to all broker account details in the given transaction, indexed by asset ID
         /// </summary>
-        public IReadOnlyDictionary<long, decimal> Income { get; }
+        public IReadOnlyDictionary<Tuple<long, long>, decimal> Income { get; }
 
         /// <summary>
         /// Outcome from all broker account details in the given transaction, indexed by asset ID

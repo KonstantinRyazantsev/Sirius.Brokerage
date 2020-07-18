@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
@@ -36,8 +37,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             foreach (var brokerAccountContext in processingContext.BrokerAccounts.Where(x => !x.Accounts.Any()))
             {
-                var brokerAccountDetailsId = brokerAccountContext.Inputs.First().Details.Id;
-                foreach (var (assetId, value) in brokerAccountContext.Income)
+                foreach (var ((brokerAccountDetailsId, assetId), value) in brokerAccountContext.Income)
                 {
                     var outbox = await _outboxManager.Open(
                         $"BrokerDeposits:Create:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}",
