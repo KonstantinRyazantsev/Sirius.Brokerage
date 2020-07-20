@@ -189,7 +189,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 brokerAccountDetails.ToDictionary(x => (x.BrokerAccountId, x.NaturalId.BlockchainId));
 
             var income = inputs
-                .GroupBy(x => new Tuple<long, long>(x.Details.Id, x.Unit.AssetId))
+                .GroupBy(x => (x.Details.Id, x.Unit.AssetId))
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
             var outcome = outputs
                 .GroupBy(x => x.Unit.AssetId)
@@ -207,7 +207,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 {
                     brokerAccountByBlockchainDict
                         .TryGetValue((x.NaturalId.BrokerAccountId, blockchainId), out var brokerAccountDetailsForBalance);
-                    var incomeKey = new Tuple<long, long>(brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
+                    var incomeKey = (brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
 
                     return new BrokerAccountBalancesContext(
                         x,
