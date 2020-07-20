@@ -26,7 +26,6 @@ namespace Brokerage.Common.Domain.Processing.Context
         private readonly IOperationsRepository _operationsRepository;
         private readonly IOutboxManager _outboxManager;
         private readonly IBlockchainsRepository _blockchainsRepository;
-        private readonly IAssetsRepository _assetsRepository;
 
         public TransactionProcessingContextBuilder(IAccountDetailsRepository accountDetailsRepository,
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
@@ -34,8 +33,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
             IOutboxManager outboxManager,
-            IBlockchainsRepository blockchainsRepository,
-            IAssetsRepository assetsRepository)
+            IBlockchainsRepository blockchainsRepository)
         {
             _accountDetailsRepository = accountDetailsRepository;
             _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
@@ -44,7 +42,6 @@ namespace Brokerage.Common.Domain.Processing.Context
             _operationsRepository = operationsRepository;
             _outboxManager = outboxManager;
             _blockchainsRepository = blockchainsRepository;
-            _assetsRepository = assetsRepository;
         }
 
         public async Task<TransactionProcessingContext> Build(string blockchainId,
@@ -128,12 +125,6 @@ namespace Brokerage.Common.Domain.Processing.Context
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)
                 .ToArray();
-
-            //var allAssetsForInputs = matchedDestinations.Select(x => x.Unit.AssetId)
-            //    .Distinct()
-            //    .ToArray();
-            //var assets = (await _assetsRepository.GetByManyIds(allAssetsForInputs))
-            //    .ToDictionary(x => x.Id);
 
             var brokerAccountsContext = matchedBrokerAccountIds
                 .Select(x => BuildBrokerAccountContext(x,
