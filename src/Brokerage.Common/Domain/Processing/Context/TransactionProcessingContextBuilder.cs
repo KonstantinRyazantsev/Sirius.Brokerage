@@ -1,14 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
+using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.Threading;
 using Swisschain.Extensions.Idempotency;
 
@@ -173,8 +176,11 @@ namespace Brokerage.Common.Domain.Processing.Context
                 outputs.AddRange(detailsOutput);
             }
 
+            var brokerAccountByBlockchainDict =
+                brokerAccountDetails.ToDictionary(x => (x.BrokerAccountId, x.NaturalId.BlockchainId));
+
             var income = inputs
-                .GroupBy(x => x.Unit.AssetId)
+                .GroupBy(x => (x.Details.Id, x.Unit.AssetId))
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
             var outcome = outputs
                 .GroupBy(x => x.Unit.AssetId)
@@ -188,12 +194,18 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToArray();
 
             var balances = brokerAccountBalances
-                .Select(x => new BrokerAccountBalancesContext(
-                    x,
-                    income.GetValueOrDefault(x.NaturalId.AssetId),
-                    outcome.GetValueOrDefault(x.NaturalId.AssetId),
-                    x.NaturalId.AssetId))
-                .ToArray();
+                .Select(x =>
+                {
+                    brokerAccountByBlockchainDict
+                        .TryGetValue((x.NaturalId.BrokerAccountId, blockchainId), out var brokerAccountDetailsForBalance);
+                    var incomeKey = (brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
+
+                    return new BrokerAccountBalancesContext(
+                        x,
+                        income.GetValueOrDefault(incomeKey),
+                            outcome.GetValueOrDefault(x.NaturalId.AssetId),
+                            x.NaturalId.AssetId);
+                }).ToArray();
 
             var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
 

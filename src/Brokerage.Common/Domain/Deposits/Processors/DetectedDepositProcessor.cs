@@ -8,6 +8,7 @@ using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.Deposits;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Indexer.MessagingContract;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits.Processors
 {
@@ -37,10 +38,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             {
                 foreach (var accountContext in brokerAccountContext.Accounts)
                 {
-                    foreach (var input in accountContext.Inputs.Where(x => x.Amount > 0))
+                    foreach (var (assetId, value) in accountContext.Income.Where(x => x.Value> 0))
                     {
                         var outbox = await _outboxManager.Open(
-                            $"Deposits:Create:{tx.TransactionId}-{accountContext.Details.Id}-{input.AssetId}",
+                            $"Deposits:Create:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}",
                             () => _depositsRepository.GetNextIdAsync());
 
                         var deposit = Deposit.Create(
@@ -50,9 +51,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                             brokerAccountContext.BrokerAccountId,
                             brokerAccountContext.ActiveDetails.Id,
                             accountContext.Details.Id,
-                            input,
+                            new Unit(assetId, value), 
                             processingContext.TransactionInfo,
                             tx.Sources
+                                .Where(x => x.Unit.AssetId == assetId)
                                 .Select(x => new DepositSource(x.Address, x.Unit.Amount))
                                 .ToArray());
 

@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.3.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="6.3.2" />
+    <PackageReference Include="swisschain.extensions.postgres" Version="1.0.0" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.1" />
     <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.1.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0-beta.1" />
