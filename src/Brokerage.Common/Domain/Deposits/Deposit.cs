@@ -178,7 +178,7 @@ namespace Brokerage.Common.Domain.Deposits
                     accountDetails.NaturalId.Address,
                     brokerAccountDetails.NaturalId.Address,
                     Unit,
-                    tx.BlockNumber + tx.RequiredConfirmationsCount - 1,
+                    tx.BlockNumber,
                     brokerAccount.VaultId);
 
                 ConsolidationOperationId = operation.Id;
