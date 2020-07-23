@@ -72,7 +72,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             var destinationBrokerAccountDetailsIds = destinationAddresses
                 .Select(x => new BrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
-            
+
             var allAccountDetailsIds = sourceAccountDetailsIds
                 .Union(destinationAccountDetailsIds)
                 .ToHashSet();
@@ -103,8 +103,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToArray();
 
             var brokerAccountBalancesIds = BuildBrokerAccountBalancesIds(
-                matchedBrokerAccountIds, 
-                matchedAccountDetails, 
+                matchedBrokerAccountIds,
+                matchedAccountDetails,
                 matchedBrokerAccountDetails,
                 matchedSources,
                 matchedDestinations);
@@ -188,23 +188,38 @@ namespace Brokerage.Common.Domain.Processing.Context
 
             var accounts = matchedAccountDetails
                 .Select(x => BuildAccountContext(
-                    matchedDestinations, 
-                    matchedSources, 
+                    matchedDestinations,
+                    matchedSources,
                     x))
                 .ToArray();
 
             var balances = brokerAccountBalances
                 .Select(x =>
                 {
-                    brokerAccountByBlockchainDict
-                        .TryGetValue((x.NaturalId.BrokerAccountId, blockchainId), out var brokerAccountDetailsForBalance);
-                    var incomeKey = (brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
+                    (long, long) incomeKey;
+
+                    if (brokerAccountByBlockchainDict
+                        .TryGetValue((x.NaturalId.BrokerAccountId, blockchainId), out var brokerAccountDetailsForBalance))
+                    {
+                        incomeKey = (brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
+                    }
+                    else if (allActiveDetails.TryGetValue(new ActiveBrokerAccountDetailsId(blockchainId, x.NaturalId.BrokerAccountId),
+                            out var activeBrokerAccountDetailsForBalance))
+                    {
+                        incomeKey = (activeBrokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Error happened. " +
+                                                            $"It is not possible to find " +
+                                                            $"broker account details for broker account {brokerAccountId}");
+                    }
 
                     return new BrokerAccountBalancesContext(
-                        x,
-                        income.GetValueOrDefault(incomeKey),
-                            outcome.GetValueOrDefault(x.NaturalId.AssetId),
-                            x.NaturalId.AssetId);
+                    x,
+                    income.GetValueOrDefault(incomeKey),
+                        outcome.GetValueOrDefault(x.NaturalId.AssetId),
+                        x.NaturalId.AssetId);
                 }).ToArray();
 
             var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
