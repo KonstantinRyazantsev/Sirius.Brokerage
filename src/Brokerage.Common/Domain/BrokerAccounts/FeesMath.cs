@@ -26,7 +26,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 .ToDictionary(x => x.AssetId, x => x.Amount);
 
             return brokerAccountIds
-                .SelectMany((brokerAccountIndex, brokerAccountId) =>
+                .SelectMany((brokerAccountId, brokerAccountIndex) =>
                 {
                     if (brokerAccountIndex == 0)
                     {
