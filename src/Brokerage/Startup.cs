@@ -7,18 +7,17 @@ using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.ServiceFunctions;
 using Brokerage.GrpcServices;
 using Brokerage.HostedServices;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.EfCore;
 using Swisschain.Extensions.Idempotency.MassTransit;
+using Swisschain.Extensions.MassTransit;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
 
@@ -81,9 +80,9 @@ namespace Brokerage
             
                     cfg.SetLoggerFactory(provider.Container.GetRequiredService<ILoggerFactory>());
                 }));
-            
-                services.AddSingleton<IHostedService, BusHost>();
             });
+
+            services.AddMassTransitBusHost();
         }
 
         protected override void RegisterEndpoints(IEndpointRouteBuilder endpoints)
