@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
-using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
+using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -21,13 +21,15 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IDepositsRepository _depositsRepository;
         private readonly IWithdrawalRepository _withdrawalRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
+        private readonly IOperationsRepository _operationsRepository;
 
         public OperationCompletedConsumer(ILogger<OperationCompletedConsumer> logger,
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
             IWithdrawalRepository withdrawalRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IOperationsRepository operationsRepository)
         {
             _logger = logger;
             _processingContextBuilder = processingContextBuilder;
@@ -35,6 +37,7 @@ namespace Brokerage.Worker.MessageConsumers
             _depositsRepository = depositsRepository;
             _withdrawalRepository = withdrawalRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
+            _operationsRepository = operationsRepository;
         }
 
         public async Task Consume(ConsumeContext<OperationCompleted> context)
@@ -42,7 +45,8 @@ namespace Brokerage.Worker.MessageConsumers
             var evt = context.Message;
 
             var processingContext = await _processingContextBuilder.Build(evt.OperationId);
-            
+            var operation = processingContext.Operation;
+
             if (processingContext.IsEmpty)
             {
                 _logger.LogInformation("There is nothing to process in the operation {@context}", evt);
@@ -80,6 +84,10 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(@event);
             }
+
+            operation.AddActualFees(evt.ActualFees);
+
+            await _operationsRepository.UpdateAsync(operation);
 
             _logger.LogInformation("Operation completion has been processed {@context}", evt);
         }

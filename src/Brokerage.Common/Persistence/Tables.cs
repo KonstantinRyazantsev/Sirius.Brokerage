@@ -21,6 +21,10 @@
         public const string WithdrawalFees = "withdrawals_fees";
         
         public const string Operations = "operations";
+        public const string ActualOperationFees = "actual_operation_fees";
+        public const string ExpectedOperationFees = "expected_operation_fees";
+
+
         public const string DetectedTransactions = "detected_transactions";
     }
 }

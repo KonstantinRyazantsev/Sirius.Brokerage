@@ -28,21 +28,28 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
                 .Distinct()
                 .ToArray();
 
-            var fees = evt.ActualFees != null
+            var actualFees = evt.ActualFees != null
                 ? FeesMath.SpreadAcrossBrokerAccounts(evt.ActualFees, brokerAccountIds)
+                : new Dictionary<BrokerAccountBalancesId, decimal>();
+
+            var expectedFees = processingContext.Operation.ExpectedFees != null
+                ? FeesMath.SpreadAcrossBrokerAccounts(processingContext.Operation.ExpectedFees, brokerAccountIds)
                 : new Dictionary<BrokerAccountBalancesId, decimal>();
 
             var balanceChanges = processingContext.Withdrawals
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Sum(x => x.Unit.Amount) + fees.GetValueOrDefault(g.Key));
+                    g => (g.Sum(x => x.Unit.Amount), 
+                        actualFees.GetValueOrDefault(g.Key),
+                        expectedFees.GetValueOrDefault(g.Key)));
 
-            foreach (var (balanceId, value) in balanceChanges.Where(x => x.Value > 0))
+            foreach (var (balanceId, value) in balanceChanges.Where(x => x.Value.Item1 > 0))
             {
                 var balances = processingContext.BrokerAccountBalances[balanceId];
-                
-                balances.Withdraw(value);
+
+                balances.FreeReservedBalance(value.Item3 - value.Item2);
+                balances.Withdraw(value.Item1+ value.Item2);
             }
 
             return Task.CompletedTask;

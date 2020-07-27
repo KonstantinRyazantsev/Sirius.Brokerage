@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Persistence.Accounts;
+﻿using System.Linq;
+using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
@@ -8,6 +9,10 @@ using Brokerage.Common.Persistence.Transactions;
 using Brokerage.Common.Persistence.Withdrawals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
+using Z.EntityFramework.Extensions;
 
 namespace Brokerage.Common.Persistence
 {
@@ -27,19 +32,39 @@ namespace Brokerage.Common.Persistence
             services.AddTransient<IOperationsRepository, OperationsRepository>();
             services.AddTransient<IDetectedTransactionsRepository, DetectedTransactionsRepository>();
 
+            var configureNamedOptions = new ConfigureNamedOptions<ConsoleLoggerOptions>("", null);
+            var optionsFactory = new OptionsFactory<ConsoleLoggerOptions>(new[] { configureNamedOptions }, Enumerable.Empty<IPostConfigureOptions<ConsoleLoggerOptions>>());
+            var optionsMonitor = new OptionsMonitor<ConsoleLoggerOptions>(optionsFactory, Enumerable.Empty<IOptionsChangeTokenSource<ConsoleLoggerOptions>>(), new OptionsCache<ConsoleLoggerOptions>());
+            var loggerFactory = new LoggerFactory(new[] { new ConsoleLoggerProvider(optionsMonitor) }, new LoggerFilterOptions { MinLevel = LogLevel.Information });
+
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {
-                var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
-                optionsBuilder.UseNpgsql(connectionString,
-                    builder =>
-                        builder.MigrationsHistoryTable(
-                            DatabaseContext.MigrationHistoryTable,
-                            DatabaseContext.SchemaName));
+                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString);
 
                 return optionsBuilder;
             });
 
+            EntityFrameworkManager.ContextFactory = context =>
+            {
+                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString);
+                return new DatabaseContext(optionsBuilder.Options);
+            };
+
             return services;
+        }
+
+        private static DbContextOptionsBuilder<DatabaseContext> CreateDbContextOptionsBuilder(string connectionString)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
+
+            //optionsBuilder.UseLoggerFactory(loggerFactory) //tie-up DbContext with LoggerFactory object
+            //    .EnableSensitiveDataLogging();
+            optionsBuilder.UseNpgsql(connectionString,
+                builder =>
+                    builder.MigrationsHistoryTable(
+                        DatabaseContext.MigrationHistoryTable,
+                        DatabaseContext.SchemaName));
+            return optionsBuilder;
         }
     }
 }

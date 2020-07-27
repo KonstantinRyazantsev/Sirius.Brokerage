@@ -1,8 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Operations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Operations
 {
@@ -28,8 +31,24 @@ namespace Brokerage.Common.Persistence.Operations
         public async Task AddOrIgnore(Operation operation)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            
+            context.Operations.Add(FromDomain(operation));
 
-            await context.Operations.AddAsync(FromDomain(operation));
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+            }
+        }
+
+        public async Task UpdateAsync(Operation operation)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var entity = FromDomain(operation);
+            context.Operations.Update(FromDomain(operation));
 
             try
             {
@@ -42,7 +61,12 @@ namespace Brokerage.Common.Persistence.Operations
 
         private static Operation ToDomain(OperationEntity entity)
         {
-            return new Operation(entity.Id, entity.Type);
+            return Operation.Restore(
+                entity.Id, 
+                entity.Type, 
+                entity.ActualFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
+                entity.ExpectedFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
+                entity.Version);
         }
 
         private static OperationEntity FromDomain(Operation operation)
@@ -50,7 +74,18 @@ namespace Brokerage.Common.Persistence.Operations
             return new OperationEntity
             {
                 Id = operation.Id,
-                Type = operation.Type
+                Type = operation.Type,
+                ExpectedFees = operation?.ExpectedFees.Select(x => new ExpectedOperationFeeEntity()
+                {
+                    Amount = x.Amount,
+                    AssetId = x.AssetId
+                }).ToArray(),
+                ActualFees = operation?.ActualFees.Select(x => new ActualOperationFeeEntity()
+                {
+                    Amount = x.Amount,
+                    AssetId = x.AssetId
+                }).ToArray(),
+                Version = operation.Version
             };
         }
     }

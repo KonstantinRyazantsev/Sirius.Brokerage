@@ -2,7 +2,6 @@
 
 namespace Brokerage.Common.Persistence.Deposits
 {
-    [Table(name: Tables.DepositSources)]
     public class DepositSourceEntity
     {
         public long DepositId { get; set; }

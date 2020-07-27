@@ -61,7 +61,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start deposit consolidation {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            var operation = new Operation(response.Response.Operation.Id, OperationType.DepositConsolidation);
+            var operation = Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
 
             await _operationsRepository.AddOrIgnore(operation);
 
@@ -119,7 +119,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start withdrawal {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            var operation = new Operation(response.Response.Operation.Id, OperationType.Withdrawal);
+            var operation = Operation.Create(response.Response.Operation.Id, OperationType.Withdrawal);
 
             await _operationsRepository.AddOrIgnore(operation);
 

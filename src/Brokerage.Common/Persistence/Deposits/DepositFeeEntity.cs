@@ -2,7 +2,6 @@
 
 namespace Brokerage.Common.Persistence.Deposits
 {
-    [Table(name: Tables.DepositFees)]
     public class DepositFeeEntity
     {
         public long DepositId { get; set; }

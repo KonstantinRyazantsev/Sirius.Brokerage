@@ -180,6 +180,25 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             GenerateEvent();
         }
 
+        /// <summary>
+        /// This action does not generate event
+        /// </summary>
+        /// <param name="amount"></param>
+        public void FreeReservedBalance(decimal amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            AvailableBalance += amount;
+            ReservedBalance -= amount;
+
+            var dateTime = DateTime.UtcNow;
+
+            UpdatedAt = dateTime;
+        }
+
         public void Withdraw(decimal amount)
         {
             if (amount <= 0)

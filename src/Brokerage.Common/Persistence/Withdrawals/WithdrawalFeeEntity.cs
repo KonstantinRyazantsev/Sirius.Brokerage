@@ -2,7 +2,6 @@
 
 namespace Brokerage.Common.Persistence.Withdrawals
 {
-    [Table(name: Tables.DepositFees)]
     public class WithdrawalFeeEntity
     {
         public long WithdrawalId { get; set; }

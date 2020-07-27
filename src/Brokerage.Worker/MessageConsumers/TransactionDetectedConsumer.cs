@@ -39,6 +39,9 @@ namespace Brokerage.Worker.MessageConsumers
         public async Task Consume(ConsumeContext<TransactionDetected> context)
         {
             var tx = context.Message;
+
+            _logger.LogInformation("Detected transaction is being processed {@context}", tx);
+
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
@@ -59,7 +62,8 @@ namespace Brokerage.Worker.MessageConsumers
                 _logger.LogDebug("There is nothing to process in the transaction {@context}", new
                 {
                     BlockchainId = tx.BlockchainId,
-                    TransactionId = tx.TransactionId
+                    TransactionId = tx.TransactionId,
+                    OperationId = tx.OperationId
                 });
 
                 return;

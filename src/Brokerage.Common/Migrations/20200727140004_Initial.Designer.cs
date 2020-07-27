@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Brokerage.Common.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200703213258_DepositsIndexedImprovedForSearch")]
-    partial class DepositsIndexedImprovedForSearch
+    [Migration("20200727140004_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -286,8 +286,14 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
 
+                    b.Property<string>("Fees")
+                        .HasColumnType("text");
+
                     b.Property<long>("Sequence")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Sources")
+                        .HasColumnType("text");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -330,22 +336,6 @@ namespace Brokerage.Common.Migrations
                     b.ToTable("deposits");
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositFeeEntity", b =>
-                {
-                    b.Property<long>("DepositId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("AssetId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("DepositId", "AssetId");
-
-                    b.ToTable("deposit_fees");
-                });
-
             modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositSourceEntity", b =>
                 {
                     b.Property<long>("DepositId")
@@ -357,7 +347,12 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<long?>("DepositEntityId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("DepositId", "Address");
+
+                    b.HasIndex("DepositEntityId");
 
                     b.ToTable("deposit_sources");
                 });
@@ -369,8 +364,20 @@ namespace Brokerage.Common.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+                    b.Property<string>("ActualFees")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExpectedFees")
+                        .HasColumnType("text");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnName("xmin")
+                        .HasColumnType("xid");
 
                     b.HasKey("Id");
 
@@ -424,6 +431,9 @@ namespace Brokerage.Common.Migrations
 
                     b.Property<int?>("DestinationTagType")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Fees")
+                        .HasColumnType("text");
 
                     b.Property<long?>("OperationId")
                         .HasColumnType("bigint");
@@ -489,7 +499,12 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<long?>("WithdrawalEntityId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("WithdrawalId", "AssetId");
+
+                    b.HasIndex("WithdrawalEntityId");
 
                     b.ToTable("withdrawals_fees");
                 });
@@ -523,11 +538,17 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnName("xmin")
-                        .HasColumnType("xid");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("NetworkType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Protocol")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -592,115 +613,18 @@ namespace Brokerage.Common.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositFeeEntity", b =>
-                {
-                    b.HasOne("Brokerage.Common.Persistence.Deposits.DepositEntity", "DepositEntity")
-                        .WithMany("Fees")
-                        .HasForeignKey("DepositId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositSourceEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Deposits.DepositEntity", "DepositEntity")
-                        .WithMany("Sources")
-                        .HasForeignKey("DepositId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("DepositEntityId");
                 });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.Withdrawals.WithdrawalFeeEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Withdrawals.WithdrawalEntity", "WithdrawalEntity")
-                        .WithMany("Fees")
-                        .HasForeignKey("WithdrawalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Brokerage.Common.ReadModels.Blockchains.Blockchain", b =>
-                {
-                    b.OwnsOne("Brokerage.Common.ReadModels.Blockchains.Protocol", "Protocol", b1 =>
-                        {
-                            b1.Property<string>("BlockchainId")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Code")
-                                .HasColumnName("ProtocolCode")
-                                .HasColumnType("text");
-
-                            b1.HasKey("BlockchainId");
-
-                            b1.HasIndex("Code")
-                                .HasName("IX_Blockchain_ProtocolCode");
-
-                            b1.ToTable("blockchains");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BlockchainId");
-
-                            b1.OwnsOne("Brokerage.Common.ReadModels.Blockchains.Capabilities", "Capabilities", b2 =>
-                                {
-                                    b2.Property<string>("ProtocolBlockchainId")
-                                        .HasColumnType("text");
-
-                                    b2.HasKey("ProtocolBlockchainId");
-
-                                    b2.ToTable("blockchains");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("ProtocolBlockchainId");
-
-                                    b2.OwnsOne("Brokerage.Common.ReadModels.Blockchains.DestinationTagCapabilities", "DestinationTag", b3 =>
-                                        {
-                                            b3.Property<string>("CapabilitiesProtocolBlockchainId")
-                                                .HasColumnType("text");
-
-                                            b3.HasKey("CapabilitiesProtocolBlockchainId");
-
-                                            b3.ToTable("blockchains");
-
-                                            b3.WithOwner()
-                                                .HasForeignKey("CapabilitiesProtocolBlockchainId");
-
-                                            b3.OwnsOne("Brokerage.Common.ReadModels.Blockchains.NumberDestinationTagsCapabilities", "Number", b4 =>
-                                                {
-                                                    b4.Property<string>("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId")
-                                                        .HasColumnType("text");
-
-                                                    b4.Property<long>("Max")
-                                                        .HasColumnType("bigint");
-
-                                                    b4.Property<long>("Min")
-                                                        .HasColumnType("bigint");
-
-                                                    b4.HasKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
-
-                                                    b4.ToTable("blockchains");
-
-                                                    b4.WithOwner()
-                                                        .HasForeignKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
-                                                });
-
-                                            b3.OwnsOne("Brokerage.Common.ReadModels.Blockchains.TextDestinationTagsCapabilities", "Text", b4 =>
-                                                {
-                                                    b4.Property<string>("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId")
-                                                        .HasColumnType("text");
-
-                                                    b4.Property<long>("MaxLength")
-                                                        .HasColumnType("bigint");
-
-                                                    b4.HasKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
-
-                                                    b4.ToTable("blockchains");
-
-                                                    b4.WithOwner()
-                                                        .HasForeignKey("DestinationTagCapabilitiesCapabilitiesProtocolBlockchainId");
-                                                });
-                                        });
-                                });
-                        });
+                        .WithMany()
+                        .HasForeignKey("WithdrawalEntityId");
                 });
 #pragma warning restore 612, 618
         }
