@@ -46,7 +46,10 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
 
             foreach (var (balanceId, value) in fees.Where(x => x.Value > 0))
             {
-                var balances = processingContext.BrokerAccountBalances[balanceId];
+                if (!processingContext.BrokerAccountBalances.TryGetValue(balanceId, out var balances))
+                {
+                    continue;
+                }
 
                 balances.ReserveBalance(value);
             }
