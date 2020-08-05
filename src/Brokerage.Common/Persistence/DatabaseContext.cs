@@ -84,10 +84,6 @@ namespace Brokerage.Common.Persistence
                 .ToTable(Tables.Operations)
                 .HasKey(x => x.Id);
 
-            modelBuilder.Entity<OperationEntity>()
-                .ToTable(Tables.Operations)
-                .HasKey(x => x.Id);
-
             modelBuilder.Entity<OperationEntity>(e =>
             {
                 e.Property(p => p.Version)

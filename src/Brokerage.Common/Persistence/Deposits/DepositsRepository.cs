@@ -85,7 +85,6 @@ namespace Brokerage.Common.Persistence.Deposits
                 else
                 {
                     context.Deposits.Update(entity);
-                    //context.Entry(entity).State = EntityState.Modified;
                 }
             }
 

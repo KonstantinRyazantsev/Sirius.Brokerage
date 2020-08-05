@@ -19,14 +19,14 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
             _operationsRepository = operationsRepository;
         }
 
-        public async Task Process(OperationSent evt, OperationProcessingContext processingContext)
+        public Task Process(OperationSent evt, OperationProcessingContext processingContext)
         {
             if (processingContext.Operation.Type != OperationType.Withdrawal)
             {
-                return;
+                return Task.CompletedTask;
             }
 
-            var operation = await _operationsRepository.GetOrDefault(evt.OperationId);
+            var operation = processingContext.Operation;
 
             foreach (var withdrawal in processingContext.Withdrawals)
             {
@@ -54,7 +54,7 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
                 balances.ReserveBalance(value);
             }
 
-            await _operationsRepository.UpdateAsync(operation);
+            return Task.CompletedTask;
         }
     }
 }

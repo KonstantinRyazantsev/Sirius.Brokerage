@@ -62,13 +62,15 @@ namespace Brokerage.Worker.MessageConsumers
             var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
             var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
             var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+            operation.AddActualFees(evt.ActualFees);
 
             await Task.WhenAll(
                 _depositsRepository.SaveAsync(updatedDeposits),
                 _withdrawalRepository.SaveAsync(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.SaveAsync(
                     $"{BalanceChangingReason.OperationCompleted}_{processingContext.Operation.Id}",
-                    updatedBrokerAccountBalances));
+                    updatedBrokerAccountBalances),
+            _operationsRepository.UpdateAsync(operation));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
             {
@@ -84,10 +86,6 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(@event);
             }
-
-            operation.AddActualFees(evt.ActualFees);
-
-            await _operationsRepository.UpdateAsync(operation);
 
             _logger.LogInformation("Operation completion has been processed {@context}", evt);
         }

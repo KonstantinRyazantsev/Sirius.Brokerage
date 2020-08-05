@@ -40,16 +40,16 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                 .ToDictionary(
                     g => g.Key,
-                    g => (g.Sum(x => x.Unit.Amount), 
-                        actualFees.GetValueOrDefault(g.Key),
-                        expectedFees.GetValueOrDefault(g.Key)));
+                    g => (Amount: g.Sum(x => x.Unit.Amount),
+                        ActualFee: actualFees.GetValueOrDefault(g.Key),
+                        ExpectedFee: expectedFees.GetValueOrDefault(g.Key)));
 
-            foreach (var (balanceId, value) in balanceChanges.Where(x => x.Value.Item1 > 0))
+            foreach (var (balanceId, value) in balanceChanges.Where(x => x.Value.Amount > 0))
             {
                 var balances = processingContext.BrokerAccountBalances[balanceId];
 
-                balances.FreeReservedBalance(value.Item3 - value.Item2);
-                balances.Withdraw(value.Item1+ value.Item2);
+                balances.FreeReservedBalance(value.ExpectedFee - value.ActualFee);
+                balances.Withdraw(value.Amount + value.ActualFee);
             }
 
             return Task.CompletedTask;

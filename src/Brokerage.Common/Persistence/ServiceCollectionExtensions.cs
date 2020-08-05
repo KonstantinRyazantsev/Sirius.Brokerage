@@ -32,11 +32,6 @@ namespace Brokerage.Common.Persistence
             services.AddTransient<IOperationsRepository, OperationsRepository>();
             services.AddTransient<IDetectedTransactionsRepository, DetectedTransactionsRepository>();
 
-            var configureNamedOptions = new ConfigureNamedOptions<ConsoleLoggerOptions>("", null);
-            var optionsFactory = new OptionsFactory<ConsoleLoggerOptions>(new[] { configureNamedOptions }, Enumerable.Empty<IPostConfigureOptions<ConsoleLoggerOptions>>());
-            var optionsMonitor = new OptionsMonitor<ConsoleLoggerOptions>(optionsFactory, Enumerable.Empty<IOptionsChangeTokenSource<ConsoleLoggerOptions>>(), new OptionsCache<ConsoleLoggerOptions>());
-            var loggerFactory = new LoggerFactory(new[] { new ConsoleLoggerProvider(optionsMonitor) }, new LoggerFilterOptions { MinLevel = LogLevel.Information });
-
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {
                 var optionsBuilder = CreateDbContextOptionsBuilder(connectionString);
@@ -57,8 +52,6 @@ namespace Brokerage.Common.Persistence
         {
             var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
 
-            //optionsBuilder.UseLoggerFactory(loggerFactory) //tie-up DbContext with LoggerFactory object
-            //    .EnableSensitiveDataLogging();
             optionsBuilder.UseNpgsql(connectionString,
                 builder =>
                     builder.MigrationsHistoryTable(

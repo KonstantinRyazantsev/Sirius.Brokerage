@@ -38,7 +38,8 @@ namespace Brokerage.Common.Persistence.Operations
             {
                 await context.SaveChangesAsync();
             }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx 
+                                              && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
             {
             }
         }
@@ -47,14 +48,13 @@ namespace Brokerage.Common.Persistence.Operations
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var entity = FromDomain(operation);
             context.Operations.Update(FromDomain(operation));
 
             try
             {
                 await context.SaveChangesAsync();
             }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
             {
             }
         }
