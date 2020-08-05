@@ -159,7 +159,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             OwnedBalance -= fee;
 
             UpdatedAt = DateTime.UtcNow;
-            
+
             GenerateEvent();
         }
 
@@ -180,34 +180,39 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             GenerateEvent();
         }
 
-        /// <summary>
-        /// This action does not generate event
-        /// </summary>
-        /// <param name="amount"></param>
-        public void FreeReservedBalance(decimal amount)
+        public void Withdraw(decimal amount, decimal actualFee, decimal expectedFee)
         {
-            if (amount <= 0)
+            var surplusReservedBalance = expectedFee - actualFee;
+            var withdrawalAmount = amount + actualFee;
+
+            if (surplusReservedBalance > 0)
             {
-                return;
+                AvailableBalance += surplusReservedBalance;
+                ReservedBalance -= surplusReservedBalance;
             }
 
-            AvailableBalance += amount;
-            ReservedBalance -= amount;
+            ReservedBalance -= withdrawalAmount;
+            OwnedBalance -= withdrawalAmount;
 
             var dateTime = DateTime.UtcNow;
 
             UpdatedAt = dateTime;
+
+            GenerateEvent();
         }
 
-        public void Withdraw(decimal amount)
+        public void FailWithdrawal(decimal amount, decimal actualFee, decimal expectedFee)
         {
-            if (amount <= 0)
+            var surplusReservedBalance = expectedFee - actualFee;
+
+            if (surplusReservedBalance > 0)
             {
-                return;
+                AvailableBalance += surplusReservedBalance;
             }
 
-            ReservedBalance -= amount;
-            OwnedBalance -= amount;
+            ReservedBalance -= (amount + expectedFee);
+            AvailableBalance += amount;
+            OwnedBalance -= actualFee;
 
             var dateTime = DateTime.UtcNow;
 

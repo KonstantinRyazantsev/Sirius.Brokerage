@@ -48,8 +48,7 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
             {
                 var balances = processingContext.BrokerAccountBalances[balanceId];
 
-                balances.FreeReservedBalance(value.ExpectedFee - value.ActualFee);
-                balances.Withdraw(value.Amount + value.ActualFee);
+                balances.Withdraw(value.Amount, value.ActualFee, value.ExpectedFee);
             }
 
             return Task.CompletedTask;
