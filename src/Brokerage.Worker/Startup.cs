@@ -7,17 +7,16 @@ using Microsoft.Extensions.Logging;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Accounts;
-using Brokerage.Common.HostedServices;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.MessageConsumers;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Microsoft.EntityFrameworkCore;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.EfCore;
 using Swisschain.Extensions.Idempotency.MassTransit;
+using Swisschain.Extensions.MassTransit;
 using Swisschain.Extensions.Postgres;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
@@ -70,10 +69,14 @@ namespace Brokerage.Worker
                     });
             
                     cfg.UseMessageRetry(y =>
-                        y.Exponential(5, 
+                    {
+                        y.AddRetriesAudit(provider.Container);
+
+                        y.Exponential(5,
                             TimeSpan.FromMilliseconds(100),
-                            TimeSpan.FromMilliseconds(10_000), 
-                            TimeSpan.FromMilliseconds(100)));
+                            TimeSpan.FromMilliseconds(10_000),
+                            TimeSpan.FromMilliseconds(100));
+                    });
             
                     cfg.SetLoggerFactory(provider.Container.GetRequiredService<ILoggerFactory>());
                     
@@ -147,9 +150,9 @@ namespace Brokerage.Worker
                     });
 
                 }));
-            
-                services.AddHostedService<BusHost>();
             });
+
+            services.AddMassTransitBusHost();
         }
     }
 }

@@ -33,7 +33,11 @@ namespace Brokerage.Common.Migrations
                 schema: "brokerage",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false)
+                    Id = table.Column<string>(nullable: false),
+                    Protocol = table.Column<string>(nullable: true),
+                    NetworkType = table.Column<int>(nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,7 +90,8 @@ namespace Brokerage.Common.Migrations
                     Name = table.Column<string>(nullable: true),
                     State = table.Column<int>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    VaultId = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -111,6 +116,7 @@ namespace Brokerage.Common.Migrations
                     AssetId = table.Column<long>(nullable: false),
                     Amount = table.Column<decimal>(nullable: false),
                     ConsolidationOperationId = table.Column<long>(nullable: true),
+                    Fees = table.Column<string>(nullable: true),
                     TransactionId = table.Column<string>(nullable: true),
                     TransactionBlock = table.Column<long>(nullable: false),
                     TransactionRequiredConfirmationsCount = table.Column<long>(nullable: false),
@@ -118,6 +124,7 @@ namespace Brokerage.Common.Migrations
                     ErrorMessage = table.Column<string>(nullable: true),
                     ErrorCode = table.Column<int>(nullable: true),
                     State = table.Column<int>(nullable: false),
+                    Sources = table.Column<string>(nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
@@ -146,7 +153,10 @@ namespace Brokerage.Common.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Type = table.Column<int>(nullable: false)
+                    ActualFees = table.Column<string>(nullable: true),
+                    ExpectedFees = table.Column<string>(nullable: true),
+                    Type = table.Column<int>(nullable: false),
+                    xmin = table.Column<uint>(type: "xid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -190,6 +200,7 @@ namespace Brokerage.Common.Migrations
                     AssetId = table.Column<long>(nullable: false),
                     Amount = table.Column<decimal>(nullable: false),
                     TenantId = table.Column<string>(nullable: true),
+                    Fees = table.Column<string>(nullable: true),
                     DestinationAddress = table.Column<string>(nullable: true),
                     DestinationTag = table.Column<string>(nullable: true),
                     DestinationTagType = table.Column<int>(nullable: true),
@@ -217,7 +228,6 @@ namespace Brokerage.Common.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:IdentitySequenceOptions", "'10200000', '1', '', '', 'False', '1'")
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RequestId = table.Column<string>(nullable: true),
                     BrokerAccountId = table.Column<long>(nullable: false),
                     ReferenceId = table.Column<string>(nullable: true),
                     State = table.Column<int>(nullable: false),
@@ -269,45 +279,25 @@ namespace Brokerage.Common.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "deposit_fees",
-                schema: "brokerage",
-                columns: table => new
-                {
-                    DepositId = table.Column<long>(nullable: false),
-                    AssetId = table.Column<long>(nullable: false),
-                    Amount = table.Column<decimal>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_deposit_fees", x => new { x.DepositId, x.AssetId });
-                    table.ForeignKey(
-                        name: "FK_deposit_fees_deposits_DepositId",
-                        column: x => x.DepositId,
-                        principalSchema: "brokerage",
-                        principalTable: "deposits",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "deposit_sources",
                 schema: "brokerage",
                 columns: table => new
                 {
                     DepositId = table.Column<long>(nullable: false),
                     Address = table.Column<string>(nullable: false),
+                    DepositEntityId = table.Column<long>(nullable: true),
                     Amount = table.Column<decimal>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_deposit_sources", x => new { x.DepositId, x.Address });
                     table.ForeignKey(
-                        name: "FK_deposit_sources_deposits_DepositId",
-                        column: x => x.DepositId,
+                        name: "FK_deposit_sources_deposits_DepositEntityId",
+                        column: x => x.DepositEntityId,
                         principalSchema: "brokerage",
                         principalTable: "deposits",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -317,18 +307,19 @@ namespace Brokerage.Common.Migrations
                 {
                     WithdrawalId = table.Column<long>(nullable: false),
                     AssetId = table.Column<long>(nullable: false),
+                    WithdrawalEntityId = table.Column<long>(nullable: true),
                     Amount = table.Column<decimal>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_withdrawals_fees", x => new { x.WithdrawalId, x.AssetId });
                     table.ForeignKey(
-                        name: "FK_withdrawals_fees_withdrawals_WithdrawalId",
-                        column: x => x.WithdrawalId,
+                        name: "FK_withdrawals_fees_withdrawals_WithdrawalEntityId",
+                        column: x => x.WithdrawalEntityId,
                         principalSchema: "brokerage",
                         principalTable: "withdrawals",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -364,7 +355,8 @@ namespace Brokerage.Common.Migrations
                 name: "IX_AccountDetails_NaturalId",
                 schema: "brokerage",
                 table: "account_details",
-                column: "NaturalId");
+                column: "NaturalId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AccountDetails_AccountId_BlockchainId",
@@ -378,13 +370,6 @@ namespace Brokerage.Common.Migrations
                 schema: "brokerage",
                 table: "accounts",
                 column: "BrokerAccountId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Account_RequestId",
-                schema: "brokerage",
-                table: "accounts",
-                column: "RequestId",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_broker_account_balances_BrokerAccountId",
@@ -433,17 +418,28 @@ namespace Brokerage.Common.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_deposit_sources_DepositEntityId",
+                schema: "brokerage",
+                table: "deposit_sources",
+                column: "DepositEntityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Deposit_BlockchainId",
+                schema: "brokerage",
+                table: "deposits",
+                column: "BlockchainId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Deposit_ConsolidationOperationId",
                 schema: "brokerage",
                 table: "deposits",
-                column: "ConsolidationOperationId",
-                unique: true);
+                column: "ConsolidationOperationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Deposit_BlockchainId_TransactionId",
+                name: "IX_Deposit_TransactionId",
                 schema: "brokerage",
                 table: "deposits",
-                columns: new[] { "BlockchainId", "TransactionId" });
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Withdrawal_OperationId",
@@ -456,6 +452,12 @@ namespace Brokerage.Common.Migrations
                 schema: "brokerage",
                 table: "withdrawals",
                 column: "TransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_withdrawals_fees_WithdrawalEntityId",
+                schema: "brokerage",
+                table: "withdrawals_fees",
+                column: "WithdrawalEntityId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -482,10 +484,6 @@ namespace Brokerage.Common.Migrations
 
             migrationBuilder.DropTable(
                 name: "broker_account_details",
-                schema: "brokerage");
-
-            migrationBuilder.DropTable(
-                name: "deposit_fees",
                 schema: "brokerage");
 
             migrationBuilder.DropTable(

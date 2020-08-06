@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Persistence.Accounts;
+﻿using System.Collections.Generic;
+using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
+using Swisschain.Sirius.VaultAgent.ApiContract.Transactions;
 using DepositSourceEntity = Brokerage.Common.Persistence.Deposits.DepositSourceEntity;
 
 namespace Brokerage.Common.Persistence
@@ -18,6 +20,8 @@ namespace Brokerage.Common.Persistence
     {
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
+        private static readonly JsonSerializerSettings _jsonSerializingSettings 
+            = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
@@ -31,12 +35,9 @@ namespace Brokerage.Common.Persistence
         public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<DepositEntity> Deposits { get; set; }
-        public DbSet<DepositSourceEntity> DepositSources { get; set; }
-        public DbSet<DepositFeeEntity> Fees { get; set; }
         public DbSet<AccountDetailsEntity> AccountDetails { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
-        public DbSet<WithdrawalFeeEntity> WithdrawalFees { get; set; }
         public DbSet<Asset> Assets { get; set; }
         public DbSet<OperationEntity> Operations { get; set; }
         public DbSet<DetectedTransactionEntity> DetectedTransactions { get; set; }
@@ -82,6 +83,38 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<OperationEntity>()
                 .ToTable(Tables.Operations)
                 .HasKey(x => x.Id);
+
+            modelBuilder.Entity<OperationEntity>(e =>
+            {
+                e.Property(p => p.Version)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
+
+            #region Conversions
+
+            modelBuilder.Entity<OperationEntity>()
+                .Property(e => e.ExpectedFees)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        _jsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<ExpectedOperationFeeEntity>>(v,
+                            _jsonSerializingSettings));
+
+            modelBuilder.Entity<OperationEntity>()
+                .Property(e => e.ActualFees)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        _jsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<ActualOperationFeeEntity>>(v,
+                            _jsonSerializingSettings));
+
+            #endregion
+
         }
 
         private static void BuildAssets(ModelBuilder modelBuilder)
@@ -126,11 +159,18 @@ namespace Brokerage.Common.Persistence
                 .HasIndex(x => x.OperationId)
                 .HasName("IX_Withdrawal_OperationId");
 
+            #region Conversions
 
             modelBuilder.Entity<WithdrawalEntity>()
-                .HasMany(x => x.Fees)
-                .WithOne(x => x.WithdrawalEntity)
-                .HasForeignKey(x => x.WithdrawalId);
+                .Property(e => e.Fees)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        _jsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<WithdrawalFeeEntity>>(v,
+                            _jsonSerializingSettings));
+
+            #endregion
         }
 
         private static void BuildDeposits(ModelBuilder modelBuilder)
@@ -145,14 +185,6 @@ namespace Brokerage.Common.Persistence
                 {
                     x.DepositId,
                     x.Address
-                });
-
-            modelBuilder.Entity<DepositFeeEntity>()
-                .ToTable(Tables.DepositFees)
-                .HasKey(x => new
-                {
-                    x.DepositId,
-                    x.AssetId
                 });
 
             modelBuilder.Entity<DepositEntity>()
@@ -180,15 +212,28 @@ namespace Brokerage.Common.Persistence
                 .HasIndex(x => x.ConsolidationOperationId)
                 .HasName("IX_Deposit_ConsolidationOperationId");
 
-            modelBuilder.Entity<DepositEntity>()
-                .HasMany(x => x.Fees)
-                .WithOne(x => x.DepositEntity)
-                .HasForeignKey(x => x.DepositId);
+
+            #region Conversions
 
             modelBuilder.Entity<DepositEntity>()
-                .HasMany(x => x.Sources)
-                .WithOne(x => x.DepositEntity)
-                .HasForeignKey(x => x.DepositId);
+                .Property(e => e.Fees)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        _jsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<DepositFeeEntity>>(v,
+                            _jsonSerializingSettings));
+
+            modelBuilder.Entity<DepositEntity>()
+                .Property(e => e.Sources)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        _jsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<DepositSourceEntity>>(v,
+                            _jsonSerializingSettings));
+
+            #endregion
         }
 
         private static void BuildBrokerAccountBalances(ModelBuilder modelBuilder)

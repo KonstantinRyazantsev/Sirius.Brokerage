@@ -284,8 +284,14 @@ namespace Brokerage.Common.Migrations
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
 
+                    b.Property<string>("Fees")
+                        .HasColumnType("text");
+
                     b.Property<long>("Sequence")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Sources")
+                        .HasColumnType("text");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -328,22 +334,6 @@ namespace Brokerage.Common.Migrations
                     b.ToTable("deposits");
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositFeeEntity", b =>
-                {
-                    b.Property<long>("DepositId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("AssetId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("DepositId", "AssetId");
-
-                    b.ToTable("deposit_fees");
-                });
-
             modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositSourceEntity", b =>
                 {
                     b.Property<long>("DepositId")
@@ -355,7 +345,12 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<long?>("DepositEntityId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("DepositId", "Address");
+
+                    b.HasIndex("DepositEntityId");
 
                     b.ToTable("deposit_sources");
                 });
@@ -367,8 +362,20 @@ namespace Brokerage.Common.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+                    b.Property<string>("ActualFees")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExpectedFees")
+                        .HasColumnType("text");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnName("xmin")
+                        .HasColumnType("xid");
 
                     b.HasKey("Id");
 
@@ -422,6 +429,9 @@ namespace Brokerage.Common.Migrations
 
                     b.Property<int?>("DestinationTagType")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Fees")
+                        .HasColumnType("text");
 
                     b.Property<long?>("OperationId")
                         .HasColumnType("bigint");
@@ -487,7 +497,12 @@ namespace Brokerage.Common.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<long?>("WithdrawalEntityId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("WithdrawalId", "AssetId");
+
+                    b.HasIndex("WithdrawalEntityId");
 
                     b.ToTable("withdrawals_fees");
                 });
@@ -596,31 +611,18 @@ namespace Brokerage.Common.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositFeeEntity", b =>
-                {
-                    b.HasOne("Brokerage.Common.Persistence.Deposits.DepositEntity", "DepositEntity")
-                        .WithMany("Fees")
-                        .HasForeignKey("DepositId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Brokerage.Common.Persistence.Deposits.DepositSourceEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Deposits.DepositEntity", "DepositEntity")
-                        .WithMany("Sources")
-                        .HasForeignKey("DepositId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("DepositEntityId");
                 });
 
             modelBuilder.Entity("Brokerage.Common.Persistence.Withdrawals.WithdrawalFeeEntity", b =>
                 {
                     b.HasOne("Brokerage.Common.Persistence.Withdrawals.WithdrawalEntity", "WithdrawalEntity")
-                        .WithMany("Fees")
-                        .HasForeignKey("WithdrawalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("WithdrawalEntityId");
                 });
 #pragma warning restore 612, 618
         }

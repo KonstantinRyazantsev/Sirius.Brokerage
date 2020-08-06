@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Persistence.Accounts;
+﻿using System.Linq;
+using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccount;
@@ -8,6 +9,10 @@ using Brokerage.Common.Persistence.Transactions;
 using Brokerage.Common.Persistence.Withdrawals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
+using Z.EntityFramework.Extensions;
 
 namespace Brokerage.Common.Persistence
 {
@@ -29,17 +34,26 @@ namespace Brokerage.Common.Persistence
 
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {
-                var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
-                optionsBuilder.UseNpgsql(connectionString,
-                    builder =>
-                        builder.MigrationsHistoryTable(
-                            DatabaseContext.MigrationHistoryTable,
-                            DatabaseContext.SchemaName));
+                var loggerFactory = x.GetRequiredService<ILoggerFactory>();
+                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString, loggerFactory);
 
                 return optionsBuilder;
             });
 
             return services;
+        }
+
+        private static DbContextOptionsBuilder<DatabaseContext> CreateDbContextOptionsBuilder(string connectionString, ILoggerFactory loggerFactory)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
+            optionsBuilder.UseLoggerFactory(loggerFactory);
+
+            optionsBuilder.UseNpgsql(connectionString,
+                builder =>
+                    builder.MigrationsHistoryTable(
+                        DatabaseContext.MigrationHistoryTable,
+                        DatabaseContext.SchemaName));
+            return optionsBuilder;
         }
     }
 }

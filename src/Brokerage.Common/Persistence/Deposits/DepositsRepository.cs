@@ -32,8 +32,6 @@ namespace Brokerage.Common.Persistence.Deposits
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var deposits = context
                 .Deposits
-                .Include(x => x.Sources)
-                .Include(x => x.Fees)
                 .AsQueryable();
 
             if (blockchainId != null)
@@ -76,7 +74,6 @@ namespace Brokerage.Common.Persistence.Deposits
             }
 
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
             var entities = deposits.Select(MapToEntity);
 
             foreach (var entity in entities)
@@ -88,8 +85,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 else
                 {
                     context.Deposits.Update(entity);
-                    context.Entry(entity).State = EntityState.Modified;
-                }    
+                }
             }
 
             await context.SaveChangesAsync();

@@ -41,6 +41,8 @@ namespace Brokerage.Worker.MessageConsumers
         {
             var tx = context.Message;
 
+            _logger.LogInformation("Confirmed transaction is being processed {@context}", tx);
+
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,

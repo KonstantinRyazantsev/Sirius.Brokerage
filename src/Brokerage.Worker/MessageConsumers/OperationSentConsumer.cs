@@ -5,6 +5,7 @@ using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
+using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -20,13 +21,15 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IDepositsRepository _depositsRepository;
         private readonly IWithdrawalRepository _withdrawalRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
+        private readonly IOperationsRepository _operationsRepository;
 
         public OperationSentConsumer(ILogger<OperationSentConsumer> logger,
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
             IWithdrawalRepository withdrawalRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IOperationsRepository operationsRepository)
         {
             _logger = logger;
             _processingContextBuilder = processingContextBuilder;
@@ -34,6 +37,7 @@ namespace Brokerage.Worker.MessageConsumers
             _depositsRepository = depositsRepository;
             _withdrawalRepository = withdrawalRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
+            _operationsRepository = operationsRepository;
         }
 
         public async Task Consume(ConsumeContext<OperationSent> context)
@@ -57,13 +61,15 @@ namespace Brokerage.Worker.MessageConsumers
             var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
             var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
             var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+            var operation = processingContext.Operation;
 
             await Task.WhenAll(
                 _depositsRepository.SaveAsync(updatedDeposits),
                 _withdrawalRepository.SaveAsync(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.SaveAsync(
                     $"{BalanceChangingReason.OperationSent}_{processingContext.Operation.Id}",
-                    updatedBrokerAccountBalances));
+                    updatedBrokerAccountBalances),
+                _operationsRepository.UpdateAsync(operation));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
             {

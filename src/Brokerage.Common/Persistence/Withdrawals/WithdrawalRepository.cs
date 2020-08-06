@@ -24,7 +24,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
             var entity = await context
                 .Withdrawals
-                .Include(x => x.Fees)
                 .FirstAsync(x => x.Id == withdrawalId);
 
             return MapToDomain(entity);
@@ -43,7 +42,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
             var entity = await context
                 .Withdrawals
-                .Include(x => x.Fees)
                 .FirstOrDefaultAsync(x => x.OperationId == operationId);
 
             return entity != null ? MapToDomain(entity) : null;
