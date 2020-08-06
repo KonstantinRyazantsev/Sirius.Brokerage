@@ -31,14 +31,14 @@ namespace Brokerage.Common.Persistence.Operations
         public async Task AddOrIgnore(Operation operation)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
+
             context.Operations.Add(FromDomain(operation));
 
             try
             {
                 await context.SaveChangesAsync();
             }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx 
+            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx
                                               && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
             {
             }
@@ -50,20 +50,14 @@ namespace Brokerage.Common.Persistence.Operations
 
             context.Operations.Update(FromDomain(operation));
 
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
-            {
-            }
+            await context.SaveChangesAsync();
         }
 
         private static Operation ToDomain(OperationEntity entity)
         {
             return Operation.Restore(
-                entity.Id, 
-                entity.Type, 
+                entity.Id,
+                entity.Type,
                 entity.ActualFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
                 entity.ExpectedFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
                 entity.Version);
