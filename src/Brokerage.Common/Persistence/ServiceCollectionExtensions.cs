@@ -34,23 +34,19 @@ namespace Brokerage.Common.Persistence
 
             services.AddSingleton<DbContextOptionsBuilder<DatabaseContext>>(x =>
             {
-                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString);
+                var loggerFactory = x.GetRequiredService<ILoggerFactory>();
+                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString, loggerFactory);
 
                 return optionsBuilder;
             });
 
-            EntityFrameworkManager.ContextFactory = context =>
-            {
-                var optionsBuilder = CreateDbContextOptionsBuilder(connectionString);
-                return new DatabaseContext(optionsBuilder.Options);
-            };
-
             return services;
         }
 
-        private static DbContextOptionsBuilder<DatabaseContext> CreateDbContextOptionsBuilder(string connectionString)
+        private static DbContextOptionsBuilder<DatabaseContext> CreateDbContextOptionsBuilder(string connectionString, ILoggerFactory loggerFactory)
         {
             var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
+            optionsBuilder.UseLoggerFactory(loggerFactory);
 
             optionsBuilder.UseNpgsql(connectionString,
                 builder =>
