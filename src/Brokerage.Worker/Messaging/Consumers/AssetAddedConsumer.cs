@@ -5,7 +5,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Indexer.MessagingContract;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class AssetAddedConsumer : IConsumer<AssetAdded>
     {
@@ -33,8 +33,6 @@ namespace Brokerage.Worker.MessageConsumers
                     Accuracy = evt.Accuracy
                 }
             );
-
-            _logger.LogInformation("Asset has been added {@context}", evt);
 
             await Task.CompletedTask;
         }

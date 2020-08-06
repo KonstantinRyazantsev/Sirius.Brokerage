@@ -19,15 +19,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.3.2" />
-    <PackageReference Include="MassTransit.RabbitMQ" Version="6.3.2" />
-    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="1.0.1" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.0.2" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="7.0.2" />
+    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="2.1.1" />
     <PackageReference Include="swisschain.extensions.postgres" Version="1.0.0" />
-    <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.1" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="6.4.0" />
     <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.1.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0-beta.1" />
     <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="8.1.0" />
-    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="1.8.0" />
+    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
