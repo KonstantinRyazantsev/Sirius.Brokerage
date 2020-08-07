@@ -70,14 +70,9 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
             {
-                if (context.GetRedeliveryCount() > 10)
-                {
-                    throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed even after some tries: {tx.BlockchainId}:{tx.TransactionId}");
-                }
+                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed. {@context}...", tx);
 
-                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed. Will be retries in 30 seconds {@context}...", tx);
-
-                await context.Redeliver(TimeSpan.FromSeconds(30));
+                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
             }
 
             foreach (var processor in _processorsFactory.GetConfirmedTransactionProcessors())
