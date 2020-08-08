@@ -46,7 +46,7 @@ namespace Brokerage.Worker.Messaging
 
                     cfg.UseMessageScheduler(schedulerEndpoint);
 
-                    cfg.UseDefaultRetries();
+                    cfg.UseDefaultRetries(context);
 
                     ConfigureReceivingEndpoints(cfg, context);
                 });

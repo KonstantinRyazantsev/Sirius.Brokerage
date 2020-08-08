@@ -33,7 +33,7 @@ namespace Brokerage.Messaging
 
                     cfg.UseMessageScheduler(schedulerEndpoint);
 
-                    cfg.UseDefaultRetries();
+                    cfg.UseDefaultRetries(context);
                 });
             });
 
