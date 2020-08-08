@@ -70,6 +70,8 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
             {
+                // TODO: Save to DB and process later.
+
                 _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed. {@context}...", tx);
 
                 throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
