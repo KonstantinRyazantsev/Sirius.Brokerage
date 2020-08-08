@@ -3,10 +3,9 @@ using System.Threading.Tasks;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.ServiceFunctions;
 using MassTransit;
-using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class PublishAccountDetailsConsumer : IConsumer<PublishAccountDetails>
     {

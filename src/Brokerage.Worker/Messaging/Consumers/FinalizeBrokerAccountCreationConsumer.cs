@@ -10,27 +10,24 @@ using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class FinalizeBrokerAccountCreationConsumer : IConsumer<FinalizeBrokerAccountCreation>
     {
         private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IBrokerAccountsRepository _brokerAccountsRepository;
 
         public FinalizeBrokerAccountCreationConsumer(
             ILogger<FinalizeBrokerAccountCreationConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsRepository brokerAccountsRepository)
         {
             _logger = logger;
             _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
-            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _brokerAccountsRepository = brokerAccountsRepository;
         }
 
@@ -90,8 +87,6 @@ namespace Brokerage.Worker.MessageConsumers
 
                 } while (true);
             }
-
-            _logger.LogInformation("FinalizeBrokerAccountCreation command has been processed {@context}", message);
         }
     }
 }

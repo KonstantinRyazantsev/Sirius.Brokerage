@@ -8,7 +8,7 @@ using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class ExecuteWithdrawalConsumer : IConsumer<ExecuteWithdrawal>
     {
@@ -70,8 +70,6 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(@event);
             }
-
-            _logger.LogInformation("ExecuteWithdrawal has been processed {@context}", evt);
 
             await Task.CompletedTask;
         }

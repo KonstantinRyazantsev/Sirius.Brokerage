@@ -10,7 +10,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Executor.MessagingContract;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class OperationFailedConsumer : IConsumer<OperationFailed>
     {
@@ -79,8 +79,6 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(@event);
             }
-
-            _logger.LogInformation("Operation failure has been processed {@context}", evt);
         }
     }
 }

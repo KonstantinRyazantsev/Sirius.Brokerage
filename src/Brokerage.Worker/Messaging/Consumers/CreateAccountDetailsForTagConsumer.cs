@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Sdk.Primitives;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class CreateAccountDetailsForTagConsumer : IConsumer<CreateAccountDetailsForTag>
     {
@@ -82,8 +82,6 @@ namespace Brokerage.Worker.MessageConsumers
             }
 
             await _outboxManager.EnsureDispatched(outbox);
-
-            _logger.LogInformation("Account finalization for tag has been complete {@context}", command);
         }
     }
 }

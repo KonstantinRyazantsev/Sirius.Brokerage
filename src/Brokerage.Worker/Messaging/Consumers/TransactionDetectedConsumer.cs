@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
@@ -9,20 +8,20 @@ using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Transactions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Sirius.Confirmator.MessagingContract;
+using Swisschain.Sirius.Indexer.MessagingContract;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
-    public class TransactionConfirmedConsumer : IConsumer<TransactionConfirmed>
+    public class TransactionDetectedConsumer : IConsumer<TransactionDetected>
     {
-        private readonly ILogger<TransactionConfirmedConsumer> _logger;
+        private readonly ILogger<TransactionDetectedConsumer> _logger;
         private readonly TransactionProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
         private readonly IDetectedTransactionsRepository _detectedTransactionsRepository;
 
-        public TransactionConfirmedConsumer(ILogger<TransactionConfirmedConsumer> logger,
+        public TransactionDetectedConsumer(ILogger<TransactionDetectedConsumer> logger,
             TransactionProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
@@ -37,17 +36,14 @@ namespace Brokerage.Worker.MessageConsumers
             _detectedTransactionsRepository = detectedTransactionsRepository;
         }
 
-        public async Task Consume(ConsumeContext<TransactionConfirmed> context)
+        public async Task Consume(ConsumeContext<TransactionDetected> context)
         {
             var tx = context.Message;
-
-            _logger.LogInformation("Confirmed transaction is being processed {@context}", tx);
 
             var processingContext = await _processingContextBuilder.Build(
                 tx.BlockchainId,
                 tx.OperationId,
-                // TODO: Add timestamp to the tx event
-                new TransactionInfo(tx.TransactionId, tx.BlockNumber, tx.RequiredConfirmationsCount, DateTime.UtcNow),
+                new TransactionInfo(tx.TransactionId, tx.BlockNumber, -1, tx.BlockMinedAt),
                 tx.Sources
                     .Select(x => new SourceContext(x.Address, x.Unit))
                     .ToArray(),
@@ -64,20 +60,14 @@ namespace Brokerage.Worker.MessageConsumers
                 _logger.LogDebug("There is nothing to process in the transaction {@context}", new
                 {
                     BlockchainId = tx.BlockchainId,
-                    TransactionId = tx.TransactionId
+                    TransactionId = tx.TransactionId,
+                    OperationId = tx.OperationId
                 });
 
                 return;
             }
 
-            if (!await _detectedTransactionsRepository.Exists(tx.BlockchainId, tx.TransactionId))
-            {
-                _logger.LogWarning("Transaction wasn't detected yet, so confirmation can't be processed {@context}...", tx);
-
-                throw new InvalidOperationException($"Transaction wasn't detected yet, so confirmation can't be processed: {tx.BlockchainId}:{tx.TransactionId}");
-            }
-
-            foreach (var processor in _processorsFactory.GetConfirmedTransactionProcessors())
+            foreach (var processor in _processorsFactory.GetDetectedTransactionProcessors())
             {
                 await processor.Process(tx, processingContext);
             }
@@ -92,7 +82,7 @@ namespace Brokerage.Worker.MessageConsumers
 
             await Task.WhenAll(
                 _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.TransactionConfirmed}_{tx.BlockchainId}_{tx.TransactionId}", 
+                    $"{BalanceChangingReason.TransactionDetected}_{tx.BlockchainId}_{tx.TransactionId}", 
                     updatedBrokerAccountBalances),
                 _depositsRepository.SaveAsync(updatedDeposits));
 
@@ -106,7 +96,7 @@ namespace Brokerage.Worker.MessageConsumers
                 await context.Publish(evt);
             }
 
-            _logger.LogInformation("Confirmed transaction has been processed {@context}", tx);
+            await _detectedTransactionsRepository.AddOrIgnore(tx.BlockchainId, tx.TransactionId);
         }
     }
 }

@@ -5,7 +5,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Integrations.MessagingContract.Blockchains;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class BlockchainUpdatedConsumer : IConsumer<BlockchainUpdated>
     {
@@ -58,8 +58,6 @@ namespace Brokerage.Worker.MessageConsumers
             };
 
             await _blockchainsRepository.AddOrReplaceAsync(blockchain);
-
-            _logger.LogInformation("Blockchain has been updated {@context}", evt);
         }
     }
 }

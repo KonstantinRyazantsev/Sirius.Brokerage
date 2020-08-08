@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
+using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.BrokerAccount;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
@@ -9,13 +10,12 @@ using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Executor.MessagingContract;
-using OperationProcessingContextBuilder = Brokerage.Common.Domain.Processing.Context.OperationProcessingContextBuilder;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
-    public class OperationCompletedConsumer : IConsumer<OperationCompleted>
+    public class OperationSentConsumer : IConsumer<OperationSent>
     {
-        private readonly ILogger<OperationCompletedConsumer> _logger;
+        private readonly ILogger<OperationSentConsumer> _logger;
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
         private readonly IDepositsRepository _depositsRepository;
@@ -23,7 +23,7 @@ namespace Brokerage.Worker.MessageConsumers
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IOperationsRepository _operationsRepository;
 
-        public OperationCompletedConsumer(ILogger<OperationCompletedConsumer> logger,
+        public OperationSentConsumer(ILogger<OperationSentConsumer> logger,
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
@@ -40,13 +40,12 @@ namespace Brokerage.Worker.MessageConsumers
             _operationsRepository = operationsRepository;
         }
 
-        public async Task Consume(ConsumeContext<OperationCompleted> context)
+        public async Task Consume(ConsumeContext<OperationSent> context)
         {
             var evt = context.Message;
 
             var processingContext = await _processingContextBuilder.Build(evt.OperationId);
-            var operation = processingContext.Operation;
-
+            
             if (processingContext.IsEmpty)
             {
                 _logger.LogInformation("There is nothing to process in the operation {@context}", evt);
@@ -54,7 +53,7 @@ namespace Brokerage.Worker.MessageConsumers
                 return;
             }
 
-            foreach (var processor in _processorsFactory.GetCompletedOperationProcessors())
+            foreach (var processor in _processorsFactory.GetSentOperationProcessors())
             {
                 await processor.Process(evt, processingContext);
             }
@@ -62,15 +61,15 @@ namespace Brokerage.Worker.MessageConsumers
             var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
             var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
             var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
-            operation.AddActualFees(evt.ActualFees);
+            var operation = processingContext.Operation;
 
             await Task.WhenAll(
                 _depositsRepository.SaveAsync(updatedDeposits),
                 _withdrawalRepository.SaveAsync(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.OperationCompleted}_{processingContext.Operation.Id}",
+                    $"{BalanceChangingReason.OperationSent}_{processingContext.Operation.Id}",
                     updatedBrokerAccountBalances),
-            _operationsRepository.UpdateAsync(operation));
+                _operationsRepository.UpdateAsync(operation));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
             {
@@ -86,8 +85,6 @@ namespace Brokerage.Worker.MessageConsumers
             {
                 await context.Publish(@event);
             }
-
-            _logger.LogInformation("Operation completion has been processed {@context}", evt);
         }
     }
 }

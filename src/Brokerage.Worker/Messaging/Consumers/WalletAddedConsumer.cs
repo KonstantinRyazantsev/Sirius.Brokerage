@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.VaultAgent.MessagingContract.Wallets;
 
-namespace Brokerage.Worker.MessageConsumers
+namespace Brokerage.Worker.Messaging.Consumers
 {
     public class WalletAddedConsumer : IConsumer<WalletAdded>
     {
@@ -130,8 +130,6 @@ namespace Brokerage.Worker.MessageConsumers
                         requesterContext.AggregateType, 
                         "This should not happen at all!");
             }
-
-            _logger.LogInformation("WalletAdded has been added {@context}", evt);
         }
     }
 }
