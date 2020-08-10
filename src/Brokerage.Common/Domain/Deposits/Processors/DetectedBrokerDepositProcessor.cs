@@ -33,12 +33,23 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return;
             }
 
+            var sourceBrokerAccountAddress = processingContext.Operation?.Type == OperationType.Withdrawal
+                ? tx.Sources.Select(x => x.Address).Single()
+                : null;
+
             var deposits = new List<Deposit>();
 
             foreach (var brokerAccountContext in processingContext.BrokerAccounts.Where(x => !x.Accounts.Any()))
             {
                 foreach (var ((brokerAccountDetailsId, assetId), value) in brokerAccountContext.Income)
                 {
+                    if (processingContext.Operation?.Type == OperationType.Withdrawal &&
+                        brokerAccountContext.BrokerAccountDetails.TryGetValue(brokerAccountDetailsId, out var brokerAccount) 
+                            && brokerAccount.NaturalId.Address == sourceBrokerAccountAddress)
+                    {
+                        continue;
+                    }
+
                     var outbox = await _outboxManager.Open(
                         $"BrokerDeposits:Create:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}",
                         () => _depositsRepository.GetNextIdAsync());
