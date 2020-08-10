@@ -233,7 +233,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 inputs,
                 outputs,
                 income,
-                outcome);
+                outcome,
+                brokerAccountDetails.ToDictionary(x => x.Id));
         }
 
         private static AccountContext BuildAccountContext(

@@ -14,7 +14,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IReadOnlyCollection<BrokerAccountContextEndpoint> inputs,
             IReadOnlyCollection<BrokerAccountContextEndpoint> outputs,
             IReadOnlyDictionary<(long brokerAccountDetailsId, long assetId), decimal> income,
-            IReadOnlyDictionary<long, decimal> outcome)
+            IReadOnlyDictionary<long, decimal> outcome,
+            IReadOnlyDictionary<long, BrokerAccountDetails> brokerAccountDetails)
         {
             Accounts = accounts;
             Balances = balances;
@@ -22,6 +23,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             Outputs = outputs;
             Income = income;
             Outcome = outcome;
+            BrokerAccountDetails = brokerAccountDetails;
             TenantId = tenantId;
             BrokerAccountId = brokerAccountId;
             ActiveDetails = activeDetails;
@@ -67,5 +69,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         /// Outcome from all broker account details in the given transaction, indexed by asset ID
         /// </summary>
         public IReadOnlyDictionary<long, decimal> Outcome { get; }
+
+        public IReadOnlyDictionary<long, BrokerAccountDetails> BrokerAccountDetails { get; }
     }
 }
