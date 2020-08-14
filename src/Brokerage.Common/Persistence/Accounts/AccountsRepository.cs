@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
 namespace Brokerage.Common.Persistence.Accounts
 {

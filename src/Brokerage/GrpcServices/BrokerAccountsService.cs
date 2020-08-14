@@ -6,6 +6,7 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MassTransit;
 using Swisschain.Sirius.Brokerage.ApiContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.GrpcServices
 {
