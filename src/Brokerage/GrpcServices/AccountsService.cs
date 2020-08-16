@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
-using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Swisschain.Extensions.Idempotency;
@@ -11,80 +11,62 @@ namespace Brokerage.GrpcServices
 {
     public class AccountsService : Accounts.AccountsBase
     {
-        private readonly IAccountsRepository _accountsRepository;
-        private readonly IOutboxManager _outboxManager;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
+        private readonly IIdGenerator _idGenerator;
 
-        public AccountsService(
-            IAccountsRepository accountsRepository,
-            IOutboxManager outboxManager)
+        public AccountsService(IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
+            IIdGenerator idGenerator)
         {
-            _accountsRepository = accountsRepository;
-            _outboxManager = outboxManager;
+            _unitOfWorkManager = unitOfWorkManager;
+            _idGenerator = idGenerator;
         }
 
         public override async Task<CreateAccountResponse> Create(CreateAccountRequest request, ServerCallContext context)
         {
             try
             {
-                var outbox = await _outboxManager.Open(
-                    $"Accounts.Create:{request.RequestId}",
-                    () => _accountsRepository.GetNextIdAsync());
+                await using var unitOfWork = await _unitOfWorkManager.Begin($"Accounts.Create:{request.RequestId}");
 
-                if (!outbox.IsStored)
+                if (!unitOfWork.Outbox.IsClosed)
                 {
-                    var newAccount = Account.Create(
-                        outbox.AggregateId,
+                    var accountId = await _idGenerator.GetId($"Accounts:{request.RequestId}", IdGenerators.Accounts);
+                    var account = Account.Create(
+                        accountId,
                         request.BrokerAccountId,
                         request.ReferenceId);
-                    var createdAccount = await _accountsRepository.AddOrGetAsync(newAccount);
 
-                    if (createdAccount.BrokerAccountId != request.BrokerAccountId)
+                    await unitOfWork.Accounts.Add(account);
+
+                    unitOfWork.Outbox.Send(new FinalizeAccountCreation
                     {
-                        outbox.Return(new CreateAccountResponse
-                        {
-                            Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
-                            {
-                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
-                                    .Types.ErrorCode.IsNotAuthorized,
-                                ErrorMessage = "Not authorized to perform action"
-                            }
-                        });
-
-                        await _outboxManager.Store(outbox);
-
-                        return outbox.GetResponse<CreateAccountResponse>();
-                    }
-
-                    outbox.Send(new FinalizeAccountCreation
-                    {
-                        AccountId = createdAccount.Id,
+                        AccountId = account.Id,
                         RequestId = request.RequestId,
                     });
 
-                    foreach (var evt in newAccount.Events)
+                    foreach (var evt in account.Events)
                     {
-                        outbox.Publish(evt);
+                        unitOfWork.Outbox.Publish(evt);
                     }
 
-                    outbox.Return(new CreateAccountResponse
+                    unitOfWork.Outbox.Return(new CreateAccountResponse
                     {
                         Response = new CreateAccountResponseBody
                         {
-                            BrokerAccountId = createdAccount.BrokerAccountId,
-                            Status = MapToResponse(createdAccount.State),
-                            Id = createdAccount.Id,
-                            ReferenceId = createdAccount.ReferenceId,
-                            UpdatedAt = Timestamp.FromDateTime(createdAccount.UpdatedAt),
-                            CreatedAt = Timestamp.FromDateTime(createdAccount.CreatedAt)
+                            BrokerAccountId = account.BrokerAccountId,
+                            Status = MapToResponse(account.State),
+                            Id = account.Id,
+                            ReferenceId = account.ReferenceId,
+                            UpdatedAt = Timestamp.FromDateTime(account.UpdatedAt),
+                            CreatedAt = Timestamp.FromDateTime(account.CreatedAt)
                         }
                     });
 
-                    await _outboxManager.Store(outbox);
+                    await unitOfWork.Commit();
                 }
 
-                await _outboxManager.EnsureDispatched(outbox);
+                await unitOfWork.EnsureOutboxDispatched();
 
-                var response = outbox.GetResponse<CreateAccountResponse>();
+                var response = unitOfWork.Outbox.GetResponse<CreateAccountResponse>();
 
                 if (response.BodyCase == CreateAccountResponse.BodyOneofCase.Error)
                 {
