@@ -1,56 +1,40 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Operations;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Operations
 {
     internal sealed class OperationsRepository : IOperationsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public OperationsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public OperationsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _dbContext = dbContext;
         }
 
         public async Task<Operation> GetOrDefault(long id)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context.Operations
+            var entity = await _dbContext.Operations
                 .FirstAsync(x => x.Id == id);
 
             return ToDomain(entity);
         }
 
-        public async Task AddOrIgnore(Operation operation)
+        public async Task Add(Operation operation)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            _dbContext.Operations.Add(FromDomain(operation));
 
-            context.Operations.Add(FromDomain(operation));
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx
-                                              && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-            }
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Operation operation)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            _dbContext.Operations.Update(FromDomain(operation));
 
-            context.Operations.Update(FromDomain(operation));
-
-            await context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
 
         private static Operation ToDomain(OperationEntity entity)

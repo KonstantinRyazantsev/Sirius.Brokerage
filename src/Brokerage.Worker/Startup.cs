@@ -33,7 +33,7 @@ namespace Brokerage.Worker
             services.AddTransient<IExecutorClient>(x => new ExecutorClient(Config.Executor.Url));
             services.AddTransient<IAddressFormatterFactory, AddressFormatterFactory>();
             services.AddPersistence(Config.Db.ConnectionString);
-            services.AddOutbox(c =>
+            services.AddIdempotency<UnitOfWork>(c =>
             {
                 c.DispatchWithMassTransit();
                 c.PersistWithEfCore(s =>

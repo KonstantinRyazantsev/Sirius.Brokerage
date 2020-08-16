@@ -11,26 +11,18 @@ namespace Brokerage.Common.Persistence.Deposits
 {
     public class DepositsRepository : IDepositsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public DepositsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public DepositsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
-        }
-
-        public async Task<long> GetNextIdAsync()
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.Deposits, nameof(DepositEntity.Id));
+            _dbContext = dbContext;
         }
 
         public async Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, 
             string transactionId,
             long? consolidationOperationId)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            var deposits = context
+            var deposits = _dbContext
                 .Deposits
                 .AsQueryable();
 
@@ -66,29 +58,28 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
-        public async Task SaveAsync(IReadOnlyCollection<Deposit> deposits)
+        public async Task Save(IReadOnlyCollection<Deposit> deposits)
         {
             if (!deposits.Any())
             {
                 return;
             }
 
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
             var entities = deposits.Select(MapToEntity);
 
             foreach (var entity in entities)
             {
                 if (entity.Version == default)
                 {
-                    context.Deposits.Add(entity);
+                    _dbContext.Deposits.Add(entity);
                 }
                 else
                 {
-                    context.Deposits.Update(entity);
+                    _dbContext.Deposits.Update(entity);
                 }
             }
 
-            await context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
 
         private static DepositEntity MapToEntity(Deposit deposit)

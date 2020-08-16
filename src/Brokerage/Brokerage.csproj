@@ -28,7 +28,7 @@
     <PackageReference Include="MassTransit" Version="7.0.2" />
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.0.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="7.0.2" />
-    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="3.0.0" />
+    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>

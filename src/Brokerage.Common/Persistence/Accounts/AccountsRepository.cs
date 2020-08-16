@@ -2,106 +2,52 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
     public class AccountsRepository : IAccountsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public AccountsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public AccountsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _dbContext = dbContext;
         }
 
-        public async Task<long> GetNextIdAsync()
+        public async Task<Account> Get(long accountId)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.Accounts, nameof(AccountEntity.Id));
-        }
-
-        public async Task<Account> GetAsync(long accountId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
+            var entity = await _dbContext
                 .Accounts
                 .FirstAsync(x => x.Id == accountId);
 
             return MapToDomain(entity);
         }
 
-        public async Task<Account> GetOrDefaultAsync(long accountId)
+        public async Task<Account> GetOrDefault(long accountId)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
+            var entity = await _dbContext
                 .Accounts
                 .FirstOrDefaultAsync(x => x.Id == accountId);
 
             return MapToDomain(entity);
         }
 
-        public async Task UpdateAsync(Account account)
+        public async Task Update(Account account)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
             var entity = MapToEntity(account);
             
-            context.Accounts.Update(entity);
+            _dbContext.Accounts.Update(entity);
             
-            await context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<Account> AddOrGetAsync(Account account)
+        public async Task Add(Account account)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
             var newEntity = MapToEntity(account);
 
-            context.Accounts.Add(newEntity);
+            _dbContext.Accounts.Add(newEntity);
 
-            try
-            {
-                await context.SaveChangesAsync();
-
-                return MapToDomain(newEntity);
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx &&
-                                              pgEx.SqlState == "23505")
-            {
-                var entity = await context
-                    .Accounts
-                    .FirstAsync(x => x.Id == account.Id);
-
-                return MapToDomain(entity);
-            }
-        }
-
-        private static AccountEntity MapToEntity(Account domainModel)
-        {
-            var state = domainModel.State switch
-            {
-                AccountState.Active =>   AccountStateEnum.Active,
-                AccountState.Blocked =>  AccountStateEnum.Blocked,
-                AccountState.Creating => AccountStateEnum.Creating,
-
-                _ => throw new ArgumentOutOfRangeException(nameof(domainModel.State), domainModel.State, null)
-            };
-
-            var entity = new AccountEntity
-            {
-                State = state,
-                CreatedAt = domainModel.CreatedAt,
-                UpdatedAt = domainModel.UpdatedAt,
-                BrokerAccountId = domainModel.BrokerAccountId,
-                ReferenceId = domainModel.ReferenceId,
-                Id = domainModel.Id,
-            };
-
-            return entity;
+            await _dbContext.SaveChangesAsync();
         }
 
         private static Account MapToDomain(AccountEntity entity)
@@ -127,6 +73,30 @@ namespace Brokerage.Common.Persistence.Accounts
             );
 
             return brokerAccount;
+        }
+
+        private static AccountEntity MapToEntity(Account domainModel)
+        {
+            var state = domainModel.State switch
+            {
+                AccountState.Active =>   AccountStateEnum.Active,
+                AccountState.Blocked =>  AccountStateEnum.Blocked,
+                AccountState.Creating => AccountStateEnum.Creating,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(domainModel.State), domainModel.State, null)
+            };
+
+            var entity = new AccountEntity
+            {
+                State = state,
+                CreatedAt = domainModel.CreatedAt,
+                UpdatedAt = domainModel.UpdatedAt,
+                BrokerAccountId = domainModel.BrokerAccountId,
+                ReferenceId = domainModel.ReferenceId,
+                Id = domainModel.Id,
+            };
+
+            return entity;
         }
     }
 }

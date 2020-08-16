@@ -3,70 +3,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
     public class AccountDetailsRepository : IAccountDetailsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public AccountDetailsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public AccountDetailsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _dbContext = dbContext;
         }
 
-        public async Task<long> GetNextIdAsync()
+        public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOf(ISet<AccountDetailsId> ids)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.AccountDetails, nameof(AccountDetails.Id));
-        }
-
-        public async Task AddOrIgnoreAsync(AccountDetails details)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = MapToEntity(details);
-
-            context.AccountDetails.Add(entity);
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-            {
-            }
-        }
-
-        public async Task<AccountDetails> GetByAccountAsync(long accountId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var accountDetailsEntity = await context
-                .AccountDetails
-                .FirstAsync(x => x.AccountId == accountId);
-
-            return MapToDomain(accountDetailsEntity);
-        }
-
-        public async Task<long> GetCountByAccountIdAsync(long accountId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var count = await context.AccountDetails.Where(x => x.AccountId == accountId).CountAsync();
-
-            return count;
-        }
-
-        public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOfAsync(ISet<AccountDetailsId> ids)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
             var idStrings = ids.Select(x => x.ToString());
 
-            var query = context
+            var query = _dbContext
                 .AccountDetails
                 .Where(x => idStrings.Contains(x.NaturalId));
 
@@ -78,11 +31,9 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<IReadOnlyCollection<AccountDetails>> GetAllAsync(long? cursor, int limit)
+        public async Task<IReadOnlyCollection<AccountDetails>> GetAll(long? cursor, int limit)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var query = context.AccountDetails.AsQueryable();
+            var query = _dbContext.AccountDetails.AsQueryable();
 
             if (cursor != null)
             {
@@ -101,15 +52,44 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<AccountDetails> GetAsync(long id)
+        public async Task<AccountDetails> Get(long id)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var requisites = await context
+            var requisites = await _dbContext
                 .AccountDetails
                 .FirstAsync(x => x.Id == id);
 
             return MapToDomain(requisites);
+        }
+
+        public async Task Add(AccountDetails details)
+        {
+            var entity = MapToEntity(details);
+
+            _dbContext.AccountDetails.Add(entity);
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<long> GetCountByAccountId(long accountId)
+        {
+            var count = await _dbContext.AccountDetails.Where(x => x.AccountId == accountId).CountAsync();
+
+            return count;
+        }
+
+        private static AccountDetails MapToDomain(AccountDetailsEntity entity)
+        {
+            var brokerAccount = AccountDetails.Restore(
+                entity.Id,
+                new AccountDetailsId(entity.BlockchainId,
+                    entity.Address,
+                    entity.Tag,
+                    entity.TagType),
+                entity.AccountId,
+                entity.BrokerAccountId,
+                entity.CreatedAt.UtcDateTime);
+
+            return brokerAccount;
         }
 
         private static AccountDetailsEntity MapToEntity(AccountDetails details)
@@ -126,21 +106,6 @@ namespace Brokerage.Common.Persistence.Accounts
                 TagType = details.NaturalId.TagType,
                 CreatedAt = details.CreatedAt
             };
-        }
-
-        private static AccountDetails MapToDomain(AccountDetailsEntity entity)
-        {
-            var brokerAccount = AccountDetails.Restore(
-                entity.Id,
-                new AccountDetailsId(entity.BlockchainId,
-                    entity.Address,
-                    entity.Tag,
-                    entity.TagType),
-                entity.AccountId,
-                entity.BrokerAccountId,
-                entity.CreatedAt.UtcDateTime);
-
-            return brokerAccount;
         }
     }
 }

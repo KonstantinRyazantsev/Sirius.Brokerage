@@ -34,8 +34,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.4" />
-    <PackageReference Include="Swisschain.Extensions.Idempotency.EfCore" Version="1.0.7" />
-    <PackageReference Include="Swisschain.Extensions.Idempotency.MassTransit" Version="2.0.0" />
+    <PackageReference Include="Swisschain.Extensions.Idempotency.EfCore" Version="2.1.0" />
+    <PackageReference Include="Swisschain.Extensions.Idempotency.MassTransit" Version="3.0.1" />
     <PackageReference Include="Swisschain.Sirius.Confirmator.MessagingContract" Version="3.0.1-beta" />
     <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.1.0" />
     <PackageReference Include="Swisschain.Sirius.Executor.MessagingContract" Version="1.2.0" />

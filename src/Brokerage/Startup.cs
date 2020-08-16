@@ -28,7 +28,7 @@ namespace Brokerage
 
             services.AddPersistence(Config.Db.ConnectionString);
             services.AddHostedService<DbSchemaValidationHost>();
-            services.AddOutbox(c =>
+            services.AddIdempotency<UnitOfWork>(c =>
             {
                 c.DispatchWithMassTransit();
                 c.PersistWithEfCore(s =>
