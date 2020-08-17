@@ -32,5 +32,7 @@ namespace Brokerage.Common.Persistence.Accounts
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public long Sequence { get; set; }
     }
 }

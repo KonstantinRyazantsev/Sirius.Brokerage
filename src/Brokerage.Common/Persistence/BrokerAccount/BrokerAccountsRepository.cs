@@ -129,7 +129,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
                 brokerAccountEntity.RequestId,
-                brokerAccountEntity.VaultId
+                brokerAccountEntity.VaultId,
+                brokerAccountEntity.Sequence
             );
 
             return brokerAccount;
