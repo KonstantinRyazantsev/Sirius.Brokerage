@@ -1,47 +1,93 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using MassTransit;
+using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
 
 namespace Brokerage.GrpcServices
 {
     public class BrokerAccountsService : BrokerAccounts.BrokerAccountsBase
     {
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
-        private readonly ISendEndpointProvider _sendEndpointProvider;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
+        private readonly IIdGenerator _idGenerator;
 
-        public BrokerAccountsService(
-            IBrokerAccountsRepository brokerAccountsRepository,
-            ISendEndpointProvider sendEndpointProvider)
+        public BrokerAccountsService(IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
+            IIdGenerator idGenerator)
         {
-            this._brokerAccountsRepository = brokerAccountsRepository;
-            _sendEndpointProvider = sendEndpointProvider;
+            _unitOfWorkManager = unitOfWorkManager;
+            _idGenerator = idGenerator;
         }
 
         public override async Task<CreateResponse> Create(CreateRequest request, ServerCallContext context)
         {
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                return new CreateResponse
+                {
+                    Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
+                    {
+                        ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
+                        ErrorMessage = "Name is empty"
+                    }
+                };
+            }
+
             try
             {
-                if (string.IsNullOrEmpty(request.Name))
+                await using var unitOfWork = await _unitOfWorkManager.Begin($"BrokerAccounts:Create:{request.RequestId}");
+
+                if (!unitOfWork.Outbox.IsClosed)
                 {
-                    return new CreateResponse
+                    var brokerAccountsId = await _idGenerator.GetId($"BrokerAccounts:{request.RequestId}",
+                        IdGenerators.BrokerAccounts);
+                    var brokerAccount = BrokerAccount.Create(
+                        brokerAccountsId,
+                        request.Name,
+                        request.TenantId,
+                        request.VaultId);
+
+                    await unitOfWork.BrokerAccounts.Add(brokerAccount);
+
+                    unitOfWork.Outbox.Send(new FinalizeBrokerAccountCreation
                     {
-                        Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
+                        BrokerAccountId = brokerAccount.Id,
+                        TenantId = brokerAccount.TenantId
+                    });
+
+                    foreach (var evt in brokerAccount.Events)
+                    {
+                        unitOfWork.Outbox.Publish(evt);
+                    }
+
+                    unitOfWork.Outbox.Return(new CreateResponse
+                    {
+                        Response = new CreateResponseBody
                         {
-                            ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.NameIsEmpty,
-                            ErrorMessage = $"Name is empty"
+                            Id = brokerAccount.Id,
+                            Name = brokerAccount.Name,
+                            Status = MapToResponse(brokerAccount.State),
+                            CreatedAt = Timestamp.FromDateTime(brokerAccount.CreatedAt),
+                            UpdatedAt = Timestamp.FromDateTime(brokerAccount.UpdatedAt),
+                            VaultId = brokerAccount.VaultId
                         }
-                    };
+                    });
+
+                    await unitOfWork.Commit();
                 }
 
-                var newBrokerAccount = BrokerAccount.Create(request.Name, request.TenantId, request.RequestId, request.VaultId);
-                var createdBrokerAccount = await _brokerAccountsRepository.AddOrGetAsync(newBrokerAccount);
+                await unitOfWork.EnsureOutboxDispatched();
 
-                if (!createdBrokerAccount.IsOwnedBy(request.TenantId))
+                var response = unitOfWork.Outbox.GetResponse<CreateResponse>();
+
+                if (response.BodyCase == CreateResponse.BodyOneofCase.Error)
+                {
+                    return response;
+                }
+
+                if (response.Response.VaultId != request.VaultId)
                 {
                     return new CreateResponse
                     {
@@ -53,25 +99,7 @@ namespace Brokerage.GrpcServices
                     };
                 }
 
-                await _sendEndpointProvider.Send(new FinalizeBrokerAccountCreation
-                {
-                    BrokerAccountId = createdBrokerAccount.Id,
-                    TenantId = createdBrokerAccount.TenantId,
-                    RequestId = request.RequestId
-                });
-
-                return new CreateResponse
-                {
-                    Response = new CreateResponseBody
-                    {
-                        Id = createdBrokerAccount.Id,
-                        Name = createdBrokerAccount.Name,
-                        Status = MapToResponse(createdBrokerAccount.State),
-                        CreatedAt = Timestamp.FromDateTime(createdBrokerAccount.CreatedAt),
-                        UpdatedAt = Timestamp.FromDateTime(createdBrokerAccount.UpdatedAt),
-                        VaultId = createdBrokerAccount.VaultId
-                    }
-                };
+                return response;
             }
             catch (Exception e)
             {
