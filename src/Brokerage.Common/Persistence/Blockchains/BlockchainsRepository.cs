@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Z.EntityFramework.Plus;
 
 namespace Brokerage.Common.Persistence.Blockchains
 {
@@ -45,19 +46,36 @@ namespace Brokerage.Common.Persistence.Blockchains
 
         public async Task AddOrReplaceAsync(Blockchain blockchain)
         {
+            int affectedRowsCount = 0;
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
-            try
-            {
-                context.Blockchains.Add(blockchain);
-             
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-            {
-                context.Blockchains.Update(blockchain);
 
-                await context.SaveChangesAsync();
+            if (blockchain.CreatedAt != blockchain.UpdatedAt)
+            {
+                affectedRowsCount = await context.Blockchains
+                    .Where(x => x.Id == blockchain.Id &&
+                                x.UpdatedAt <= blockchain.UpdatedAt)
+                    .UpdateAsync(x => new Blockchain
+                    {
+                        NetworkType = blockchain.NetworkType,
+                        UpdatedAt = blockchain.UpdatedAt,
+                        Protocol = blockchain.Protocol,
+                        CreatedAt = blockchain.CreatedAt,
+                        Id = blockchain.Id
+                    });
+            }
+
+            if (blockchain.CreatedAt == blockchain.UpdatedAt || affectedRowsCount == 0)
+            {
+                try
+                {
+                    context.Blockchains.Add(blockchain);
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx
+                                                  && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
+                {
+                    //Swallow error: the entity was already added
+                }
             }
         }
         
