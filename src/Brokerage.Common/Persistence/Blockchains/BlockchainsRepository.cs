@@ -64,7 +64,7 @@ namespace Brokerage.Common.Persistence.Blockchains
                     });
             }
 
-            if (blockchain.CreatedAt == blockchain.UpdatedAt || affectedRowsCount == 0)
+            if (affectedRowsCount == 0)
             {
                 try
                 {
