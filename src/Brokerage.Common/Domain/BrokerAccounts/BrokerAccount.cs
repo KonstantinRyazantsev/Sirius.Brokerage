@@ -17,7 +17,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt, 
             DateTime updatedAt, 
             BrokerAccountState state,
-            long vaultId)
+            long vaultId,
+            long sequence)
         {
             Id = id;
             Name = name;
@@ -26,6 +27,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             UpdatedAt = updatedAt;
             State = state;
             VaultId = vaultId;
+            Sequence = sequence;
         }
         
         public long Id { get; }
@@ -35,21 +37,25 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
         public long VaultId { get; }
-
+        public long Sequence { get; }
         public IReadOnlyCollection<object> Events => _events;
 
         public static BrokerAccount Create(long id, string name, string tenantId, long vaultId)
         {
             var utcNow = DateTime.UtcNow;
-
-            return new BrokerAccount(
+            var brokerAccount = new BrokerAccount(
                 id,
                 name, 
                 tenantId,
                 utcNow, 
                 utcNow, 
                 BrokerAccountState.Creating, 
-                vaultId);
+                vaultId,
+                0);
+
+            brokerAccount.AddBrokerAccountUpdatedEvent();
+
+            return brokerAccount;
         }
 
         public static BrokerAccount Restore(
@@ -59,7 +65,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt,
             DateTime updatedAt,
             BrokerAccountState state,
-            long vaultId)
+            long vaultId,
+            long sequence)
         {
             return new BrokerAccount(
                 id, 
@@ -68,7 +75,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 createdAt, 
                 updatedAt, 
                 state, 
-                vaultId);
+                vaultId,
+                sequence);
         }
 
         public void Activate()
@@ -107,6 +115,21 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 Activate();
                 await brokerAccountsRepository.Update(this);
             }
+        }
+
+        private void AddBrokerAccountUpdatedEvent()
+        {
+            _events.Add(new BrokerAccountUpdated()
+            {
+                BrokerAccountId = this.Id,
+                UpdatedAt = this.UpdatedAt,
+                VaultId = this.VaultId,
+                Sequence = this.Sequence,
+                CreatedAt = this.CreatedAt,
+                Name = this.Name,
+                TenantId = this.TenantId,
+                State = this.State
+            });
         }
     }
 }

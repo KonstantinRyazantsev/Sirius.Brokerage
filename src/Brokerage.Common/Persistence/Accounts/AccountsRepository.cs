@@ -69,7 +69,8 @@ namespace Brokerage.Common.Persistence.Accounts
                 entity.ReferenceId,
                 state,
                 entity.CreatedAt.UtcDateTime,
-                entity.UpdatedAt.UtcDateTime
+                entity.UpdatedAt.UtcDateTime,
+                entity.Sequence
             );
 
             return brokerAccount;
@@ -94,6 +95,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 BrokerAccountId = domainModel.BrokerAccountId,
                 ReferenceId = domainModel.ReferenceId,
                 Id = domainModel.Id,
+                Sequence = domainModel.Sequence
             };
 
             return entity;

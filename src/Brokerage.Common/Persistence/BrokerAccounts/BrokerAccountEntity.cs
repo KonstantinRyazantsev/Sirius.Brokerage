@@ -31,5 +31,7 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
         public long VaultId { get; set; }
 
         public ICollection<AccountEntity> Accounts { get; set; }
+
+        public long Sequence { get; set; }
     }
 }

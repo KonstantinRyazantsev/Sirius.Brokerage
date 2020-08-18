@@ -6,6 +6,7 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
+using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
 namespace Brokerage.GrpcServices
 {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Microsoft.EntityFrameworkCore;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.Common.Persistence.BrokerAccounts
 {
@@ -69,7 +70,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 TenantId = brokerAccount.TenantId,
                 UpdatedAt = brokerAccount.UpdatedAt,
                 VaultId = brokerAccount.VaultId,
-                Id = brokerAccount.Id
+                Id = brokerAccount.Id,
+                Sequence = brokerAccount.Sequence
             };
             return newEntity;
         }
@@ -91,7 +93,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 brokerAccountEntity.CreatedAt.UtcDateTime,
                 brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
-                brokerAccountEntity.VaultId
+                brokerAccountEntity.VaultId,
+                brokerAccountEntity.Sequence
             );
 
             return brokerAccount;

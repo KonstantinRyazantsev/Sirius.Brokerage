@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Domain.BrokerAccounts
+﻿namespace Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts
 {
     public enum BrokerAccountState
     {
