@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccounts;
+using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
+using Swisschain.Sirius.VaultAgent.ApiClient;
+using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {
@@ -84,7 +89,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             UpdatedAt = DateTime.UtcNow;
             State = BrokerAccountState.Active;
             
-            _events.Add(new BrokerAccountActivated()
+            _events.Add(new BrokerAccountActivated
             {
                 BrokerAccountId = Id,
                 UpdatedAt = UpdatedAt
@@ -99,7 +104,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             await brokerAccountDetailsRepository.Add(brokerAccountDetails);
             
-            _events.Add(new BrokerAccountDetailsAdded()
+            _events.Add(new BrokerAccountDetailsAdded
             {
                 BlockchainId = brokerAccountDetails.NaturalId.BlockchainId,
                 Address = brokerAccountDetails.NaturalId.Address,
@@ -117,18 +122,80 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             }
         }
 
+        public async Task FinalizeCreation(ILogger<BrokerAccount> logger,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
+        {
+            if (State == BrokerAccountState.Creating)
+            {
+                await RequestDetailsGeneration(logger, blockchainsRepository, vaultAgentClient);
+            }
+        }
+        
+        private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
+        {
+            string cursor = null;
+            var expectedCount = await blockchainsRepository.GetCountAsync();
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
+            {
+                AggregateId = Id,
+                AggregateType = AggregateType.BrokerAccount,
+                ExpectedCount = expectedCount
+            });
+
+            do
+            {
+                var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
+
+                if (!blockchains.Any())
+                {
+                    break;
+                }
+
+                cursor = blockchains.Last().Id;
+
+                foreach (var blockchain in blockchains)
+                {
+                    var walletGenerationRequest = new GenerateWalletRequest
+                    {
+                        RequestId = $"Brokerage:BrokerAccountDetails:{Id}:{blockchain.Id}",
+                        BlockchainId = blockchain.Id,
+                        TenantId = TenantId,
+                        VaultId = VaultId,
+                        Component = nameof(Brokerage),
+                        Context = requesterContext
+                    };
+
+                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
+
+                    if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
+                    {
+                        logger.LogWarning("Wallet generation failed {@context}", new
+                        {
+                            Request = walletGenerationRequest,
+                            Response = walletGenerationResponse
+                        });
+
+                        throw new InvalidOperationException($"Wallet generation request has been failed: {walletGenerationResponse.Error.ErrorMessage}");
+                    }
+                }
+            } while (true);
+        }
+
         private void AddBrokerAccountUpdatedEvent()
         {
-            _events.Add(new BrokerAccountUpdated()
+            _events.Add(new BrokerAccountUpdated
             {
-                BrokerAccountId = this.Id,
-                UpdatedAt = this.UpdatedAt,
-                VaultId = this.VaultId,
-                Sequence = this.Sequence,
-                CreatedAt = this.CreatedAt,
-                Name = this.Name,
-                TenantId = this.TenantId,
-                State = this.State
+                BrokerAccountId = Id,
+                UpdatedAt = UpdatedAt,
+                VaultId = VaultId,
+                Sequence = Sequence,
+                CreatedAt = CreatedAt,
+                Name = Name,
+                TenantId = TenantId,
+                State = State
             });
         }
     }

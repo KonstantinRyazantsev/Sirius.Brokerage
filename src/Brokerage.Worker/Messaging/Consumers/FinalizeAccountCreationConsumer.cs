@@ -51,8 +51,6 @@ namespace Brokerage.Worker.Messaging.Consumers
                     _vaultAgentClient,
                     _destinationTagGeneratorFactory);
 
-                await unitOfWork.Accounts.Update(account);
-
                 foreach (var evt in account.Commands)
                 {
                     unitOfWork.Outbox.Send(evt);

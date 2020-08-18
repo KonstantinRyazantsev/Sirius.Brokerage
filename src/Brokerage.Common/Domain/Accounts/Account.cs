@@ -116,6 +116,33 @@ namespace Brokerage.Common.Domain.Accounts
                 );
             }
         }
+        
+        public void Activate()
+        {
+            State = AccountState.Active;
+            UpdatedAt = DateTime.UtcNow;
+
+            _events.Add(GetAccountActivatedEvent(UpdatedAt));
+        }
+
+        public async Task AddAccountDetails(
+            IAccountDetailsRepository accountDetailsRepository,
+            IAccountsRepository accountsRepository,
+            AccountDetails accountDetails,
+            long expectedCount)
+        {
+            await accountDetailsRepository.Add(accountDetails);
+            
+            _events.Add(GetAccountDetailsAddedEvent(accountDetails));
+
+            var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
+
+            if (accountDetailsCount >= expectedCount)
+            {
+                Activate();
+                await accountsRepository.Update(this);
+            }
+        }
 
         private async Task RequestDetailsGeneration(
             ILogger<Account> logger,
@@ -160,33 +187,30 @@ namespace Brokerage.Common.Domain.Accounts
                         continue;
                     }
 
-                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
-                        new GenerateWalletRequest
-                        {
-                            RequestId = $"Brokerage:AccountDetails:{Id}:{blockchain.Id}",
-                            BlockchainId = blockchain.Id,
-                            TenantId = brokerAccount.TenantId,
-                            VaultId = brokerAccount.VaultId,
-                            Component = nameof(Brokerage),
-                            Context = requesterContext
-                        });
+                    var walletGenerationRequest = new GenerateWalletRequest
+                    {
+                        RequestId = $"Brokerage:AccountDetails:{Id}:{blockchain.Id}",
+                        BlockchainId = blockchain.Id,
+                        TenantId = brokerAccount.TenantId,
+                        VaultId = brokerAccount.VaultId,
+                        Component = nameof(Brokerage),
+                        Context = requesterContext
+                    };
+
+                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
 
                     if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
                     {
-                        logger.LogWarning("Wallet generation failed {@context}", walletGenerationResponse);
+                        logger.LogWarning("Wallet generation failed {@context}", new
+                        {
+                            Request = walletGenerationRequest,
+                            Response = walletGenerationResponse
+                        });
 
                         throw new InvalidOperationException($"Wallet generation has been failed: {walletGenerationResponse.Error.ErrorMessage}");
                     }
                 }
             } while (true);
-        }
-
-        public void Activate()
-        {
-            State = AccountState.Active;
-            UpdatedAt = DateTime.UtcNow;
-
-            _events.Add(GetAccountActivatedEvent(UpdatedAt));
         }
 
         private AccountActivated GetAccountActivatedEvent(DateTime activationDateTime)
@@ -210,25 +234,6 @@ namespace Brokerage.Common.Domain.Accounts
                 AccountId = details.AccountId,
                 AccountDetailsId = details.Id
             };
-        }
-
-        public async Task AddAccountDetails(
-            IAccountDetailsRepository accountDetailsRepository,
-            IAccountsRepository accountsRepository,
-            AccountDetails accountDetails,
-            long expectedCount)
-        {
-            await accountDetailsRepository.Add(accountDetails);
-            
-            _events.Add(GetAccountDetailsAddedEvent(accountDetails));
-
-            var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
-
-            if (accountDetailsCount >= expectedCount)
-            {
-                Activate();
-                await accountsRepository.Update(this);
-            }
         }
     }
 }
