@@ -5,20 +5,12 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.Operations;
 using Swisschain.Sirius.Executor.MessagingContract;
 
 namespace Brokerage.Common.Domain.Withdrawals.Processors
 {
     public class SentWithdrawalProcessor : ISentOperationProcessor
     {
-        private readonly IOperationsRepository _operationsRepository;
-
-        public SentWithdrawalProcessor(IOperationsRepository operationsRepository)
-        {
-            _operationsRepository = operationsRepository;
-        }
-
         public Task Process(OperationSent evt, OperationProcessingContext processingContext)
         {
             if (processingContext.Operation.Type != OperationType.Withdrawal)
