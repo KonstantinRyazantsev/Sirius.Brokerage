@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.Common.Persistence.BrokerAccount
 {
@@ -128,7 +129,8 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
                 brokerAccountEntity.RequestId,
-                brokerAccountEntity.VaultId
+                brokerAccountEntity.VaultId,
+                brokerAccountEntity.Sequence
             );
 
             return brokerAccount;

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
 namespace Brokerage.Common.Persistence.Accounts
 {
@@ -99,6 +100,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 BrokerAccountId = domainModel.BrokerAccountId,
                 ReferenceId = domainModel.ReferenceId,
                 Id = domainModel.Id,
+                Sequence = domainModel.Sequence
             };
 
             return entity;
@@ -123,7 +125,8 @@ namespace Brokerage.Common.Persistence.Accounts
                 entity.ReferenceId,
                 state,
                 entity.CreatedAt.UtcDateTime,
-                entity.UpdatedAt.UtcDateTime
+                entity.UpdatedAt.UtcDateTime,
+                entity.Sequence
             );
 
             return brokerAccount;

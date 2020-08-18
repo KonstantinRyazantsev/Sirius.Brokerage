@@ -29,7 +29,8 @@ namespace Brokerage.Common.Domain.Accounts
             string referenceId,
             AccountState state,
             DateTime createdAt,
-            DateTime updatedAt)
+            DateTime updatedAt,
+            long sequence)
         {
             Id = id;
             BrokerAccountId = brokerAccountId;
@@ -37,6 +38,7 @@ namespace Brokerage.Common.Domain.Accounts
             State = state;
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;
+            Sequence = sequence;
 
             _events = new List<object>();
         }
@@ -48,6 +50,7 @@ namespace Brokerage.Common.Domain.Accounts
         public AccountState State { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
+        public long Sequence { get; }
 
         public static Account Create(
             long id,
@@ -61,13 +64,18 @@ namespace Brokerage.Common.Domain.Accounts
                 referenceId,
                 AccountState.Creating,
                 createdAt,
-                createdAt);
+                createdAt,
+                0);
 
-            account._events.Add(new AccountAdded()
+            account._events.Add(new AccountUpdated()
             {
                 BrokerAccountId = account.BrokerAccountId,
                 CreatedAt = account.CreatedAt,
-                AccountId = account.Id
+                AccountId = account.Id,
+                Sequence = account.Sequence,
+                UpdatedAt = account.UpdatedAt,
+                State = account.State,
+                ReferenceId = account.ReferenceId
             });
 
             return account;
@@ -79,7 +87,8 @@ namespace Brokerage.Common.Domain.Accounts
             string referenceId,
             AccountState accountState,
             DateTime createdAt,
-            DateTime updatedAt)
+            DateTime updatedAt,
+            long sequence)
         {
             return new Account(
                 accountId,
@@ -87,7 +96,8 @@ namespace Brokerage.Common.Domain.Accounts
                 referenceId,
                 accountState,
                 createdAt,
-                updatedAt);
+                updatedAt,
+                sequence);
         }
 
         public async Task FinalizeCreation(
