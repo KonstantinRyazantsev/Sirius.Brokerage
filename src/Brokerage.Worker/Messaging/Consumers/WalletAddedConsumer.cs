@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccounts;
+using Brokerage.Common.Persistence;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.VaultAgent.MessagingContract.Wallets;
 
 namespace Brokerage.Worker.Messaging.Consumers
@@ -15,25 +15,16 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class WalletAddedConsumer : IConsumer<WalletAdded>
     {
         private readonly ILogger<WalletAddedConsumer> _logger;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
-        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
-        private readonly IAccountsRepository _accountsRepository;
-        private readonly IAccountDetailsRepository _accountDetailsRepository;
-        private readonly IOutboxManager _outboxManager;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
+        private readonly IIdGenerator _idGenerator;
 
         public WalletAddedConsumer(ILogger<WalletAddedConsumer> logger,
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IAccountsRepository accountsRepository,
-            IAccountDetailsRepository accountDetailsRepository,
-            IOutboxManager outboxManager)
+            IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
+            IIdGenerator idGenerator)
         {
             _logger = logger;
-            _brokerAccountsRepository = brokerAccountsRepository;
-            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
-            _accountsRepository = accountsRepository;
-            _accountDetailsRepository = accountDetailsRepository;
-            _outboxManager = outboxManager;
+            _unitOfWorkManager = unitOfWorkManager;
+            _idGenerator = idGenerator;
         }
 
         public async Task Consume(ConsumeContext<WalletAdded> context)
@@ -59,77 +50,82 @@ namespace Brokerage.Worker.Messaging.Consumers
             switch (requesterContext.AggregateType)
             {
                 case AggregateType.Account:
-                    {
-                        var outbox = await _outboxManager.Open($"AccountDetails:Create:{evt.WalletGenerationRequestId}",
-                            () => _accountDetailsRepository.GetNextIdAsync());
-                        if (!outbox.IsStored)
-                        {
-                            var account = await _accountsRepository.GetAsync(requesterContext.AggregateId);
-                            var accountDetails = AccountDetails.Create(
-                                outbox.AggregateId,
-                                new AccountDetailsId(evt.BlockchainId, evt.Address),
-                                account.Id,
-                                account.BrokerAccountId);
+                    await CreateAccountDetails(evt, requesterContext, context);
+                    break;
 
-                            await account.AddAccountDetails(
-                                _accountDetailsRepository, 
-                                _accountsRepository,
-                                accountDetails, 
-                                requesterContext.ExpectedCount);
-
-                            foreach (var item in account.Events)
-                            {
-                                outbox.Publish(item);
-                            }
-
-                            await _outboxManager.Store(outbox);
-                        }
-
-                        await _outboxManager.EnsureDispatched(outbox);
-
-                        _logger.LogInformation("AccountDetails have been added {@context}", evt);
-
-                        break;
-                    }
                 case AggregateType.BrokerAccount:
-                    {
-                        var outbox = await _outboxManager.Open($"BrokerAccountDetails:Create:{evt.WalletGenerationRequestId}",
-                            () => _brokerAccountDetailsRepository.GetNextIdAsync());
-                        if (!outbox.IsStored)
-                        {
-                            var brokerAccount = await _brokerAccountsRepository.Get(requesterContext.AggregateId);
-                            var brokerAccountDetails = BrokerAccountDetails.Create(
-                                outbox.AggregateId,
-                                new BrokerAccountDetailsId(evt.BlockchainId, evt.Address),
-                                brokerAccount.TenantId,
-                                brokerAccount.Id);
+                    await CreateBrokerAccountDetails(evt, requesterContext, context);
+                    break;
 
-                            await brokerAccount.AddBrokerAccountDetails(
-                                _brokerAccountDetailsRepository,
-                                _brokerAccountsRepository,
-                                brokerAccountDetails,
-                                requesterContext.ExpectedCount);
-
-                            foreach (var item in brokerAccount.Events)
-                            {
-                                outbox.Publish(item);
-                            }
-
-                            await _outboxManager.Store(outbox);
-                        }
-
-                        await _outboxManager.EnsureDispatched(outbox);
-
-                        _logger.LogInformation("BrokerAccountDetails have been added {@context}", evt);
-
-                        break;
-                    }
                 default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(requesterContext.AggregateType), 
-                        requesterContext.AggregateType, 
-                        "This should not happen at all!");
+                    throw new ArgumentOutOfRangeException(nameof(requesterContext.AggregateType), requesterContext.AggregateType, "");
             }
+        }
+
+        private async Task CreateAccountDetails(WalletAdded evt,
+            WalletGenerationRequesterContext requesterContext,
+            ConsumeContext<WalletAdded> consumeContext)
+        {
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"AccountDetails:Create:{evt.WalletGenerationRequestId}");
+
+            if (!unitOfWork.Outbox.IsClosed)
+            {
+                var account = await unitOfWork.Accounts.Get(requesterContext.AggregateId);
+                var accountDetailsId = await _idGenerator.GetId(unitOfWork.Outbox.IdempotencyId, IdGenerators.AccountDetails);
+                var accountDetails = AccountDetails.Create(
+                    accountDetailsId,
+                    new AccountDetailsId(evt.BlockchainId, evt.Address),
+                    account.Id,
+                    account.BrokerAccountId);
+
+                await account.AddAccountDetails(
+                    unitOfWork.AccountDetails,
+                    unitOfWork.Accounts,
+                    accountDetails,
+                    requesterContext.ExpectedCount);
+
+                foreach (var item in account.Events)
+                {
+                    unitOfWork.Outbox.Publish(item);
+                }
+
+                await unitOfWork.Commit();
+            }
+
+            await unitOfWork.EnsureOutboxDispatched(consumeContext);
+        }
+
+        private async Task CreateBrokerAccountDetails(WalletAdded evt,
+            WalletGenerationRequesterContext requesterContext,
+            ConsumeContext<WalletAdded> consumeContext)
+        {
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"BrokerAccountDetails:Create:{evt.WalletGenerationRequestId}");
+
+            if (!unitOfWork.Outbox.IsClosed)
+            {
+                var brokerAccount = await unitOfWork.BrokerAccounts.Get(requesterContext.AggregateId);
+                var brokerAccountDetailsId = await _idGenerator.GetId(unitOfWork.Outbox.IdempotencyId, IdGenerators.BrokerAccountDetails);
+                var brokerAccountDetails = BrokerAccountDetails.Create(
+                    brokerAccountDetailsId,
+                    new BrokerAccountDetailsId(evt.BlockchainId, evt.Address),
+                    brokerAccount.TenantId,
+                    brokerAccount.Id);
+
+                await brokerAccount.AddBrokerAccountDetails(
+                    unitOfWork.BrokerAccountDetails,
+                    unitOfWork.BrokerAccounts,
+                    brokerAccountDetails,
+                    requesterContext.ExpectedCount);
+
+                foreach (var item in brokerAccount.Events)
+                {
+                    unitOfWork.Outbox.Publish(item);
+                }
+
+                await unitOfWork.Commit();
+            }
+
+            await unitOfWork.EnsureOutboxDispatched(consumeContext);
         }
     }
 }
