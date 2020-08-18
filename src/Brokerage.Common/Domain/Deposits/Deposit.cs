@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
@@ -69,9 +69,9 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
-
+        
         public List<object> Events { get; } = new List<object>();
-
+        
         public bool IsBrokerDeposit => AccountDetailsId == null;
         
         public static Deposit Create(
@@ -167,10 +167,10 @@ namespace Brokerage.Common.Domain.Deposits
             if (SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed))
             {
                 // TODO: Optimize this - track in the processingContext, to avoid multiple reading
-                var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
+                var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
                 // ReSharper disable once PossibleInvalidOperationException
-                var accountDetails = await accountDetailsRepository.GetAsync(AccountDetailsId.Value);
-                var brokerAccount = await brokerAccountsRepository.GetAsync(this.BrokerAccountId);
+                var accountDetails = await accountDetailsRepository.Get(AccountDetailsId.Value);
+                var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
 
                 var operation = await operationsExecutor.StartDepositConsolidation(
                     TenantId,

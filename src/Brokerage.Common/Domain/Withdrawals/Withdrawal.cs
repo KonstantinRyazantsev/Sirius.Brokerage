@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Withdrawals
@@ -163,8 +163,8 @@ namespace Brokerage.Common.Domain.Withdrawals
         {
             if (SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing))
             {
-                var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
-                var brokerAccount = await brokerAccountsRepository.GetAsync(this.BrokerAccountId);
+                var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
+                var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
 
                 var operation = await operationsExecutor.StartWithdrawal(
                     TenantId,
@@ -174,42 +174,42 @@ namespace Brokerage.Common.Domain.Withdrawals
                     Unit,
                     brokerAccount.VaultId);
 
-                this.OperationId = operation.Id;
-                this.UpdatedAt = DateTime.UtcNow;
+                OperationId = operation.Id;
+                UpdatedAt = DateTime.UtcNow;
             }
 
-            this.AddUpdateEvent();
+            AddUpdateEvent();
         }
 
         public void TrackSent()
         {
             if (SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent))
             {
-                this.UpdatedAt = DateTime.UtcNow;
+                UpdatedAt = DateTime.UtcNow;
             }
 
-            this.AddUpdateEvent();
+            AddUpdateEvent();
         }
 
         public void Complete()
         {
             if (SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed))
             {
-                this.UpdatedAt = DateTime.UtcNow;
+                UpdatedAt = DateTime.UtcNow;
             }
 
-            this.AddUpdateEvent();
+            AddUpdateEvent();
         }
 
         public void Fail(WithdrawalError error)
         {
             if (SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Failed))
             {
-                this.UpdatedAt = DateTime.UtcNow;
-                this.Error = error;
+                UpdatedAt = DateTime.UtcNow;
+                Error = error;
             }
 
-            this.AddUpdateEvent();
+            AddUpdateEvent();
         }
 
         private bool SwitchState(IEnumerable<WithdrawalState> allowedStates, WithdrawalState targetState)
@@ -224,7 +224,7 @@ namespace Brokerage.Common.Domain.Withdrawals
                 throw new InvalidOperationException($"Can't switch withdrawal to the {targetState} from the state {State}");
             }
 
-            this.Sequence++;
+            Sequence++;
 
             State = targetState;
 
@@ -233,36 +233,36 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         private void AddUpdateEvent()
         {
-            this.Events.Add(new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalUpdated()
+            Events.Add(new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalUpdated()
             {
-                WithdrawalId = this.Id,
+                WithdrawalId = Id,
                 TransactionInfo =
-                    this.TransactionInfo == null
+                    TransactionInfo == null
                         ? null
                         : new Swisschain.Sirius.Brokerage.MessagingContract.TransactionInfo()
                         {
-                            TransactionId = this.TransactionInfo.TransactionId,
-                            TransactionBlock = this.TransactionInfo.TransactionBlock,
-                            DateTime = this.TransactionInfo.DateTime,
-                            RequiredConfirmationsCount = this.TransactionInfo.RequiredConfirmationsCount
+                            TransactionId = TransactionInfo.TransactionId,
+                            TransactionBlock = TransactionInfo.TransactionBlock,
+                            DateTime = TransactionInfo.DateTime,
+                            RequiredConfirmationsCount = TransactionInfo.RequiredConfirmationsCount
                         },
-                Sequence = this.Sequence,
-                TenantId = this.TenantId,
-                BrokerAccountId = this.BrokerAccountId,
-                BrokerAccountDetailsId = this.BrokerAccountDetailsId,
-                Fees = this.Fees,
-                Unit = this.Unit,
+                Sequence = Sequence,
+                TenantId = TenantId,
+                BrokerAccountId = BrokerAccountId,
+                BrokerAccountDetailsId = BrokerAccountDetailsId,
+                Fees = Fees,
+                Unit = Unit,
                 DestinationDetails = new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.DestinationDetails()
                 {
-                    TagType = this.DestinationDetails.TagType,
-                    Tag = this.DestinationDetails.Tag,
-                    Address = this.DestinationDetails.Address
+                    TagType = DestinationDetails.TagType,
+                    Tag = DestinationDetails.Tag,
+                    Address = DestinationDetails.Address
                 },
-                Error = this.Error == null
+                Error = Error == null
                     ? null
                     : new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalError()
                     {
-                        Code = this.Error.Code switch
+                        Code = Error.Code switch
                         {
                             WithdrawalErrorCode.NotEnoughBalance =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode.NotEnoughBalance,
@@ -274,13 +274,13 @@ namespace Brokerage.Common.Domain.Withdrawals
                                 .DestinationTagRequired,
                             WithdrawalErrorCode.TechnicalProblem =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode.TechnicalProblem,
-                            _ => throw new ArgumentOutOfRangeException(nameof(this.Error.Code),
-                                this.Error.Code,
+                            _ => throw new ArgumentOutOfRangeException(nameof(Error.Code),
+                                Error.Code,
                                 null)
                         },
-                        Message = this.Error.Message
+                        Message = Error.Message
                     },
-                State = this.State switch
+                State = State switch
                 {
                     WithdrawalState.Processing => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState
                         .Processing,
@@ -290,13 +290,13 @@ namespace Brokerage.Common.Domain.Withdrawals
                     WithdrawalState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState
                         .Completed,
                     WithdrawalState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState.Failed,
-                    _ => throw new ArgumentOutOfRangeException(nameof(this.State), this.State, null)
+                    _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
-                OperationId = this.OperationId,
-                ReferenceId = this.ReferenceId,
-                AccountId = this.AccountId,
-                CreatedAt = this.CreatedAt,
-                UpdatedAt = this.UpdatedAt
+                OperationId = OperationId,
+                ReferenceId = ReferenceId,
+                AccountId = AccountId,
+                CreatedAt = CreatedAt,
+                UpdatedAt = UpdatedAt
             });
         }
     }

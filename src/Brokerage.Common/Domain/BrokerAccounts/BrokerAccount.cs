@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
@@ -9,6 +9,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     public class BrokerAccount
     {
         private readonly List<object> _events = new List<object>();
+
         private BrokerAccount(
             long id, 
             string name,
@@ -16,7 +17,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt, 
             DateTime updatedAt, 
             BrokerAccountState state,
-            string requestId,
             long vaultId)
         {
             Id = id;
@@ -25,15 +25,12 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;
             State = state;
-            RequestId = requestId;
             VaultId = vaultId;
         }
         
         public long Id { get; }
         public string Name { get; }
         public string TenantId { get; }
-        // TODO: This is here only because of EF - we can't update DB record without having entire entity
-        public string RequestId { get; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
@@ -41,22 +38,17 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         public IReadOnlyCollection<object> Events => _events;
 
-        public bool IsOwnedBy(string tenantId)
-        {
-            return TenantId == tenantId;
-        }
-
-        public static BrokerAccount Create(string name, string tenantId, string requestId, long vaultId)
+        public static BrokerAccount Create(long id, string name, string tenantId, long vaultId)
         {
             var utcNow = DateTime.UtcNow;
+
             return new BrokerAccount(
-                default,
+                id,
                 name, 
                 tenantId,
                 utcNow, 
                 utcNow, 
                 BrokerAccountState.Creating, 
-                requestId, 
                 vaultId);
         }
 
@@ -67,7 +59,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt,
             DateTime updatedAt,
             BrokerAccountState state,
-            string requestId,
             long vaultId)
         {
             return new BrokerAccount(
@@ -77,7 +68,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 createdAt, 
                 updatedAt, 
                 state, 
-                requestId,
                 vaultId);
         }
 
@@ -88,8 +78,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             
             _events.Add(new BrokerAccountActivated()
             {
-                BrokerAccountId = this.Id,
-                UpdatedAt = this.UpdatedAt
+                BrokerAccountId = Id,
+                UpdatedAt = UpdatedAt
             });
         }
 
@@ -99,9 +89,9 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             BrokerAccountDetails brokerAccountDetails,
             long expectedCount)
         {
-            await brokerAccountDetailsRepository.AddOrIgnoreAsync(brokerAccountDetails);
+            await brokerAccountDetailsRepository.Add(brokerAccountDetails);
             
-            this._events.Add(new BrokerAccountDetailsAdded()
+            _events.Add(new BrokerAccountDetailsAdded()
             {
                 BlockchainId = brokerAccountDetails.NaturalId.BlockchainId,
                 Address = brokerAccountDetails.NaturalId.Address,
@@ -110,13 +100,12 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 CreatedAt = brokerAccountDetails.CreatedAt
             });
 
-            long accountDetailsCount =
-                await brokerAccountsRepository.GetCountByBrokerAccountIdAsync(this.Id);
+            var accountDetailsCount = await brokerAccountDetailsRepository.GetCountByBrokerAccountId(Id);
 
             if (accountDetailsCount >= expectedCount)
             {
-                this.Activate();
-                await brokerAccountsRepository.UpdateAsync(this);
+                Activate();
+                await brokerAccountsRepository.Update(this);
             }
         }
     }

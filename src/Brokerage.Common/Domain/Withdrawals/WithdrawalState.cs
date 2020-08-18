@@ -3,13 +3,9 @@
     public enum WithdrawalState
     {
         Processing,
-
         Executing,
-
         Sent,
-
         Completed,
-
         Failed
     }
 }

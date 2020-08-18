@@ -63,7 +63,7 @@ namespace Brokerage.Common.Domain.Operations
 
             var operation = Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
 
-            await _operationsRepository.AddOrIgnore(operation);
+            await _operationsRepository.Add(operation);
 
             return operation;
         }
@@ -121,7 +121,7 @@ namespace Brokerage.Common.Domain.Operations
 
             var operation = Operation.Create(response.Response.Operation.Id, OperationType.Withdrawal);
 
-            await _operationsRepository.AddOrIgnore(operation);
+            await _operationsRepository.Add(operation);
 
             return operation;
         }

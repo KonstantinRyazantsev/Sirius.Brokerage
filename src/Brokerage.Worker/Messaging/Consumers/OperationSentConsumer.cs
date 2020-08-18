@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Withdrawals;
@@ -64,11 +64,9 @@ namespace Brokerage.Worker.Messaging.Consumers
             var operation = processingContext.Operation;
 
             await Task.WhenAll(
-                _depositsRepository.SaveAsync(updatedDeposits),
-                _withdrawalRepository.SaveAsync(updatedWithdrawals),
-                _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.OperationSent}_{processingContext.Operation.Id}",
-                    updatedBrokerAccountBalances),
+                _depositsRepository.Save(updatedDeposits),
+                _withdrawalRepository.Update(updatedWithdrawals),
+                _brokerAccountsBalancesRepository.Save(updatedBrokerAccountBalances),
                 _operationsRepository.UpdateAsync(operation));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))

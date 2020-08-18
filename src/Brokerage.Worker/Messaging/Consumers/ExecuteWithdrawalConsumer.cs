@@ -3,7 +3,7 @@ using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Withdrawals;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -41,7 +41,7 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             var evt = context.Message;
 
-            var withdrawal = await _withdrawalRepository.GetAsync(evt.WithdrawalId);
+            var withdrawal = await _withdrawalRepository.Get(evt.WithdrawalId);
             
             var executionTask = withdrawal.Execute(
                 _brokerAccountsRepository,
@@ -55,11 +55,9 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             await executionTask;
 
-            await _withdrawalRepository.SaveAsync(new[] {withdrawal});
+            await _withdrawalRepository.Update(new[] {withdrawal});
 
-            await _brokerAccountsBalancesRepository.SaveAsync(
-                $"{BalanceChangingReason.OperationStarted}_{withdrawal.OperationId}",
-                new[] {brokerAccountBalances});
+            await _brokerAccountsBalancesRepository.Save(new[] {brokerAccountBalances});
 
             foreach (var @event in withdrawal.Events)
             {

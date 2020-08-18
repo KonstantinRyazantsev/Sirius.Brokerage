@@ -5,7 +5,7 @@ using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits.Processors

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Transactions;
 using MassTransit;
@@ -81,10 +81,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                 .ToArray();
 
             await Task.WhenAll(
-                _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.TransactionDetected}_{tx.BlockchainId}_{tx.TransactionId}", 
-                    updatedBrokerAccountBalances),
-                _depositsRepository.SaveAsync(updatedDeposits));
+                _brokerAccountsBalancesRepository.Save(updatedBrokerAccountBalances),
+                _depositsRepository.Save(updatedDeposits));
 
             foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
             {
@@ -96,7 +94,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                 await context.Publish(evt);
             }
 
-            await _detectedTransactionsRepository.AddOrIgnore(tx.BlockchainId, tx.TransactionId);
+            await _detectedTransactionsRepository.Add(tx.BlockchainId, tx.TransactionId);
         }
     }
 }

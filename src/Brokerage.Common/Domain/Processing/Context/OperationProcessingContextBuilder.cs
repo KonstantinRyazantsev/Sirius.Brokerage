@@ -6,7 +6,7 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Withdrawals;
@@ -51,7 +51,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                     var brokerAccountIds = deposits
                         .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                         .ToHashSet();
-                    var brokerAccountBalances = (await _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountIds))
+                    var brokerAccountBalances = (await _brokerAccountsBalancesRepository.GetAnyOf(brokerAccountIds))
                         .ToDictionary(x => x.NaturalId);
 
                     return new OperationProcessingContext(
@@ -67,7 +67,7 @@ namespace Brokerage.Common.Domain.Processing.Context
 
                 case OperationType.Withdrawal:
                 {
-                    var withdrawal = await _withdrawalRepository.GetByOperationIdOrDefaultAsync(operationId);
+                    var withdrawal = await _withdrawalRepository.GetByOperationIdOrDefault(operationId);
                     var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(
                         new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
 

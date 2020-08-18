@@ -9,8 +9,6 @@
         }
 
         public string Message { get; }
-
         public WithdrawalErrorCode Code { get; }
-
     }
 }

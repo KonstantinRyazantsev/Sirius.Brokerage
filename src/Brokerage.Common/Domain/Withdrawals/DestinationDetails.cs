@@ -12,9 +12,7 @@ namespace Brokerage.Common.Domain.Withdrawals
         }
 
         public string Address { get;}
-
         public string Tag { get; }
-
         public DestinationTagType? TagType { get; }
     }
 }

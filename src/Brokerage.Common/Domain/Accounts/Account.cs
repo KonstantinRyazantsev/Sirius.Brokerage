@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Extensions.Idempotency;
-using Swisschain.Sirius.Brokerage.MessagingContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
-using Swisschain.Sirius.Sdk.Primitives;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
@@ -123,7 +118,7 @@ namespace Brokerage.Common.Domain.Accounts
             var expectedCount = await blockchainsRepository.GetCountAsync();
             var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
             {
-                AggregateId = this.Id,
+                AggregateId = Id,
                 AggregateType = AggregateType.Account,
                 ExpectedCount = expectedCount
             });
@@ -147,7 +142,7 @@ namespace Brokerage.Common.Domain.Accounts
                     {
                         await sendEndpoint.Send(new CreateAccountDetailsForTag()
                         {
-                            AccountId = this.Id,
+                            AccountId = Id,
                             BlockchainId = blockchain.Id,
                             ExpectedCount = expectedCount
                         });
@@ -213,16 +208,16 @@ namespace Brokerage.Common.Domain.Accounts
             AccountDetails accountDetails,
             long expectedCount)
         {
-            await accountDetailsRepository.AddOrIgnoreAsync(accountDetails);
-            this._events.Add(GetAccountDetailsAddedEvent(accountDetails));
+            await accountDetailsRepository.Add(accountDetails);
+            
+            _events.Add(GetAccountDetailsAddedEvent(accountDetails));
 
-            var accountDetailsCount =
-                await accountDetailsRepository.GetCountByAccountIdAsync(this.Id);
+            var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
 
             if (accountDetailsCount >= expectedCount)
             {
-                this.Activate();
-                await accountsRepository.UpdateAsync(this);
+                Activate();
+                await accountsRepository.Update(this);
             }
         }
     }

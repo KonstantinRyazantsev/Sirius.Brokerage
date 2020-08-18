@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.VaultAgent.ApiClient;
@@ -36,7 +36,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             // TODO: Use outbox correctly here
 
             var message = context.Message;
-            var brokerAccount = await _brokerAccountsRepository.GetAsync(message.BrokerAccountId);
+            var brokerAccount = await _brokerAccountsRepository.Get(message.BrokerAccountId);
             var blockchainsCount = await _blockchainsRepository.GetCountAsync();
 
             if (brokerAccount.State == BrokerAccountState.Creating)

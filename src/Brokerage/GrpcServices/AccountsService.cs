@@ -39,8 +39,7 @@ namespace Brokerage.GrpcServices
 
                     unitOfWork.Outbox.Send(new FinalizeAccountCreation
                     {
-                        AccountId = account.Id,
-                        RequestId = request.RequestId,
+                        AccountId = account.Id
                     });
 
                     foreach (var evt in account.Events)

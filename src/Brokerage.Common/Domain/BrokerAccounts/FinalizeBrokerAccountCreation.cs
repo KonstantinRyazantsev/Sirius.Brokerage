@@ -3,7 +3,6 @@
     public class FinalizeBrokerAccountCreation
     {
         public long BrokerAccountId { get; set; }
-        public string RequestId { get; set; }
         public string TenantId { get; set; }
     }
 }

@@ -4,7 +4,7 @@ using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.VaultAgent.ApiClient;
@@ -46,7 +46,7 @@ namespace Brokerage.Worker.Messaging.Consumers
         {
             var command = context.Message;
             var account = await _accountsRepository.GetAsync(command.AccountId);
-            var brokerAccount = await _brokerAccountsRepository.GetAsync(account.BrokerAccountId);
+            var brokerAccount = await _brokerAccountsRepository.Get(account.BrokerAccountId);
 
             await account.FinalizeCreation(
                 _loggerFactory.CreateLogger<Account>(),
@@ -56,7 +56,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                 _destinationTagGeneratorFactory,
                 _sendEndpoint);
 
-            await _accountsRepository.UpdateAsync(account);
+            await _accountsRepository.Update(account);
 
             foreach (var evt in account.Events)
             {

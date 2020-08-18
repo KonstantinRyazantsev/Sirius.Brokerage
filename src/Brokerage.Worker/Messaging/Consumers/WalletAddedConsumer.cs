@@ -4,7 +4,7 @@ using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -97,7 +97,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                             () => _brokerAccountDetailsRepository.GetNextIdAsync());
                         if (!outbox.IsStored)
                         {
-                            var brokerAccount = await _brokerAccountsRepository.GetAsync(requesterContext.AggregateId);
+                            var brokerAccount = await _brokerAccountsRepository.Get(requesterContext.AggregateId);
                             var brokerAccountDetails = BrokerAccountDetails.Create(
                                 outbox.AggregateId,
                                 new BrokerAccountDetailsId(evt.BlockchainId, evt.Address),
