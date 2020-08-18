@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.Accounts;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
-using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
@@ -153,9 +153,9 @@ namespace Brokerage.Common.Domain.Deposits
         }
 
         public async Task ConfirmRegular(
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IAccountDetailsRepository accountDetailsRepository, 
+            BrokerAccount brokerAccount,
+            BrokerAccountDetails brokerAccountDetails,
+            AccountDetails accountDetails,
             TransactionConfirmed tx, 
             IOperationsExecutor operationsExecutor)
         {
@@ -166,12 +166,6 @@ namespace Brokerage.Common.Domain.Deposits
 
             if (SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed))
             {
-                // TODO: Optimize this - track in the processingContext, to avoid multiple reading
-                var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
-                // ReSharper disable once PossibleInvalidOperationException
-                var accountDetails = await accountDetailsRepository.Get(AccountDetailsId.Value);
-                var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
-
                 var operation = await operationsExecutor.StartDepositConsolidation(
                     TenantId,
                     Id,

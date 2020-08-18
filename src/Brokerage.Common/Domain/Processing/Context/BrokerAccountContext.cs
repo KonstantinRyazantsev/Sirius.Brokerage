@@ -8,6 +8,7 @@ namespace Brokerage.Common.Domain.Processing.Context
     {
         public BrokerAccountContext(string tenantId,
             long brokerAccountId,
+            BrokerAccount brokerAccount,
             BrokerAccountDetails activeDetails,
             IReadOnlyCollection<AccountContext> accounts,
             IReadOnlyCollection<BrokerAccountBalancesContext> balances,
@@ -26,12 +27,15 @@ namespace Brokerage.Common.Domain.Processing.Context
             BrokerAccountDetails = brokerAccountDetails;
             TenantId = tenantId;
             BrokerAccountId = brokerAccountId;
+            BrokerAccount = brokerAccount;
             ActiveDetails = activeDetails;
         }
 
         public string TenantId { get; }
 
         public long BrokerAccountId { get; }
+
+        public BrokerAccount BrokerAccount { get; }
 
         /// <summary>
         /// Active broker account details

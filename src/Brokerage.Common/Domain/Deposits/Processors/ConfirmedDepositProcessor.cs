@@ -4,28 +4,17 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccounts;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 
 namespace Brokerage.Common.Domain.Deposits.Processors
 {
     public class ConfirmedDepositProcessor : IConfirmedTransactionProcessor
     {
-        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
-        private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IOperationsExecutor _operationsExecutor;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
 
-        public ConfirmedDepositProcessor(IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IAccountDetailsRepository accountDetailsRepository,
-            IOperationsExecutor operationsExecutor,
-            IBrokerAccountsRepository brokerAccountsRepository)
+        public ConfirmedDepositProcessor(IOperationsExecutor operationsExecutor)
         {
-            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
-            _accountDetailsRepository = accountDetailsRepository;
             _operationsExecutor = operationsExecutor;
-            _brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
@@ -66,10 +55,15 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             {
                 foreach (var deposit in regularDeposits)
                 {
-                    await deposit.ConfirmRegular(
-                        _brokerAccountsRepository,
-                        _brokerAccountDetailsRepository,
-                        _accountDetailsRepository,
+                    var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == deposit.BrokerAccountId);
+                    var brokerAccountDetails = brokerAccountContext.BrokerAccountDetails[deposit.BrokerAccountDetailsId];
+                    var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.AccountId == deposit.AccountDetailsId);
+                    var brokerAccount = brokerAccountContext.BrokerAccount;
+                    var accountDetails = accountDetailsContext.Details;
+
+                    await deposit.ConfirmRegular(brokerAccount,
+                        brokerAccountDetails,
+                        accountDetails,
                         tx,
                         _operationsExecutor);
                 }

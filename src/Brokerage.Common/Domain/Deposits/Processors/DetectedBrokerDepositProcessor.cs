@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.Deposits;
+using Brokerage.Common.Persistence;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Indexer.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
@@ -15,14 +14,11 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 {
     public class DetectedBrokerDepositProcessor : IDetectedTransactionProcessor
     {
-        private readonly IOutboxManager _outboxManager;
-        private readonly IDepositsRepository _depositsRepository;
+        private readonly IIdGenerator _idGenerator;
 
-        public DetectedBrokerDepositProcessor(IOutboxManager outboxManager, 
-            IDepositsRepository depositsRepository)
+        public DetectedBrokerDepositProcessor(IIdGenerator idGenerator)
         {
-            _outboxManager = outboxManager;
-            _depositsRepository = depositsRepository;
+            _idGenerator = idGenerator;
         }
 
         public async Task Process(TransactionDetected tx, TransactionProcessingContext processingContext)
@@ -50,12 +46,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         continue;
                     }
 
-                    var outbox = await _outboxManager.Open(
-                        $"BrokerDeposits:Create:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}",
-                        () => _depositsRepository.GetNextIdAsync());
-
+                    var depositId = await _idGenerator.GetId($"BrokerDeposits:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}", IdGenerators.Deposits);
+                    
                     var deposit = Deposit.Create(
-                        outbox.AggregateId,
+                        depositId,
                         brokerAccountContext.TenantId,
                         tx.BlockchainId,
                         brokerAccountContext.BrokerAccountId,

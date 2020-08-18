@@ -5,13 +5,12 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
+using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
-using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.Threading;
 using Swisschain.Extensions.Idempotency;
 
@@ -19,28 +18,31 @@ namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class TransactionProcessingContextBuilder
     {
+        private readonly IIdGenerator _idGenerator;
+        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IAccountDetailsRepository _accountDetailsRepository;
         private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IDepositsRepository _depositsRepository;
         private readonly IOperationsRepository _operationsRepository;
-        private readonly IOutboxManager _outboxManager;
         private readonly IBlockchainsRepository _blockchainsRepository;
 
-        public TransactionProcessingContextBuilder(IAccountDetailsRepository accountDetailsRepository,
+        public TransactionProcessingContextBuilder(IIdGenerator idGenerator,
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IAccountDetailsRepository accountDetailsRepository,
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
             IOperationsRepository operationsRepository,
-            IOutboxManager outboxManager,
             IBlockchainsRepository blockchainsRepository)
         {
+            _idGenerator = idGenerator;
+            _brokerAccountsRepository = brokerAccountsRepository;
             _accountDetailsRepository = accountDetailsRepository;
             _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _depositsRepository = depositsRepository;
             _operationsRepository = operationsRepository;
-            _outboxManager = outboxManager;
             _blockchainsRepository = blockchainsRepository;
         }
 
@@ -81,8 +83,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToHashSet();
 
             var (matchedAccountDetails, matchedBrokerAccountDetails, matchedOperation) = await TaskExecution.WhenAll(
-                _accountDetailsRepository.GetAnyOfAsync(allAccountDetailsIds),
-                _brokerAccountDetailsRepository.GetAnyOfAsync(allBrokerAccountDetailsIds),
+                _accountDetailsRepository.GetAnyOf(allAccountDetailsIds),
+                _brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds),
                 _operationsRepository.GetOrDefaultAsync(operationId));
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
@@ -113,9 +115,10 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => new ActiveBrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
-            var (existingBrokerAccountBalances, activeBrokerAccountDetails, deposits, blockchain) = await TaskExecution.WhenAll(
-                _brokerAccountsBalancesRepository.GetAnyOfAsync(brokerAccountBalancesIds),
-                _brokerAccountDetailsRepository.GetActiveAsync(activeBrokerAccountDetailsIds),
+            var (existingBrokerAccountBalances, activeBrokerAccountDetails, matchedBrokerAccounts, deposits, blockchain) = await TaskExecution.WhenAll(
+                _brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds),
+                _brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds),
+                _brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds),
                 _depositsRepository.Search(
                     blockchainId,
                     transactionInfo.TransactionId,
@@ -126,7 +129,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Concat(newBrokerAccountBalances)
                 .ToArray();
 
-            var brokerAccountsContext = matchedBrokerAccountIds
+            var brokerAccountsContext = matchedBrokerAccounts
                 .Select(x => BuildBrokerAccountContext(x,
                     blockchainId,
                     activeBrokerAccountDetails,
@@ -145,7 +148,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 blockchain);
         }
 
-        private BrokerAccountContext BuildBrokerAccountContext(long brokerAccountId,
+        private static BrokerAccountContext BuildBrokerAccountContext(BrokerAccount brokerAccount,
             string blockchainId,
             IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails> allActiveDetails,
             IReadOnlyCollection<BrokerAccountBalances> brokerAccountBalances,
@@ -155,7 +158,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             IReadOnlyCollection<AccountDetails> matchedAccountDetails)
         {
             var brokerAccountDetails = matchedBrokerAccountDetails
-                .Where(x => x.BrokerAccountId == brokerAccountId)
+                .Where(x => x.BrokerAccountId == brokerAccount.Id)
                 .ToArray();
 
             var inputs = new List<BrokerAccountContextEndpoint>();
@@ -212,7 +215,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                     {
                         throw new InvalidOperationException($"Error happened. " +
                                                             $"It is not possible to find " +
-                                                            $"broker account details for broker account {brokerAccountId}");
+                                                            $"broker account details for broker account {brokerAccount.Id}");
                     }
 
                     return new BrokerAccountBalancesContext(
@@ -222,11 +225,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                         x.NaturalId.AssetId);
                 }).ToArray();
 
-            var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccountId)];
+            var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccount.Id)];
 
             return new BrokerAccountContext(
                 activeDetails.TenantId,
                 activeDetails.BrokerAccountId,
+                brokerAccount,
                 activeDetails,
                 accounts,
                 balances,
@@ -270,14 +274,13 @@ namespace Brokerage.Common.Domain.Processing.Context
             var notExistingBrokerAccountBalancesIds = brokerAccountBalancesIds.Where(x => !existingBrokerAccountBalancesIds.Contains(x));
             var newBrokerAccountBalances = new List<BrokerAccountBalances>();
 
-            foreach (var brokerAccountBalancesId in notExistingBrokerAccountBalancesIds)
+            foreach (var brokerAccountBalancesNaturalId in notExistingBrokerAccountBalancesIds)
             {
-                // TODO: Decouple outbox and ID generator
-                var outbox = await _outboxManager.Open(
-                    $"BrokerAccountBalances:Create:{brokerAccountBalancesId.BrokerAccountId}_{brokerAccountBalancesId.AssetId}",
-                    () => _brokerAccountsBalancesRepository.GetNextIdAsync());
+                var brokerAccountBalancesId = await _idGenerator.GetId(
+                    $"BrokerAccountBalances:{brokerAccountBalancesNaturalId.BrokerAccountId}_{brokerAccountBalancesNaturalId.AssetId}",
+                    IdGenerators.BrokerAccountsBalances);
 
-                newBrokerAccountBalances.Add(BrokerAccountBalances.Create(outbox.AggregateId, brokerAccountBalancesId));
+                newBrokerAccountBalances.Add(BrokerAccountBalances.Create(brokerAccountBalancesId, brokerAccountBalancesNaturalId));
             }
 
             return newBrokerAccountBalances;
