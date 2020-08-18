@@ -52,35 +52,21 @@ namespace Brokerage.Common.Domain.Withdrawals
         public uint Version { get; }
         public long Sequence { get; set; }
         public long BrokerAccountId { get; }
-
         public long BrokerAccountDetailsId { get; }
-
         public long? AccountId { get; }
-
         public string ReferenceId { get; }
-
         public Unit Unit { get; }
-
         public string TenantId { get; }
-
         public IReadOnlyCollection<Unit> Fees { get; }
-
         public DestinationDetails DestinationDetails { get; }
-
         public WithdrawalState State { get; private set; }
-
         public TransactionInfo TransactionInfo { get; }
-
         public WithdrawalError Error { get; private set; }
-
         public long? OperationId { get; private set; }
-
         public DateTime CreatedAt { get; }
-
         public DateTime UpdatedAt { get; private set; }
-
         public List<object> Events { get; } = new List<object>();
-
+        
         public static Withdrawal Create(
             long id,
             long brokerAccountId,
