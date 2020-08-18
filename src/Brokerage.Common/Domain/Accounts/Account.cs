@@ -6,7 +6,6 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 using Swisschain.Sirius.VaultAgent.ApiClient;
@@ -17,6 +16,7 @@ namespace Brokerage.Common.Domain.Accounts
     public class Account
     {
         private readonly List<object> _events;
+        private readonly List<object> _commands;
 
         private Account(
             long id,
@@ -36,9 +36,12 @@ namespace Brokerage.Common.Domain.Accounts
             Sequence = sequence;
 
             _events = new List<object>();
+            _commands = new List<object>();
         }
 
         public IReadOnlyCollection<object> Events => _events;
+        public IReadOnlyCollection<object> Commands => _commands;
+
         public long Id { get; }
         public long BrokerAccountId { get; }
         public string ReferenceId { get; }
@@ -100,8 +103,7 @@ namespace Brokerage.Common.Domain.Accounts
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            ISendEndpointProvider sendEndpoint)
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
         {
             if (State == AccountState.Creating)
             {
@@ -110,8 +112,7 @@ namespace Brokerage.Common.Domain.Accounts
                     brokerAccount,
                     blockchainsRepository,
                     vaultAgentClient,
-                    destinationTagGeneratorFactory,
-                    sendEndpoint
+                    destinationTagGeneratorFactory
                 );
             }
         }
@@ -121,12 +122,11 @@ namespace Brokerage.Common.Domain.Accounts
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            ISendEndpointProvider sendEndpoint)
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
         {
             string cursor = null;
             var expectedCount = await blockchainsRepository.GetCountAsync();
-            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
             {
                 AggregateId = Id,
                 AggregateType = AggregateType.Account,
@@ -150,7 +150,7 @@ namespace Brokerage.Common.Domain.Accounts
 
                     if (tagGenerator != null)
                     {
-                        await sendEndpoint.Send(new CreateAccountDetailsForTag()
+                        _commands.Add(new CreateAccountDetailsForTag
                         {
                             AccountId = Id,
                             BlockchainId = blockchain.Id,
@@ -163,7 +163,7 @@ namespace Brokerage.Common.Domain.Accounts
                     var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(
                         new GenerateWalletRequest
                         {
-                            RequestId = $"Brokerage:AccountDetails:{Id}_{blockchain.Id}",
+                            RequestId = $"Brokerage:AccountDetails:{Id}:{blockchain.Id}",
                             BlockchainId = blockchain.Id,
                             TenantId = brokerAccount.TenantId,
                             VaultId = brokerAccount.VaultId,
