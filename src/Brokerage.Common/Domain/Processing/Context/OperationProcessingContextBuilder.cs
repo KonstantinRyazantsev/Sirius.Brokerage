@@ -15,25 +15,13 @@ namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class OperationProcessingContextBuilder
     {
-        private readonly IOperationsRepository _operationsRepository;
-        private readonly IDepositsRepository _depositsRepository;
-        private readonly IWithdrawalRepository _withdrawalRepository;
-        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
-
-        public OperationProcessingContextBuilder(IOperationsRepository operationsRepository,
+        public async Task<OperationProcessingContext> Build(long operationId,
+            IOperationsRepository operationsRepository,
             IDepositsRepository depositsRepository,
-            IWithdrawalRepository withdrawalRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IWithdrawalsRepository withdrawalsRepository)
         {
-            _operationsRepository = operationsRepository;
-            _depositsRepository = depositsRepository;
-            _withdrawalRepository = withdrawalRepository;
-            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
-        }
-
-        public async Task<OperationProcessingContext> Build(long operationId)
-        {
-            var operation = await _operationsRepository.GetOrDefault(operationId);
+            var operation = await operationsRepository.GetOrDefault(operationId);
 
             if (operation == null)
             {
@@ -44,14 +32,14 @@ namespace Brokerage.Common.Domain.Processing.Context
             {
                 case OperationType.DepositConsolidation:
                 {
-                    var deposits = await _depositsRepository.Search(
+                    var deposits = await depositsRepository.Search(
                         blockchainId: null,
                         transactionId: null,
                         consolidationOperationId: operation.Id);
                     var brokerAccountIds = deposits
                         .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                         .ToHashSet();
-                    var brokerAccountBalances = (await _brokerAccountsBalancesRepository.GetAnyOf(brokerAccountIds))
+                    var brokerAccountBalances = (await brokerAccountsBalancesRepository.GetAnyOf(brokerAccountIds))
                         .ToDictionary(x => x.NaturalId);
 
                     return new OperationProcessingContext(
@@ -67,8 +55,8 @@ namespace Brokerage.Common.Domain.Processing.Context
 
                 case OperationType.Withdrawal:
                 {
-                    var withdrawal = await _withdrawalRepository.GetByOperationIdOrDefault(operationId);
-                    var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(
+                    var withdrawal = await withdrawalsRepository.GetByOperationIdOrDefault(operationId);
+                    var brokerAccountBalances = await brokerAccountsBalancesRepository.GetAsync(
                         new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
 
                     return new OperationProcessingContext(

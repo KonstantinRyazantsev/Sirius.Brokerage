@@ -16,7 +16,7 @@ namespace Brokerage.Common.Persistence
         public IBrokerAccountsBalancesRepository BrokerAccountBalances { get; private set; }
         public IBrokerAccountsRepository BrokerAccounts { get; private set; }
         public IDepositsRepository Deposits { get; private set; }
-        public IWithdrawalRepository Withdrawals { get; private set; }
+        public IWithdrawalsRepository Withdrawals { get; private set; }
         public IOperationsRepository Operations { get; private set; }
         public IDetectedTransactionsRepository DetectedTransactions { get; private set; }
 
@@ -28,7 +28,7 @@ namespace Brokerage.Common.Persistence
             BrokerAccountBalances = new BrokerAccountsBalancesRepository(dbContext);
             BrokerAccounts = new BrokerAccountsRepository(dbContext);
             Deposits = new DepositsRepository(dbContext);
-            Withdrawals = new WithdrawalRepository(dbContext);
+            Withdrawals = new WithdrawalsRepository(dbContext);
             Operations = new OperationsRepository(dbContext);
             DetectedTransactions = new DetectedTransactionsRepository(dbContext);
         }

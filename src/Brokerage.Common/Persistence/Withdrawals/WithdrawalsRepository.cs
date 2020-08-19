@@ -8,11 +8,11 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Withdrawals
 {
-    public class WithdrawalRepository : IWithdrawalRepository
+    public class WithdrawalsRepository : IWithdrawalsRepository
     {
         private readonly DatabaseContext _dbContext;
 
-        public WithdrawalRepository(DatabaseContext dbContext)
+        public WithdrawalsRepository(DatabaseContext dbContext)
         {
             _dbContext = dbContext;
         }

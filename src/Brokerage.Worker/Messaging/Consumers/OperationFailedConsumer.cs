@@ -18,21 +18,21 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
         private readonly IDepositsRepository _depositsRepository;
-        private readonly IWithdrawalRepository _withdrawalRepository;
+        private readonly IWithdrawalsRepository _withdrawalsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
 
         public OperationFailedConsumer(ILogger<OperationFailedConsumer> logger,
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
-            IWithdrawalRepository withdrawalRepository,
+            IWithdrawalsRepository withdrawalsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository)
         {
             _logger = logger;
             _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
             _depositsRepository = depositsRepository;
-            _withdrawalRepository = withdrawalRepository;
+            _withdrawalsRepository = withdrawalsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
         }
 
@@ -60,7 +60,7 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             await Task.WhenAll(
                 _depositsRepository.Save(updatedDeposits),
-                _withdrawalRepository.Update(updatedWithdrawals),
+                _withdrawalsRepository.Update(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.Save(updatedBrokerAccountBalances));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))

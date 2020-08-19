@@ -7,6 +7,6 @@ namespace Brokerage.Common.Persistence.Operations
     {
         Task<Operation> GetOrDefault(long id);
         Task Add(Operation operation);
-        Task UpdateAsync(Operation operation);
+        Task Update(Operation operation);
     }
 }

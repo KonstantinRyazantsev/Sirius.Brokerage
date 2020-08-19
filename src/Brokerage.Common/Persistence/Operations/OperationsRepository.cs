@@ -30,7 +30,7 @@ namespace Brokerage.Common.Persistence.Operations
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Operation operation)
+        public async Task Update(Operation operation)
         {
             _dbContext.Operations.Update(FromDomain(operation));
 
@@ -53,12 +53,12 @@ namespace Brokerage.Common.Persistence.Operations
             {
                 Id = operation.Id,
                 Type = operation.Type,
-                ExpectedFees = operation?.ExpectedFees.Select(x => new ExpectedOperationFeeEntity()
+                ExpectedFees = operation?.ExpectedFees.Select(x => new ExpectedOperationFeeEntity
                 {
                     Amount = x.Amount,
                     AssetId = x.AssetId
                 }).ToArray(),
-                ActualFees = operation?.ActualFees.Select(x => new ActualOperationFeeEntity()
+                ActualFees = operation?.ActualFees.Select(x => new ActualOperationFeeEntity
                 {
                     Amount = x.Amount,
                     AssetId = x.AssetId

@@ -4,7 +4,7 @@ using Brokerage.Common.Domain.Withdrawals;
 
 namespace Brokerage.Common.Persistence.Withdrawals
 {
-    public interface IWithdrawalRepository
+    public interface IWithdrawalsRepository
     {
         Task<Withdrawal> Get(long withdrawalId);
         Task<Withdrawal> GetByOperationIdOrDefault(long operationId);

@@ -19,7 +19,7 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
         private readonly IDepositsRepository _depositsRepository;
-        private readonly IWithdrawalRepository _withdrawalRepository;
+        private readonly IWithdrawalsRepository _withdrawalsRepository;
         private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
         private readonly IOperationsRepository _operationsRepository;
 
@@ -27,7 +27,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             OperationProcessingContextBuilder processingContextBuilder,
             IProcessorsFactory processorsFactory,
             IDepositsRepository depositsRepository,
-            IWithdrawalRepository withdrawalRepository,
+            IWithdrawalsRepository withdrawalsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IOperationsRepository operationsRepository)
         {
@@ -35,7 +35,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
             _depositsRepository = depositsRepository;
-            _withdrawalRepository = withdrawalRepository;
+            _withdrawalsRepository = withdrawalsRepository;
             _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
             _operationsRepository = operationsRepository;
         }
@@ -65,9 +65,9 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             await Task.WhenAll(
                 _depositsRepository.Save(updatedDeposits),
-                _withdrawalRepository.Update(updatedWithdrawals),
+                _withdrawalsRepository.Update(updatedWithdrawals),
                 _brokerAccountsBalancesRepository.Save(updatedBrokerAccountBalances),
-                _operationsRepository.UpdateAsync(operation));
+                _operationsRepository.Update(operation));
             
             foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
             {
