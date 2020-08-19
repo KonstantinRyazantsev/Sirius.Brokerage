@@ -33,7 +33,7 @@ namespace Brokerage.Worker.Messaging.Consumers
         {
             var evt = context.Message;
 
-            await using var unitOfWork = await _unitOfWorkManager.Begin($"Operation:Failed:{evt.OperationId}");
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"Operations:Failed:{evt.OperationId}");
 
             if (!unitOfWork.Outbox.IsClosed)
             {
@@ -58,13 +58,16 @@ namespace Brokerage.Worker.Messaging.Consumers
                 var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
                 var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
                 var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+                var operation = processingContext.Operation;
 
                 // TODO: Fail operation
+                operation.AddActualFees(evt.ActualFees);
 
                 await Task.WhenAll(
                     unitOfWork.Deposits.Save(updatedDeposits),
                     unitOfWork.Withdrawals.Update(updatedWithdrawals),
-                    unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances));
+                    unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances),
+                    unitOfWork.Operations.Update(operation));
 
                 foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
                 {
