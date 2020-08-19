@@ -69,7 +69,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     _logger.LogDebug("There is nothing to process in the transaction {@context}", new
                     {
                         BlockchainId = tx.BlockchainId,
-                        TransactionId = tx.TransactionId
+                        TransactionId = tx.TransactionId,
+                        OperationId = tx.OperationId
                     });
 
                     return;
