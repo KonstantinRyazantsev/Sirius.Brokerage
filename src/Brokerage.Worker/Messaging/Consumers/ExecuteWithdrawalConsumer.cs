@@ -12,13 +12,13 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class ExecuteWithdrawalConsumer : IConsumer<ExecuteWithdrawal>
     {
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
-        private readonly IOperationsExecutor _operationsExecutor;
+        private readonly IOperationsFactory _operationsFactory;
 
         public ExecuteWithdrawalConsumer(IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
-            IOperationsExecutor operationsExecutor)
+            IOperationsFactory operationsFactory)
         {
             _unitOfWorkManager = unitOfWorkManager;
-            _operationsExecutor = operationsExecutor;
+            _operationsFactory = operationsFactory;
         }
 
         public async Task Consume(ConsumeContext<ExecuteWithdrawal> context)
@@ -34,18 +34,19 @@ namespace Brokerage.Worker.Messaging.Consumers
                 var executionTask = withdrawal.Execute(
                     unitOfWork.BrokerAccounts,
                     unitOfWork.BrokerAccountDetails, 
-                    _operationsExecutor);
+                    _operationsFactory);
 
                 var brokerAccountBalances = await unitOfWork.BrokerAccountBalances.Get(
                     new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
 
                 brokerAccountBalances.ReserveBalance(withdrawal.Unit.Amount);
 
-                await executionTask;
+                var operation = await executionTask;
 
                 await Task.WhenAll(
                     unitOfWork.Withdrawals.Update(new[] {withdrawal}),
-                    unitOfWork.BrokerAccountBalances.Save(new[] {brokerAccountBalances}));
+                    unitOfWork.BrokerAccountBalances.Save(new[] {brokerAccountBalances}),
+                    unitOfWork.Operations.Add(operation));
 
                 foreach (var evt in withdrawal.Events)
                 {

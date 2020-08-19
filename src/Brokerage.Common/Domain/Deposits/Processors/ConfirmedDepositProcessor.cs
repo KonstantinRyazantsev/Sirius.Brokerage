@@ -10,11 +10,11 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 {
     public class ConfirmedDepositProcessor : IConfirmedTransactionProcessor
     {
-        private readonly IOperationsExecutor _operationsExecutor;
+        private readonly IOperationsFactory _operationsFactory;
 
-        public ConfirmedDepositProcessor(IOperationsExecutor operationsExecutor)
+        public ConfirmedDepositProcessor(IOperationsFactory operationsFactory)
         {
-            _operationsExecutor = operationsExecutor;
+            _operationsFactory = operationsFactory;
         }
 
         public async Task Process(TransactionConfirmed tx, TransactionProcessingContext processingContext)
@@ -61,11 +61,13 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     var brokerAccount = brokerAccountContext.BrokerAccount;
                     var accountDetails = accountDetailsContext.Details;
 
-                    await deposit.ConfirmRegular(brokerAccount,
+                    var consolidationOperation = await deposit.ConfirmRegular(brokerAccount,
                         brokerAccountDetails,
                         accountDetails,
                         tx,
-                        _operationsExecutor);
+                        _operationsFactory);
+
+                    processingContext.AddNewOperation(consolidationOperation);
                 }
 
                 foreach (var change in balanceChanges)

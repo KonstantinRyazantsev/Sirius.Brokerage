@@ -11,7 +11,8 @@ namespace Brokerage.Common.Domain.Processing.Context
     public sealed class TransactionProcessingContext
     {
         private readonly ConcurrentBag<Deposit> _deposits;
-        
+        private readonly ConcurrentBag<Operation> _newOperations;
+
         public TransactionProcessingContext(IReadOnlyCollection<BrokerAccountContext> brokerAccounts, 
             Operation operation,
             TransactionInfo transactionInfo,
@@ -24,6 +25,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             Blockchain = blockchain;
 
             _deposits = new ConcurrentBag<Deposit>(deposits);
+            _newOperations = new ConcurrentBag<Operation>();
             
             BrokerAccountBalances = brokerAccounts
                 .SelectMany(x => x.Balances)
@@ -31,6 +33,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         }
 
         public IReadOnlyCollection<Deposit> Deposits => _deposits;
+        public IReadOnlyCollection<Operation> NewOperations => _newOperations;
         public IReadOnlyCollection<BrokerAccountContext> BrokerAccounts { get; }
         public Operation Operation { get; }
         public TransactionInfo TransactionInfo { get; }
@@ -45,6 +48,11 @@ namespace Brokerage.Common.Domain.Processing.Context
         public void AddDeposit(Deposit deposit)
         {
             _deposits.Add(deposit);
+        }
+
+        public void AddNewOperation(Operation operation)
+        {
+            _newOperations.Add(operation);
         }
     }
 }

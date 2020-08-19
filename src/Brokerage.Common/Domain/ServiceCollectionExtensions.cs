@@ -14,7 +14,7 @@ namespace Brokerage.Common.Domain
         public static IServiceCollection AddDomain(this IServiceCollection services)
         {
             services.AddSingleton<IProcessorsFactory, ProcessorsFactory>();
-            services.AddTransient<IOperationsExecutor, OperationsExecutor>();
+            services.AddTransient<IOperationsFactory, OperationsFactory>();
 
             services.AddTransient<TransactionProcessingContextBuilder>();
             services.AddTransient<OperationProcessingContextBuilder>();

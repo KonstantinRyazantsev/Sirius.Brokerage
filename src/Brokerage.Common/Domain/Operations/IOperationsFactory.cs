@@ -4,7 +4,7 @@ using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace Brokerage.Common.Domain.Operations
 {
-    public interface IOperationsExecutor
+    public interface IOperationsFactory
     {
         Task<Operation> StartDepositConsolidation(string tenantId,
             long depositId,

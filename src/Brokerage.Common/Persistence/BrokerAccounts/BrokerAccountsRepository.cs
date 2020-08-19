@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +51,17 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
             _dbContext.BrokerAccounts.Update(entity);
             
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IReadOnlyCollection<BrokerAccount>> GetAllOf(IReadOnlyCollection<long> brokerAccountIds)
+        {
+            var entities = await _dbContext.BrokerAccounts
+                .Where(x => brokerAccountIds.Contains(x.Id))
+                .ToListAsync();
+
+            return entities
+                .Select(MapToDomain)
+                .ToArray();
         }
 
         private static BrokerAccountEntity MapToEntity(BrokerAccount brokerAccount)

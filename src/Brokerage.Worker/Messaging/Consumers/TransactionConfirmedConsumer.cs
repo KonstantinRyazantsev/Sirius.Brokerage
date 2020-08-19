@@ -102,7 +102,8 @@ namespace Brokerage.Worker.Messaging.Consumers
 
                 await Task.WhenAll(
                     unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances),
-                    unitOfWork.Deposits.Save(updatedDeposits));
+                    unitOfWork.Deposits.Save(updatedDeposits),
+                    unitOfWork.Operations.Add(processingContext.NewOperations));
 
                 foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
                 {

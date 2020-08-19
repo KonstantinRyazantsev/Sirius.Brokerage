@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.Persistence.Operations;
 using Google.Protobuf.WellKnownTypes;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Executor.ApiContract.Common;
@@ -11,16 +10,13 @@ using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace Brokerage.Common.Domain.Operations
 {
-    internal sealed class OperationsExecutor : IOperationsExecutor
+    internal sealed class OperationsFactory : IOperationsFactory
     {
         private readonly IExecutorClient _executorClient;
-        private readonly IOperationsRepository _operationsRepository;
 
-        public OperationsExecutor(IExecutorClient executorClient,
-            IOperationsRepository operationsRepository)
+        public OperationsFactory(IExecutorClient executorClient)
         {
             _executorClient = executorClient;
-            _operationsRepository = operationsRepository;
         }
 
         public async Task<Operation> StartDepositConsolidation(string tenantId,
@@ -61,11 +57,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start deposit consolidation {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            var operation = Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
-
-            await _operationsRepository.Add(operation);
-
-            return operation;
+            return Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
         }
 
         public async Task<Operation> StartWithdrawal(string tenantId,
@@ -119,11 +111,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start withdrawal {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            var operation = Operation.Create(response.Response.Operation.Id, OperationType.Withdrawal);
-
-            await _operationsRepository.Add(operation);
-
-            return operation;
+            return Operation.Create(response.Response.Operation.Id, OperationType.Withdrawal);
         }
     }
 }

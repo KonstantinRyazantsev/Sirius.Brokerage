@@ -86,10 +86,11 @@ namespace Brokerage.Worker.Messaging.Consumers
                 var updatedDeposits = processingContext.Deposits
                     .Where(x => x.Events.Any())
                     .ToArray();
-
+                
                 await Task.WhenAll(
                     unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances),
-                    unitOfWork.Deposits.Save(updatedDeposits));
+                    unitOfWork.Deposits.Save(updatedDeposits),
+                    unitOfWork.Operations.Add(processingContext.NewOperations));
 
                 foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
                 {

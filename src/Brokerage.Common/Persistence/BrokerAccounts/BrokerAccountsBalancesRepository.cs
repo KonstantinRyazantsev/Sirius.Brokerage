@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
@@ -14,7 +15,19 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
         {
             _dbContext = dbContext;
         }
-        
+
+        public async Task<BrokerAccountBalances> Get(BrokerAccountBalancesId id)
+        {
+            var brokerAccountBalances = await GetOrDefault(id);
+
+            if (brokerAccountBalances == null)
+            {
+                throw new InvalidOperationException("Broker account balances entity is not found");
+            }
+
+            return brokerAccountBalances;
+        }
+
         public async Task<BrokerAccountBalances> GetOrDefault(BrokerAccountBalancesId id)
         {
             var entity = await _dbContext
@@ -31,8 +44,7 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 return;
             }
 
-            var entities = balances
-                .Select(MapToEntity);
+            var entities = balances.Select(MapToEntity);
 
             foreach (var entity in entities)
             {

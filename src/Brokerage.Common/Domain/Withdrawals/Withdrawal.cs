@@ -50,7 +50,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public long Id { get; }
         public uint Version { get; }
-        public long Sequence { get; set; }
+        public long Sequence { get; private set; }
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountId { get; }
@@ -142,69 +142,62 @@ namespace Brokerage.Common.Domain.Withdrawals
                 updatedDateTime);
         }
 
-        public async Task Execute(
+        public async Task<Operation> Execute(
             IBrokerAccountsRepository brokerAccountsRepository,
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IOperationsExecutor operationsExecutor)
+            IOperationsFactory operationsFactory)
         {
-            if (SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing))
-            {
-                var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
-                var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
+            SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing);
 
-                var operation = await operationsExecutor.StartWithdrawal(
-                    TenantId,
-                    Id,
-                    brokerAccountDetails.NaturalId.Address,
-                    DestinationDetails,
-                    Unit,
-                    brokerAccount.VaultId);
+            var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
+            var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
 
-                OperationId = operation.Id;
-                UpdatedAt = DateTime.UtcNow;
-            }
+            var operation = await operationsFactory.StartWithdrawal(
+                TenantId,
+                Id,
+                brokerAccountDetails.NaturalId.Address,
+                DestinationDetails,
+                Unit,
+                brokerAccount.VaultId);
+            
+            OperationId = operation.Id;
+            UpdatedAt = DateTime.UtcNow;
 
             AddUpdateEvent();
+
+            return operation;
         }
 
         public void TrackSent()
         {
-            if (SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent))
-            {
-                UpdatedAt = DateTime.UtcNow;
-            }
+            SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent);
+            
+            UpdatedAt = DateTime.UtcNow;
 
             AddUpdateEvent();
         }
 
         public void Complete()
         {
-            if (SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed))
-            {
-                UpdatedAt = DateTime.UtcNow;
-            }
+            SwitchState(new[] {WithdrawalState.Sent}, WithdrawalState.Completed);
+            
+            UpdatedAt = DateTime.UtcNow;
 
             AddUpdateEvent();
         }
 
         public void Fail(WithdrawalError error)
         {
-            if (SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Failed))
-            {
-                UpdatedAt = DateTime.UtcNow;
-                Error = error;
-            }
+            SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Failed);
+            
+            UpdatedAt = DateTime.UtcNow;
+            Error = error;
 
             AddUpdateEvent();
         }
 
-        private bool SwitchState(IEnumerable<WithdrawalState> allowedStates, WithdrawalState targetState)
+        private void SwitchState(IEnumerable<WithdrawalState> allowedStates, WithdrawalState targetState)
         {
-            if (State == targetState)
-            {
-                return false;
-            }
-
             if (!allowedStates.Contains(State))
             {
                 throw new InvalidOperationException($"Can't switch withdrawal to the {targetState} from the state {State}");
@@ -213,8 +206,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             Sequence++;
 
             State = targetState;
-
-            return true;
         }
 
         private void AddUpdateEvent()

@@ -42,8 +42,7 @@ namespace Brokerage.GrpcServices
 
                 if (!unitOfWork.Outbox.IsClosed)
                 {
-                    var brokerAccountsId = await _idGenerator.GetId($"BrokerAccounts:{request.RequestId}",
-                        IdGenerators.BrokerAccounts);
+                    var brokerAccountsId = await _idGenerator.GetId($"BrokerAccounts:{request.RequestId}", IdGenerators.BrokerAccounts);
                     var brokerAccount = BrokerAccount.Create(
                         brokerAccountsId,
                         request.Name,
@@ -54,8 +53,7 @@ namespace Brokerage.GrpcServices
 
                     unitOfWork.Outbox.Send(new FinalizeBrokerAccountCreation
                     {
-                        BrokerAccountId = brokerAccount.Id,
-                        TenantId = brokerAccount.TenantId
+                        BrokerAccountId = brokerAccount.Id
                     });
 
                     foreach (var evt in brokerAccount.Events)
