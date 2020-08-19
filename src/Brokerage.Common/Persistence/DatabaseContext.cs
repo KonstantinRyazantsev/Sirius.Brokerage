@@ -19,8 +19,7 @@ namespace Brokerage.Common.Persistence
     {
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
-        private static readonly JsonSerializerSettings _jsonSerializingSettings 
-            = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+        private static readonly JsonSerializerSettings JsonSerializingSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
@@ -43,6 +42,9 @@ namespace Brokerage.Common.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            ChangeTracker.AutoDetectChangesEnabled = false;
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
             modelBuilder.HasDefaultSchema(SchemaName);
 
             modelBuilder.BuildIdempotency(x =>
@@ -107,19 +109,19 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.ExpectedFees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<ExpectedOperationFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             modelBuilder.Entity<OperationEntity>()
                 .Property(e => e.ActualFees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<ActualOperationFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
 
@@ -169,10 +171,10 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.Fees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<WithdrawalFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
         }
@@ -219,19 +221,19 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.Fees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<DepositFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             modelBuilder.Entity<DepositEntity>()
                 .Property(e => e.Sources)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<DepositSourceEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
         }
