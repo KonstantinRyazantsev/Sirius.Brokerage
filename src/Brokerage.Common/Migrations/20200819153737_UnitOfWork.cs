@@ -7,6 +7,8 @@ namespace Brokerage.Common.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("delete from brokerage.outbox");
+
             migrationBuilder.DropTable(
                 name: "broker_account_balances_update",
                 schema: "brokerage");
