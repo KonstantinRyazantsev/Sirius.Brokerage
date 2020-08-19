@@ -19,30 +19,12 @@ namespace Brokerage.Common.Domain.Processing.Context
     public sealed class TransactionProcessingContextBuilder
     {
         private readonly IIdGenerator _idGenerator;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
-        private readonly IAccountDetailsRepository _accountDetailsRepository;
-        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
-        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
-        private readonly IDepositsRepository _depositsRepository;
-        private readonly IOperationsRepository _operationsRepository;
         private readonly IBlockchainsRepository _blockchainsRepository;
 
         public TransactionProcessingContextBuilder(IIdGenerator idGenerator,
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IAccountDetailsRepository accountDetailsRepository,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            IDepositsRepository depositsRepository,
-            IOperationsRepository operationsRepository,
             IBlockchainsRepository blockchainsRepository)
         {
             _idGenerator = idGenerator;
-            _brokerAccountsRepository = brokerAccountsRepository;
-            _accountDetailsRepository = accountDetailsRepository;
-            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
-            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
-            _depositsRepository = depositsRepository;
-            _operationsRepository = operationsRepository;
             _blockchainsRepository = blockchainsRepository;
         }
 
@@ -50,7 +32,13 @@ namespace Brokerage.Common.Domain.Processing.Context
             long? operationId,
             TransactionInfo transactionInfo,
             SourceContext[] sources,
-            DestinationContext[] destinations)
+            DestinationContext[] destinations,
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IAccountDetailsRepository accountDetailsRepository,
+            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
+            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
+            IDepositsRepository depositsRepository,
+            IOperationsRepository operationsRepository)
         {
             var sourceAddresses = sources
                 .Select(x => x.Address)
@@ -83,9 +71,9 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToHashSet();
 
             var (matchedAccountDetails, matchedBrokerAccountDetails, matchedOperation) = await TaskExecution.WhenAll(
-                _accountDetailsRepository.GetAnyOf(allAccountDetailsIds),
-                _brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds),
-                _operationsRepository.GetOrDefaultAsync(operationId));
+                accountDetailsRepository.GetAnyOf(allAccountDetailsIds),
+                brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds),
+                operationsRepository.GetOrDefaultAsync(operationId));
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
@@ -116,10 +104,10 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToHashSet();
 
             var (existingBrokerAccountBalances, activeBrokerAccountDetails, matchedBrokerAccounts, deposits, blockchain) = await TaskExecution.WhenAll(
-                _brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds),
-                _brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds),
-                _brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds),
-                _depositsRepository.Search(
+                brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds),
+                brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds),
+                brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds),
+                depositsRepository.Search(
                     blockchainId,
                     transactionInfo.TransactionId,
                     consolidationOperationId: matchedOperation?.Type == OperationType.DepositConsolidation ? (long?)matchedOperation.Id : null),
