@@ -63,11 +63,10 @@ namespace Brokerage.Worker.Messaging.Consumers
                 // TODO: Fail operation
                 operation.AddActualFees(evt.ActualFees);
 
-                await Task.WhenAll(
-                    unitOfWork.Deposits.Save(updatedDeposits),
-                    unitOfWork.Withdrawals.Update(updatedWithdrawals),
-                    unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances),
-                    unitOfWork.Operations.Update(operation));
+                await unitOfWork.Deposits.Save(updatedDeposits);
+                await unitOfWork.Withdrawals.Update(updatedWithdrawals);
+                await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
+                await unitOfWork.Operations.Update(operation);
 
                 foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
                 {

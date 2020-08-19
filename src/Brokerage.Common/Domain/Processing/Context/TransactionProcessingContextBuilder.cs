@@ -11,7 +11,6 @@ using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
-using Brokerage.Common.Threading;
 using Swisschain.Extensions.Idempotency;
 
 namespace Brokerage.Common.Domain.Processing.Context
@@ -70,10 +69,9 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Union(destinationBrokerAccountDetailsIds)
                 .ToHashSet();
 
-            var (matchedAccountDetails, matchedBrokerAccountDetails, matchedOperation) = await TaskExecution.WhenAll(
-                accountDetailsRepository.GetAnyOf(allAccountDetailsIds),
-                brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds),
-                operationsRepository.GetOrDefaultAsync(operationId));
+            var matchedAccountDetails = await accountDetailsRepository.GetAnyOf(allAccountDetailsIds);
+            var matchedBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds);
+            var matchedOperation = await operationsRepository.GetOrDefaultAsync(operationId);
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
@@ -103,15 +101,14 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Select(x => new ActiveBrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
-            var (existingBrokerAccountBalances, activeBrokerAccountDetails, matchedBrokerAccounts, deposits, blockchain) = await TaskExecution.WhenAll(
-                brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds),
-                brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds),
-                brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds),
-                depositsRepository.Search(
+            var existingBrokerAccountBalances = await brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds);
+            var activeBrokerAccountDetails = await brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds);
+            var matchedBrokerAccounts = await brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds);
+            var deposits = await depositsRepository.Search(
                     blockchainId,
                     transactionInfo.TransactionId,
-                    consolidationOperationId: matchedOperation?.Type == OperationType.DepositConsolidation ? (long?)matchedOperation.Id : null),
-                _blockchainsRepository.GetAsync(blockchainId));
+                    consolidationOperationId: matchedOperation?.Type == OperationType.DepositConsolidation ? (long?)matchedOperation.Id : null);
+            var blockchain = await _blockchainsRepository.GetAsync(blockchainId);
             var newBrokerAccountBalances = await BuildNewBrokerAccountBalances(existingBrokerAccountBalances, brokerAccountBalancesIds);
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)

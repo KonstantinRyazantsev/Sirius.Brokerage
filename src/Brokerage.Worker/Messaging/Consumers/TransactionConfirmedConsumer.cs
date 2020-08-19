@@ -100,10 +100,9 @@ namespace Brokerage.Worker.Messaging.Consumers
                     .Where(x => x.Events.Any())
                     .ToArray();
 
-                await Task.WhenAll(
-                    unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances),
-                    unitOfWork.Deposits.Save(updatedDeposits),
-                    unitOfWork.Operations.Add(processingContext.NewOperations));
+                await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
+                await unitOfWork.Deposits.Save(updatedDeposits);
+                await unitOfWork.Operations.Add(processingContext.NewOperations);
 
                 foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
                 {

@@ -31,7 +31,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             {
                 var withdrawal = await unitOfWork.Withdrawals.Get(command.WithdrawalId);
 
-                var executionTask = withdrawal.Execute(
+                var operation = await withdrawal.Execute(
                     unitOfWork.BrokerAccounts,
                     unitOfWork.BrokerAccountDetails, 
                     _operationsFactory);
@@ -41,12 +41,9 @@ namespace Brokerage.Worker.Messaging.Consumers
 
                 brokerAccountBalances.ReserveBalance(withdrawal.Unit.Amount);
 
-                var operation = await executionTask;
-
-                await Task.WhenAll(
-                    unitOfWork.Withdrawals.Update(new[] {withdrawal}),
-                    unitOfWork.BrokerAccountBalances.Save(new[] {brokerAccountBalances}),
-                    unitOfWork.Operations.Add(operation));
+                await unitOfWork.Withdrawals.Update(new[] {withdrawal});
+                await unitOfWork.BrokerAccountBalances.Save(new[] {brokerAccountBalances});
+                await unitOfWork.Operations.Add(operation);
 
                 foreach (var evt in withdrawal.Events)
                 {
