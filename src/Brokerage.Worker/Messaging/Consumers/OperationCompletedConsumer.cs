@@ -33,7 +33,7 @@ namespace Brokerage.Worker.Messaging.Consumers
         {
             var evt = context.Message;
 
-            await using var unitOfWork = await _unitOfWorkManager.Begin($"OperationCompleted:{evt.OperationId}");
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"Operation:Completed:{evt.OperationId}");
 
             if (!unitOfWork.Outbox.IsClosed)
             {
@@ -59,8 +59,9 @@ namespace Brokerage.Worker.Messaging.Consumers
 
                 var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
                 var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
-                var updatedBrokerAccountBalances =
-                    processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+                var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
+
+                // TODO: Complete operation
                 operation.AddActualFees(evt.ActualFees);
 
                 await Task.WhenAll(
