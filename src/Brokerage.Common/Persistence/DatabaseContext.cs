@@ -26,6 +26,13 @@ namespace Brokerage.Common.Persistence
         {
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        }
+
         public DbSet<OutboxEntity> Outbox { get; set; }
         public DbSet<IdGeneratorEntity> IsGenerator { get; set; }
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
@@ -39,14 +46,6 @@ namespace Brokerage.Common.Persistence
         public DbSet<Asset> Assets { get; set; }
         public DbSet<OperationEntity> Operations { get; set; }
         public DbSet<DetectedTransactionEntity> DetectedTransactions { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-
-            ChangeTracker.AutoDetectChangesEnabled = false;
-            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
