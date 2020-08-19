@@ -40,11 +40,16 @@ namespace Brokerage.Common.Persistence
         public DbSet<OperationEntity> Operations { get; set; }
         public DbSet<DetectedTransactionEntity> DetectedTransactions { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            base.OnConfiguring(optionsBuilder);
+
             ChangeTracker.AutoDetectChangesEnabled = false;
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
             modelBuilder.HasDefaultSchema(SchemaName);
 
             modelBuilder.BuildIdempotency(x =>
