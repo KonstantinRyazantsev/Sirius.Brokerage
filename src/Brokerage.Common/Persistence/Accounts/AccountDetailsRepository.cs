@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
@@ -17,6 +18,11 @@ namespace Brokerage.Common.Persistence.Accounts
 
         public async Task<IReadOnlyCollection<AccountDetails>> GetAnyOf(ISet<AccountDetailsId> ids)
         {
+            if (ids.Count == 0)
+            {
+                return Array.Empty<AccountDetails>();
+            }
+
             var idStrings = ids.Select(x => x.ToString());
 
             var query = _dbContext
@@ -33,6 +39,11 @@ namespace Brokerage.Common.Persistence.Accounts
 
         public async Task<IReadOnlyCollection<AccountDetails>> GetAll(long? cursor, int limit)
         {
+            if (limit == 0)
+            {
+                return Array.Empty<AccountDetails>();
+            }
+
             var query = _dbContext.AccountDetails.AsQueryable();
 
             if (cursor != null)

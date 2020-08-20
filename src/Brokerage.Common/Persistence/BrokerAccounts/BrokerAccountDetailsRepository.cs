@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
@@ -17,6 +18,11 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
 
         public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<BrokerAccountDetailsId> ids)
         {
+            if (ids.Count == 0)
+            {
+                return Array.Empty<BrokerAccountDetails>();
+            }
+
             var idStrings = ids.Select(x => x.ToString()).ToArray();
 
             var query = _dbContext
@@ -31,9 +37,33 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 .ToArray();
         }
 
+        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<long> ids)
+        {
+            if (ids.Count == 0)
+            {
+                return Array.Empty<BrokerAccountDetails>();
+            }
+
+            var query = _dbContext
+                .BrokerAccountsDetails
+                .Where(x => ids.Contains(x.Id));
+            
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task<IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>> GetActive(
             ISet<ActiveBrokerAccountDetailsId> ids)
         {
+            if (!ids.Any())
+            {
+                return new Dictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>();
+            }
+
             var entities = new List<BrokerAccountDetailsEntity>();
 
             foreach (var id in ids)

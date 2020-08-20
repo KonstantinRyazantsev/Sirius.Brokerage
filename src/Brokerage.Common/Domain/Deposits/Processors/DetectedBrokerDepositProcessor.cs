@@ -39,8 +39,9 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             {
                 foreach (var ((brokerAccountDetailsId, assetId), value) in brokerAccountContext.Income)
                 {
+                    // Ignores change returned to the broker account on a withdrawal
                     if (processingContext.Operation?.Type == OperationType.Withdrawal &&
-                        brokerAccountContext.BrokerAccountDetails.TryGetValue(brokerAccountDetailsId, out var brokerAccount) 
+                        brokerAccountContext.MatchedBrokerAccountDetails.TryGetValue(brokerAccountDetailsId, out var brokerAccount) 
                             && brokerAccount.NaturalId.Address == sourceBrokerAccountAddress)
                     {
                         continue;

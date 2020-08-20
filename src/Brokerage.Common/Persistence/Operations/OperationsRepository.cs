@@ -19,9 +19,9 @@ namespace Brokerage.Common.Persistence.Operations
         public async Task<Operation> GetOrDefault(long id)
         {
             var entity = await _dbContext.Operations
-                .FirstAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            return ToDomain(entity);
+            return entity != null ? ToDomain(entity) : null;
         }
 
         public async Task Add(Operation operation)
@@ -33,6 +33,11 @@ namespace Brokerage.Common.Persistence.Operations
 
         public async Task Add(IReadOnlyCollection<Operation> operations)
         {
+            if (!operations.Any())
+            {
+                return;
+            }
+
             _dbContext.Operations.AddRange(operations.Select(FromDomain));
 
             await _dbContext.SaveChangesAsync();

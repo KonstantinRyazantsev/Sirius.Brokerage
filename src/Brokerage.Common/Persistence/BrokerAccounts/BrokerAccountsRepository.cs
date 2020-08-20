@@ -55,6 +55,11 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
 
         public async Task<IReadOnlyCollection<BrokerAccount>> GetAllOf(IReadOnlyCollection<long> brokerAccountIds)
         {
+            if (!brokerAccountIds.Any())
+            {
+                return Array.Empty<BrokerAccount>();
+            }
+
             var entities = await _dbContext.BrokerAccounts
                 .Where(x => brokerAccountIds.Contains(x.Id))
                 .ToListAsync();

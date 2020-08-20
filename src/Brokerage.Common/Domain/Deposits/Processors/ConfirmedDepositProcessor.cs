@@ -56,8 +56,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 foreach (var deposit in regularDeposits)
                 {
                     var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == deposit.BrokerAccountId);
-                    var brokerAccountDetails = brokerAccountContext.BrokerAccountDetails[deposit.BrokerAccountDetailsId];
-                    var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.AccountId == deposit.AccountDetailsId);
+                    var brokerAccountDetails = brokerAccountContext.AllBrokerAccountDetails[deposit.BrokerAccountDetailsId];
+                    var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == deposit.AccountDetailsId);
                     var brokerAccount = brokerAccountContext.BrokerAccount;
                     var accountDetails = accountDetailsContext.Details;
 

@@ -63,6 +63,11 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
 
         public async Task<IReadOnlyCollection<BrokerAccountBalances>> GetAnyOf(ISet<BrokerAccountBalancesId> ids)
         {
+            if (ids.Count == 0)
+            {
+                return Array.Empty<BrokerAccountBalances>();
+            }
+
             var idStrings = ids.Select(x => x.ToString()).ToArray();
 
             var query = _dbContext

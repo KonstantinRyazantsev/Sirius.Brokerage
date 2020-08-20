@@ -7,6 +7,7 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
     public interface IBrokerAccountDetailsRepository
     {
         Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<BrokerAccountDetailsId> ids);
+        Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<long> ids);
         Task Add(BrokerAccountDetails brokerAccount);
         Task<BrokerAccountDetails> Get(long id);
         Task<IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>> GetActive(ISet<ActiveBrokerAccountDetailsId> ids);

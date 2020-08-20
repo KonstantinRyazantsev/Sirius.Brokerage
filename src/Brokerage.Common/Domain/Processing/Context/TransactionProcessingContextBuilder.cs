@@ -65,13 +65,15 @@ namespace Brokerage.Common.Domain.Processing.Context
             var allAccountDetailsIds = sourceAccountDetailsIds
                 .Union(destinationAccountDetailsIds)
                 .ToHashSet();
-            var allBrokerAccountDetailsIds = sourceBrokerAccountDetailsIds
+            var matchedBrokerAccountDetailsIds = sourceBrokerAccountDetailsIds
                 .Union(destinationBrokerAccountDetailsIds)
                 .ToHashSet();
 
             var matchedAccountDetails = await accountDetailsRepository.GetAnyOf(allAccountDetailsIds);
-            var matchedBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(allBrokerAccountDetailsIds);
-            var matchedOperation = await operationsRepository.GetOrDefaultAsync(operationId);
+            var matchedBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(matchedBrokerAccountDetailsIds);
+            var matchedOperation = await operationsRepository.GetOrDefault(operationId);
+
+            // TODO: we can return empty result here
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
@@ -97,12 +99,17 @@ namespace Brokerage.Common.Domain.Processing.Context
                 matchedSources,
                 matchedDestinations);
 
+            var allBrokerAccountDetails = new HashSet<BrokerAccountDetails>(matchedBrokerAccountDetails, new BrokerAccountDetailsIdComparer());
+
             var activeBrokerAccountDetailsIds = matchedBrokerAccountIds
                 .Select(x => new ActiveBrokerAccountDetailsId(blockchainId, x))
                 .ToHashSet();
 
             var existingBrokerAccountBalances = await brokerAccountsBalancesRepository.GetAnyOf(brokerAccountBalancesIds);
             var activeBrokerAccountDetails = await brokerAccountDetailsRepository.GetActive(activeBrokerAccountDetailsIds);
+
+            allBrokerAccountDetails.AddRange(activeBrokerAccountDetails.Values);
+
             var matchedBrokerAccounts = await brokerAccountsRepository.GetAllOf(matchedBrokerAccountIds);
             var deposits = await depositsRepository.Search(
                     blockchainId,
@@ -113,13 +120,21 @@ namespace Brokerage.Common.Domain.Processing.Context
             var brokerAccountBalances = existingBrokerAccountBalances
                 .Concat(newBrokerAccountBalances)
                 .ToArray();
+            var depositBrokerAccountDetailIdsToLoad = deposits
+                .Select(x => x.BrokerAccountDetailsId)
+                .Except(allBrokerAccountDetails.Select(x => x.Id))
+                .ToHashSet();
+            var depositBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(depositBrokerAccountDetailIdsToLoad);
+
+            allBrokerAccountDetails.AddRange(depositBrokerAccountDetails);
 
             var brokerAccountsContext = matchedBrokerAccounts
                 .Select(x => BuildBrokerAccountContext(x,
                     blockchainId,
                     activeBrokerAccountDetails,
-                    brokerAccountBalances,
                     matchedBrokerAccountDetails,
+                    allBrokerAccountDetails,
+                    brokerAccountBalances,
                     matchedDestinations,
                     matchedSources,
                     matchedAccountDetails))
@@ -135,37 +150,40 @@ namespace Brokerage.Common.Domain.Processing.Context
 
         private static BrokerAccountContext BuildBrokerAccountContext(BrokerAccount brokerAccount,
             string blockchainId,
-            IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails> allActiveDetails,
-            IReadOnlyCollection<BrokerAccountBalances> brokerAccountBalances,
+            IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails> activeBrokerAccountDetails,
             IReadOnlyCollection<BrokerAccountDetails> matchedBrokerAccountDetails,
+            IReadOnlyCollection<BrokerAccountDetails> allBrokerAccountDetails,
+            IReadOnlyCollection<BrokerAccountBalances> brokerAccountBalances,
             IReadOnlyCollection<DestinationContext> matchedDestinations,
             IReadOnlyCollection<SourceContext> matchedSources,
             IReadOnlyCollection<AccountDetails> matchedAccountDetails)
         {
-            var brokerAccountDetails = matchedBrokerAccountDetails
+            var currentMatchedBrokerAccountDetails = matchedBrokerAccountDetails
                 .Where(x => x.BrokerAccountId == brokerAccount.Id)
                 .ToArray();
+            var currentAllBrokerAccountDetails = allBrokerAccountDetails
+                .Where(x => x.BrokerAccountId == brokerAccount.Id)
+                .ToDictionary(x => x.Id);
 
             var inputs = new List<BrokerAccountContextEndpoint>();
             var outputs = new List<BrokerAccountContextEndpoint>();
 
-            foreach (var accountDetails in brokerAccountDetails)
+            foreach (var details in currentMatchedBrokerAccountDetails)
             {
                 var detailsInput = matchedDestinations
-                    .Where(x => x.Address == accountDetails.NaturalId.Address)
-                    .Select(x => new BrokerAccountContextEndpoint(accountDetails, x.Unit))
+                    .Where(x => x.Address == details.NaturalId.Address)
+                    .Select(x => new BrokerAccountContextEndpoint(details, x.Unit))
                     .ToArray();
                 var detailsOutput = matchedSources
-                    .Where(x => x.Address == accountDetails.NaturalId.Address)
-                    .Select(x => new BrokerAccountContextEndpoint(accountDetails, x.Unit))
+                    .Where(x => x.Address == details.NaturalId.Address)
+                    .Select(x => new BrokerAccountContextEndpoint(details, x.Unit))
                     .ToArray();
 
                 inputs.AddRange(detailsInput);
                 outputs.AddRange(detailsOutput);
             }
 
-            var brokerAccountByBlockchainDict =
-                brokerAccountDetails.ToDictionary(x => (x.BrokerAccountId, x.NaturalId.BlockchainId));
+            var brokerAccountByBlockchainDict = currentMatchedBrokerAccountDetails.ToDictionary(x => (x.BrokerAccountId, x.NaturalId.BlockchainId));
 
             var income = inputs
                 .GroupBy(x => (x.Details.Id, x.Unit.AssetId))
@@ -191,7 +209,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                     {
                         incomeKey = (brokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
                     }
-                    else if (allActiveDetails.TryGetValue(new ActiveBrokerAccountDetailsId(blockchainId, x.NaturalId.BrokerAccountId),
+                    else if (activeBrokerAccountDetails.TryGetValue(new ActiveBrokerAccountDetailsId(blockchainId, x.NaturalId.BrokerAccountId),
                             out var activeBrokerAccountDetailsForBalance))
                     {
                         incomeKey = (activeBrokerAccountDetailsForBalance.Id, x.NaturalId.AssetId);
@@ -210,7 +228,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                         x.NaturalId.AssetId);
                 }).ToArray();
 
-            var activeDetails = allActiveDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccount.Id)];
+            var activeDetails = activeBrokerAccountDetails[new ActiveBrokerAccountDetailsId(blockchainId, brokerAccount.Id)];
 
             return new BrokerAccountContext(
                 activeDetails.TenantId,
@@ -223,7 +241,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 outputs,
                 income,
                 outcome,
-                brokerAccountDetails.ToDictionary(x => x.Id));
+                currentMatchedBrokerAccountDetails.ToDictionary(x => x.Id),
+                currentAllBrokerAccountDetails);
         }
 
         private static AccountContext BuildAccountContext(
