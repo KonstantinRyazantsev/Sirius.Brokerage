@@ -30,7 +30,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             }
 
             var sourceBrokerAccountAddress = processingContext.Operation?.Type == OperationType.Withdrawal
-                ? tx.Sources.Select(x => x.Address).Single()
+                ? tx.Sources.Select(x => x.Address).Distinct().Single()
                 : null;
 
             var deposits = new List<Deposit>();
