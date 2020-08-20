@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.Blockchains;
+using Brokerage.Common.Persistence.BrokerAccounts;
+using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
+using Swisschain.Sirius.VaultAgent.ApiClient;
+using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Common.Domain.BrokerAccounts
 {
     public class BrokerAccount
     {
         private readonly List<object> _events = new List<object>();
+
         private BrokerAccount(
             long id, 
             string name,
@@ -16,7 +22,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt, 
             DateTime updatedAt, 
             BrokerAccountState state,
-            string requestId,
             long vaultId,
             long sequence)
         {
@@ -26,7 +31,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;
             State = state;
-            RequestId = requestId;
             VaultId = vaultId;
             Sequence = sequence;
         }
@@ -34,8 +38,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public long Id { get; }
         public string Name { get; }
         public string TenantId { get; }
-        // TODO: This is here only because of EF - we can't update DB record without having entire entity
-        public string RequestId { get; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
@@ -43,22 +45,16 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public long Sequence { get; }
         public IReadOnlyCollection<object> Events => _events;
 
-        public bool IsOwnedBy(string tenantId)
-        {
-            return TenantId == tenantId;
-        }
-
-        public static BrokerAccount Create(string name, string tenantId, string requestId, long vaultId)
+        public static BrokerAccount Create(long id, string name, string tenantId, long vaultId)
         {
             var utcNow = DateTime.UtcNow;
             var brokerAccount = new BrokerAccount(
-                default,
+                id,
                 name, 
                 tenantId,
                 utcNow, 
                 utcNow, 
                 BrokerAccountState.Creating, 
-                requestId, 
                 vaultId,
                 0);
 
@@ -74,7 +70,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime createdAt,
             DateTime updatedAt,
             BrokerAccountState state,
-            string requestId,
             long vaultId,
             long sequence)
         {
@@ -85,7 +80,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 createdAt, 
                 updatedAt, 
                 state, 
-                requestId,
                 vaultId,
                 sequence);
         }
@@ -95,10 +89,10 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             UpdatedAt = DateTime.UtcNow;
             State = BrokerAccountState.Active;
             
-            _events.Add(new BrokerAccountActivated()
+            _events.Add(new BrokerAccountActivated
             {
-                BrokerAccountId = this.Id,
-                UpdatedAt = this.UpdatedAt
+                BrokerAccountId = Id,
+                UpdatedAt = UpdatedAt
             });
         }
 
@@ -108,9 +102,9 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             BrokerAccountDetails brokerAccountDetails,
             long expectedCount)
         {
-            await brokerAccountDetailsRepository.AddOrIgnoreAsync(brokerAccountDetails);
+            await brokerAccountDetailsRepository.Add(brokerAccountDetails);
             
-            this._events.Add(new BrokerAccountDetailsAdded()
+            _events.Add(new BrokerAccountDetailsAdded
             {
                 BlockchainId = brokerAccountDetails.NaturalId.BlockchainId,
                 Address = brokerAccountDetails.NaturalId.Address,
@@ -119,28 +113,89 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 CreatedAt = brokerAccountDetails.CreatedAt
             });
 
-            long accountDetailsCount =
-                await brokerAccountsRepository.GetCountByBrokerAccountIdAsync(this.Id);
+            var accountDetailsCount = await brokerAccountDetailsRepository.GetCountByBrokerAccountId(Id);
 
             if (accountDetailsCount >= expectedCount)
             {
-                this.Activate();
-                await brokerAccountsRepository.UpdateAsync(this);
+                Activate();
+                await brokerAccountsRepository.Update(this);
             }
+        }
+
+        public async Task FinalizeCreation(ILogger<BrokerAccount> logger,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
+        {
+            if (State == BrokerAccountState.Creating)
+            {
+                await RequestDetailsGeneration(logger, blockchainsRepository, vaultAgentClient);
+            }
+        }
+        
+        private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
+            IBlockchainsRepository blockchainsRepository,
+            IVaultAgentClient vaultAgentClient)
+        {
+            string cursor = null;
+            var expectedCount = await blockchainsRepository.GetCountAsync();
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
+            {
+                AggregateId = Id,
+                AggregateType = AggregateType.BrokerAccount,
+                ExpectedCount = expectedCount
+            });
+
+            do
+            {
+                var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
+
+                if (!blockchains.Any())
+                {
+                    break;
+                }
+
+                cursor = blockchains.Last().Id;
+
+                foreach (var blockchain in blockchains)
+                {
+                    var walletGenerationRequest = new GenerateWalletRequest
+                    {
+                        RequestId = $"Brokerage:BrokerAccountDetails:{Id}:{blockchain.Id}",
+                        BlockchainId = blockchain.Id,
+                        TenantId = TenantId,
+                        VaultId = VaultId,
+                        Component = nameof(Brokerage),
+                        Context = requesterContext
+                    };
+
+                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
+
+                    if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
+                    {
+                        logger.LogWarning("Wallet generation failed {@context}", new
+                        {
+                            Request = walletGenerationRequest,
+                            Response = walletGenerationResponse
+                        });
+
+                        throw new InvalidOperationException($"Wallet generation request has been failed: {walletGenerationResponse.Error.ErrorMessage}");
+                    }
+                }
+            } while (true);
         }
 
         private void AddBrokerAccountUpdatedEvent()
         {
-            _events.Add(new BrokerAccountUpdated()
+            _events.Add(new BrokerAccountUpdated
             {
-                BrokerAccountId = this.Id,
-                UpdatedAt = this.UpdatedAt,
-                VaultId = this.VaultId,
-                Sequence = this.Sequence,
-                CreatedAt = this.CreatedAt,
-                Name = this.Name,
-                TenantId = this.TenantId,
-                State = this.State
+                BrokerAccountId = Id,
+                UpdatedAt = UpdatedAt,
+                VaultId = VaultId,
+                Sequence = Sequence,
+                CreatedAt = CreatedAt,
+                Name = Name,
+                TenantId = TenantId,
+                State = State
             });
         }
     }

@@ -7,8 +7,8 @@
             Address = address;
             Amount = amount;
         }
-        public string Address { get; }
 
+        public string Address { get; }
         public decimal Amount { get; }
     }
 }

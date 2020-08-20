@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
-using Brokerage.Common.Persistence.BrokerAccount;
-using Brokerage.Common.Persistence.Deposits;
-using Brokerage.Common.Persistence.Transactions;
+using Brokerage.Common.Persistence;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.Indexer.MessagingContract;
 
 namespace Brokerage.Worker.Messaging.Consumers
@@ -15,88 +15,98 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class TransactionDetectedConsumer : IConsumer<TransactionDetected>
     {
         private readonly ILogger<TransactionDetectedConsumer> _logger;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly TransactionProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
-        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
-        private readonly IDepositsRepository _depositsRepository;
-        private readonly IDetectedTransactionsRepository _detectedTransactionsRepository;
 
         public TransactionDetectedConsumer(ILogger<TransactionDetectedConsumer> logger,
+            IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             TransactionProcessingContextBuilder processingContextBuilder,
-            IProcessorsFactory processorsFactory,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            IDepositsRepository depositsRepository,
-            IDetectedTransactionsRepository detectedTransactionsRepository)
+            IProcessorsFactory processorsFactory)
         {
             _logger = logger;
+            _unitOfWorkManager = unitOfWorkManager;
             _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
-            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
-            _depositsRepository = depositsRepository;
-            _detectedTransactionsRepository = detectedTransactionsRepository;
         }
 
         public async Task Consume(ConsumeContext<TransactionDetected> context)
         {
             var tx = context.Message;
 
-            var processingContext = await _processingContextBuilder.Build(
-                tx.BlockchainId,
-                tx.OperationId,
-                new TransactionInfo(tx.TransactionId, tx.BlockNumber, -1, tx.BlockMinedAt),
-                tx.Sources
-                    .Select(x => new SourceContext(x.Address, x.Unit))
-                    .ToArray(),
-                tx.Destinations
-                    .Select(x => new DestinationContext(
-                        x.Address,
-                        x.Tag,
-                        x.TagType,
-                        x.Unit))
-                    .ToArray());
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"Transactions:Detected:{tx.BlockchainId}:{tx.TransactionId}");
 
-            if (processingContext.IsEmpty)
+            if (!unitOfWork.Outbox.IsClosed)
             {
-                _logger.LogDebug("There is nothing to process in the transaction {@context}", new
+                var processingContext = await _processingContextBuilder.Build(
+                    tx.BlockchainId,
+                    tx.OperationId,
+                    new TransactionInfo(tx.TransactionId,
+                        tx.BlockNumber,
+                        -1,
+                        tx.BlockMinedAt),
+                    tx.Sources
+                        .Select(x => new SourceContext(x.Address, x.Unit))
+                        .ToArray(),
+                    tx.Destinations
+                        .Select(x => new DestinationContext(
+                            x.Address,
+                            x.Tag,
+                            x.TagType,
+                            x.Unit))
+                        .ToArray(),
+                    unitOfWork.BrokerAccounts,
+                    unitOfWork.AccountDetails,
+                    unitOfWork.BrokerAccountDetails,
+                    unitOfWork.BrokerAccountBalances,
+                    unitOfWork.Deposits,
+                    unitOfWork.Operations);
+
+                if (processingContext.IsEmpty)
                 {
-                    BlockchainId = tx.BlockchainId,
-                    TransactionId = tx.TransactionId,
-                    OperationId = tx.OperationId
-                });
+                    _logger.LogDebug("There is nothing to process in the transaction {@context}", new
+                    {
+                        BlockchainId = tx.BlockchainId,
+                        TransactionId = tx.TransactionId,
+                        OperationId = tx.OperationId
+                    });
 
-                return;
+                    return;
+                }
+
+                foreach (var processor in _processorsFactory.GetDetectedTransactionProcessors())
+                {
+                    await processor.Process(tx, processingContext);
+                }
+
+                var updatedBrokerAccountBalances = processingContext.BrokerAccounts
+                    .SelectMany(x => x.Balances.Select(b => b.Balances))
+                    .Where(x => x.Events.Any())
+                    .ToArray();
+                var updatedDeposits = processingContext.Deposits
+                    .Where(x => x.Events.Any())
+                    .ToArray();
+
+                await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
+                await unitOfWork.Deposits.Save(updatedDeposits);
+                await unitOfWork.Operations.Add(processingContext.NewOperations);
+
+                foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
+                {
+                    unitOfWork.Outbox.Publish(evt);
+                }
+
+                foreach (var evt in updatedDeposits.SelectMany(x => x.Events))
+                {
+                    unitOfWork.Outbox.Publish(evt);
+                }
+
+                await unitOfWork.DetectedTransactions.Add(tx.BlockchainId, tx.TransactionId);
+
+                await unitOfWork.Commit();
             }
 
-            foreach (var processor in _processorsFactory.GetDetectedTransactionProcessors())
-            {
-                await processor.Process(tx, processingContext);
-            }
-
-            var updatedBrokerAccountBalances = processingContext.BrokerAccounts
-                .SelectMany(x => x.Balances.Select(b => b.Balances))
-                .Where(x => x.Events.Any())
-                .ToArray();
-            var updatedDeposits = processingContext.Deposits
-                .Where(x => x.Events.Any())
-                .ToArray();
-
-            await Task.WhenAll(
-                _brokerAccountsBalancesRepository.SaveAsync(
-                    $"{BalanceChangingReason.TransactionDetected}_{tx.BlockchainId}_{tx.TransactionId}", 
-                    updatedBrokerAccountBalances),
-                _depositsRepository.SaveAsync(updatedDeposits));
-
-            foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
-            {
-                await context.Publish(evt);
-            }
-
-            foreach (var evt in updatedDeposits.SelectMany(x => x.Events))
-            {
-                await context.Publish(evt);
-            }
-
-            await _detectedTransactionsRepository.AddOrIgnore(tx.BlockchainId, tx.TransactionId);
+            await unitOfWork.EnsureOutboxDispatched(context);
         }
     }
 }

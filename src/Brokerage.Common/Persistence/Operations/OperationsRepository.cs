@@ -1,56 +1,53 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Operations;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Operations
 {
     internal sealed class OperationsRepository : IOperationsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public OperationsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public OperationsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _dbContext = dbContext;
         }
 
         public async Task<Operation> GetOrDefault(long id)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            var entity = await _dbContext.Operations
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            var entity = await context.Operations
-                .FirstAsync(x => x.Id == id);
-
-            return ToDomain(entity);
+            return entity != null ? ToDomain(entity) : null;
         }
 
-        public async Task AddOrIgnore(Operation operation)
+        public async Task Add(Operation operation)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            _dbContext.Operations.Add(FromDomain(operation));
 
-            context.Operations.Add(FromDomain(operation));
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx
-                                              && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-            }
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Operation operation)
+        public async Task Add(IReadOnlyCollection<Operation> operations)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            if (!operations.Any())
+            {
+                return;
+            }
 
-            context.Operations.Update(FromDomain(operation));
+            _dbContext.Operations.AddRange(operations.Select(FromDomain));
 
-            await context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task Update(Operation operation)
+        {
+            _dbContext.Operations.Update(FromDomain(operation));
+
+            await _dbContext.SaveChangesAsync();
         }
 
         private static Operation ToDomain(OperationEntity entity)
@@ -69,12 +66,12 @@ namespace Brokerage.Common.Persistence.Operations
             {
                 Id = operation.Id,
                 Type = operation.Type,
-                ExpectedFees = operation?.ExpectedFees.Select(x => new ExpectedOperationFeeEntity()
+                ExpectedFees = operation.ExpectedFees.Select(x => new ExpectedOperationFeeEntity
                 {
                     Amount = x.Amount,
                     AssetId = x.AssetId
                 }).ToArray(),
-                ActualFees = operation?.ActualFees.Select(x => new ActualOperationFeeEntity()
+                ActualFees = operation.ActualFees.Select(x => new ActualOperationFeeEntity
                 {
                     Amount = x.Amount,
                     AssetId = x.AssetId

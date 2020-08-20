@@ -1,12 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.Tags;
-using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 
 namespace Brokerage.Worker.Messaging.Consumers
@@ -14,54 +14,57 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class FinalizeAccountCreationConsumer : IConsumer<FinalizeAccountCreation>
     {
         private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger<FinalizeAccountCreationConsumer> _logger;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IAccountsRepository _accountsRepository;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
         private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
-        private readonly ISendEndpointProvider _sendEndpoint;
 
         public FinalizeAccountCreationConsumer(
             ILoggerFactory loggerFactory,
-            ILogger<FinalizeAccountCreationConsumer> logger,
+            IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IAccountsRepository accountsRepository,
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            ISendEndpointProvider sendEndpoint)
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
         {
             _loggerFactory = loggerFactory;
-            _logger = logger;
+            _unitOfWorkManager = unitOfWorkManager;
             _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
-            _accountsRepository = accountsRepository;
-            _brokerAccountsRepository = brokerAccountsRepository;
             _destinationTagGeneratorFactory = destinationTagGeneratorFactory;
-            _sendEndpoint = sendEndpoint;
         }
 
         public async Task Consume(ConsumeContext<FinalizeAccountCreation> context)
         {
             var command = context.Message;
-            var account = await _accountsRepository.GetAsync(command.AccountId);
-            var brokerAccount = await _brokerAccountsRepository.GetAsync(account.BrokerAccountId);
 
-            await account.FinalizeCreation(
-                _loggerFactory.CreateLogger<Account>(),
-                brokerAccount,
-                _blockchainsRepository,
-                _vaultAgentClient,
-                _destinationTagGeneratorFactory,
-                _sendEndpoint);
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"Accounts:FinalizeCreation:{command.AccountId}");
 
-            await _accountsRepository.UpdateAsync(account);
-
-            foreach (var evt in account.Events)
+            if (!unitOfWork.Outbox.IsClosed)
             {
-                await context.Publish(evt);
+                var account = await unitOfWork.Accounts.Get(command.AccountId);
+                var brokerAccount = await unitOfWork.BrokerAccounts.Get(account.BrokerAccountId);
+
+                await account.FinalizeCreation(
+                    _loggerFactory.CreateLogger<Account>(),
+                    brokerAccount,
+                    _blockchainsRepository,
+                    _vaultAgentClient,
+                    _destinationTagGeneratorFactory);
+
+                foreach (var evt in account.Commands)
+                {
+                    unitOfWork.Outbox.Send(evt);
+                }
+
+                foreach (var evt in account.Events)
+                {
+                    unitOfWork.Outbox.Publish(evt);
+                }
+
+                await unitOfWork.Commit();
             }
+
+            await unitOfWork.EnsureOutboxDispatched(context);
         }
     }
 }

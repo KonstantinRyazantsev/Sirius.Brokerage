@@ -1,28 +1,31 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence.Accounts;
+using Brokerage.Common.Persistence;
 using Brokerage.Common.ServiceFunctions;
 using MassTransit;
+using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
 
 namespace Brokerage.Worker.Messaging.Consumers
 {
     public class PublishAccountDetailsConsumer : IConsumer<PublishAccountDetails>
     {
-        private readonly IAccountDetailsRepository _accountDetailsRepository;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
 
-        public PublishAccountDetailsConsumer(IAccountDetailsRepository accountDetailsRepository)
+        public PublishAccountDetailsConsumer(IUnitOfWorkManager<UnitOfWork> unitOfWorkManager)
         {
-            _accountDetailsRepository = accountDetailsRepository;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
         public async Task Consume(ConsumeContext<PublishAccountDetails> context)
         {
+            await using var unitOfWork = await _unitOfWorkManager.Begin();
+
             var cursor = default(long?);
 
             do
             {
-                var page = await _accountDetailsRepository.GetAllAsync(cursor, 1000);
+                var page = await unitOfWork.AccountDetails.GetAll(cursor, 1000);
 
                 if (!page.Any())
                 {

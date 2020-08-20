@@ -6,8 +6,7 @@ namespace Brokerage.Common.Persistence.Deposits
 {
     public interface IDepositsRepository
     {
-        Task<long> GetNextIdAsync();
-        Task SaveAsync(IReadOnlyCollection<Deposit> deposits);
+        Task Save(IReadOnlyCollection<Deposit> deposits);
         Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, string transactionId, long? consolidationOperationId);
     }
 }

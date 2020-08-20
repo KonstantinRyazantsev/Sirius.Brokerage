@@ -24,5 +24,12 @@ namespace Brokerage.Common.Threading
 
             return (task1.Result, task2.Result, task3.Result, task4.Result);
         }
+
+        public static async Task<(TResult1, TResult2, TResult3, TResult4, TResult5)> WhenAll<TResult1, TResult2, TResult3, TResult4, TResult5>(Task<TResult1> task1, Task<TResult2> task2, Task<TResult3> task3, Task<TResult4> task4, Task<TResult5> task5)
+        {
+            await Task.WhenAll(task1, task2, task3, task4, task5);
+
+            return (task1.Result, task2.Result, task3.Result, task4.Result, task5.Result);
+        }
     }
 }

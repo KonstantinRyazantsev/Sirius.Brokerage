@@ -7,8 +7,8 @@
             Message = message;
             Code = code;
         }
-        public string Message { get; }
 
+        public string Message { get; }
         public DepositErrorCode Code { get; }
     }
 }

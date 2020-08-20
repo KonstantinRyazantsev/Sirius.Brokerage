@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
 using Brokerage.Common.Persistence.Transactions;
@@ -11,28 +11,33 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
-using Swisschain.Sirius.VaultAgent.ApiContract.Transactions;
 using DepositSourceEntity = Brokerage.Common.Persistence.Deposits.DepositSourceEntity;
 
 namespace Brokerage.Common.Persistence
 {
-    public class DatabaseContext : DbContext, IDbContextWithOutbox
+    public class DatabaseContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
     {
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
-        private static readonly JsonSerializerSettings _jsonSerializingSettings 
-            = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+        private static readonly JsonSerializerSettings JsonSerializingSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
         {
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        }
+
         public DbSet<OutboxEntity> Outbox { get; set; }
+        public DbSet<IdGeneratorEntity> IsGenerator { get; set; }
         public DbSet<BrokerAccountEntity> BrokerAccounts { get; set; }
         public DbSet<BrokerAccountDetailsEntity> BrokerAccountsDetails { get; set; }
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
-        public DbSet<BrokerAccountBalancesUpdateEntity> BrokerAccountBalancesUpdate { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<DepositEntity> Deposits { get; set; }
         public DbSet<AccountDetailsEntity> AccountDetails { get; set; }
@@ -46,7 +51,16 @@ namespace Brokerage.Common.Persistence
         {
             modelBuilder.HasDefaultSchema(SchemaName);
 
-            modelBuilder.BuildOutbox();
+            modelBuilder.BuildIdempotency(x =>
+            {
+                x.AddIdGenerator(IdGenerators.BrokerAccounts, 100000000);
+                x.AddIdGenerator(IdGenerators.BrokerAccountDetails, 101000000);
+                x.AddIdGenerator(IdGenerators.BrokerAccountsBalances, 102000000);
+                x.AddIdGenerator(IdGenerators.Accounts, 103000000);
+                x.AddIdGenerator(IdGenerators.AccountDetails, 104000000);
+                x.AddIdGenerator(IdGenerators.Deposits, 105000000);
+                x.AddIdGenerator(IdGenerators.Withdrawals, 106000000);
+            });
 
             BuildAssets(modelBuilder);
             BuildBlockchains(modelBuilder);
@@ -99,19 +113,19 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.ExpectedFees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<ExpectedOperationFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             modelBuilder.Entity<OperationEntity>()
                 .Property(e => e.ActualFees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<ActualOperationFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
 
@@ -138,10 +152,6 @@ namespace Brokerage.Common.Persistence
                     x.AssetId
                 });
 
-            modelBuilder.Entity<WithdrawalEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10600000);
-
             modelBuilder.Entity<WithdrawalEntity>(e =>
             {
                 e.Property(p => p.Version)
@@ -165,10 +175,10 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.Fees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<WithdrawalFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
         }
@@ -186,10 +196,6 @@ namespace Brokerage.Common.Persistence
                     x.DepositId,
                     x.Address
                 });
-
-            modelBuilder.Entity<DepositEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10500000);
 
             modelBuilder.Entity<DepositEntity>(e =>
             {
@@ -219,36 +225,28 @@ namespace Brokerage.Common.Persistence
                 .Property(e => e.Fees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<DepositFeeEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             modelBuilder.Entity<DepositEntity>()
                 .Property(e => e.Sources)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
-                        _jsonSerializingSettings),
+                        JsonSerializingSettings),
                     v =>
                         JsonConvert.DeserializeObject<IReadOnlyCollection<DepositSourceEntity>>(v,
-                            _jsonSerializingSettings));
+                            JsonSerializingSettings));
 
             #endregion
         }
 
         private static void BuildBrokerAccountBalances(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BrokerAccountBalancesUpdateEntity>()
-                .ToTable(Tables.BrokerAccountBalancesUpdate)
-                .HasKey(x => x.UpdateId);
-
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .ToTable(Tables.BrokerAccountBalances)
                 .HasKey(x => x.Id);
-
-            modelBuilder.Entity<BrokerAccountBalancesEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10400000);
 
             modelBuilder.Entity<BrokerAccountBalancesEntity>()
                 .HasIndex(x => x.NaturalId)
@@ -293,10 +291,6 @@ namespace Brokerage.Common.Persistence
                 .IsUnique(true);
 
             modelBuilder.Entity<AccountDetailsEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10300000);
-
-            modelBuilder.Entity<AccountDetailsEntity>()
                 .HasIndex(x => new
                 {
                     x.AccountId,
@@ -316,10 +310,6 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<AccountEntity>()
                 .HasKey(c => new { Id = c.Id });
 
-            modelBuilder.Entity<AccountEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10200000);
-
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasMany<AccountEntity>(s => s.Accounts)
                 .WithOne(s => s.BrokerAccount)
@@ -331,10 +321,6 @@ namespace Brokerage.Common.Persistence
         {
             modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasKey(c => new { c.Id });
-
-            modelBuilder.Entity<BrokerAccountDetailsEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10100000);
 
             modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.ActiveId)
@@ -360,14 +346,6 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasKey(c => c.Id);
 
-            modelBuilder.Entity<BrokerAccountEntity>()
-                .HasIndex(x => x.RequestId)
-                .IsUnique(true)
-                .HasName("IX_BrokerAccount_RequestId");
-
-            modelBuilder.Entity<BrokerAccountEntity>()
-                .Property(b => b.Id)
-                .HasIdentityOptions(startValue: 10000000);
         }
     }
 }

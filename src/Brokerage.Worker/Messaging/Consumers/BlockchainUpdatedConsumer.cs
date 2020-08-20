@@ -2,22 +2,17 @@
 using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.ReadModels.Blockchains;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Integrations.MessagingContract.Blockchains;
 
 namespace Brokerage.Worker.Messaging.Consumers
 {
     public class BlockchainUpdatedConsumer : IConsumer<BlockchainUpdated>
     {
-        private readonly ILogger<BlockchainUpdatedConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
 
-        public BlockchainUpdatedConsumer(
-            ILogger<BlockchainUpdatedConsumer> logger,
-            IBlockchainsRepository blockchainsRepository)
+        public BlockchainUpdatedConsumer(IBlockchainsRepository blockchainsRepository)
         {
-            _logger = logger;
-            this._blockchainsRepository = blockchainsRepository;
+            _blockchainsRepository = blockchainsRepository;
         }
 
         public async Task Consume(ConsumeContext<BlockchainUpdated> context)

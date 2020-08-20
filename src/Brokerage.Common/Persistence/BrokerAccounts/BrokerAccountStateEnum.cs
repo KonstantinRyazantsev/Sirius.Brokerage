@@ -1,4 +1,4 @@
-﻿namespace Brokerage.Common.Persistence.BrokerAccount
+﻿namespace Brokerage.Common.Persistence.BrokerAccounts
 {
     public enum BrokerAccountStateEnum
     {

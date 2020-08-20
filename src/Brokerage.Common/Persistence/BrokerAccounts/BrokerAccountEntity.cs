@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Brokerage.Common.Persistence.Accounts;
 
-namespace Brokerage.Common.Persistence.BrokerAccount
+namespace Brokerage.Common.Persistence.BrokerAccounts
 {
     [Table(name: Tables.BrokerAccounts)]
     public class BrokerAccountEntity
@@ -13,8 +13,6 @@ namespace Brokerage.Common.Persistence.BrokerAccount
         {
             Accounts = new HashSet<AccountEntity>();
         }
-
-        public string RequestId { get; set; }
 
         public string TenantId { get; set; }
 

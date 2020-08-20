@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Domain.Accounts;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
-using Brokerage.Common.Persistence.Accounts;
-using Brokerage.Common.Persistence.BrokerAccount;
 using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
@@ -69,9 +69,9 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
-
+        
         public List<object> Events { get; } = new List<object>();
-
+        
         public bool IsBrokerDeposit => AccountDetailsId == null;
         
         public static Deposit Create(
@@ -152,41 +152,36 @@ namespace Brokerage.Common.Domain.Deposits
                 updatedAt);
         }
 
-        public async Task ConfirmRegular(
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IAccountDetailsRepository accountDetailsRepository, 
+        public async Task<Operation> ConfirmRegular(
+            BrokerAccount brokerAccount,
+            BrokerAccountDetails brokerAccountDetails,
+            AccountDetails accountDetails,
             TransactionConfirmed tx, 
-            IOperationsExecutor operationsExecutor)
+            IOperationsFactory operationsFactory)
         {
             if (IsBrokerDeposit)
             {
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            if (SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed))
-            {
-                // TODO: Optimize this - track in the processingContext, to avoid multiple reading
-                var brokerAccountDetails = await brokerAccountDetailsRepository.GetAsync(BrokerAccountDetailsId);
-                // ReSharper disable once PossibleInvalidOperationException
-                var accountDetails = await accountDetailsRepository.GetAsync(AccountDetailsId.Value);
-                var brokerAccount = await brokerAccountsRepository.GetAsync(this.BrokerAccountId);
+            SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed);
 
-                var operation = await operationsExecutor.StartDepositConsolidation(
-                    TenantId,
-                    Id,
-                    accountDetails.NaturalId.Address,
-                    brokerAccountDetails.NaturalId.Address,
-                    Unit,
-                    tx.BlockNumber,
-                    brokerAccount.VaultId);
+            var consolidationOperation = await operationsFactory.StartDepositConsolidation(
+                TenantId,
+                Id,
+                accountDetails.NaturalId.Address,
+                brokerAccountDetails.NaturalId.Address,
+                Unit,
+                tx.BlockNumber,
+                brokerAccount.VaultId);
 
-                ConsolidationOperationId = operation.Id;
-                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-                UpdatedAt = DateTime.UtcNow;
-            }
+            ConsolidationOperationId = consolidationOperation.Id;
+            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+            UpdatedAt = DateTime.UtcNow;
 
             AddDepositUpdatedEvent();
+
+            return consolidationOperation;
         }
 
         public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
@@ -196,13 +191,12 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            if (SwitchState(new[] {DepositState.Detected}, DepositState.Completed))
-            {
-                var date = DateTime.UtcNow;
+            SwitchState(new[] {DepositState.Detected}, DepositState.Completed);
 
-                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-                UpdatedAt = date;
-            }
+            var date = DateTime.UtcNow;
+
+            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+            UpdatedAt = date;
 
             AddDepositUpdatedEvent();
         }
@@ -214,46 +208,38 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a regular deposit as a broker deposit");
             }
 
-            if (SwitchState(new[] {DepositState.Detected}, DepositState.Completed))
-            {
-                var date = DateTime.UtcNow;
+            SwitchState(new[] {DepositState.Detected}, DepositState.Completed);
 
-                TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-                UpdatedAt = date;
-            }
+            var date = DateTime.UtcNow;
+
+            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+            UpdatedAt = date;
 
             AddDepositUpdatedEvent();
         }
 
         public void Complete(IReadOnlyCollection<Unit> fees)
         {
-            if (SwitchState(new[] {DepositState.Confirmed}, DepositState.Completed))
-            {
-                Fees = fees;
-                UpdatedAt = DateTime.UtcNow;
-            }
+            SwitchState(new[] {DepositState.Confirmed}, DepositState.Completed);
+
+            Fees = fees;
+            UpdatedAt = DateTime.UtcNow;
 
             AddDepositUpdatedEvent();
         }
 
         public void Fail(DepositError depositError)
         {
-            if (SwitchState(new[] {DepositState.Confirmed}, DepositState.Failed))
-            {
-                UpdatedAt = DateTime.UtcNow;
-                Error = depositError;
-            }
+            SwitchState(new[] {DepositState.Confirmed}, DepositState.Failed);
+            
+            UpdatedAt = DateTime.UtcNow;
+            Error = depositError;
 
             AddDepositUpdatedEvent();
         }
 
-        private bool SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
+        private void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
         {
-            if (State == targetState)
-            {
-                return false;
-            }
-
             if (!allowedStates.Contains(State))
             {
                 throw new InvalidOperationException($"Can't switch deposit to the {targetState} from the state {State}");
@@ -262,8 +248,6 @@ namespace Brokerage.Common.Domain.Deposits
             Sequence++;
 
             State = targetState;
-
-            return true;
         }
 
         private void AddDepositUpdatedEvent()

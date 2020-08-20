@@ -1,77 +1,64 @@
 ﻿using System.Threading.Tasks;
-using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
-using Brokerage.Common.Persistence.BrokerAccount;
-using Brokerage.Common.Persistence.Withdrawals;
+using Brokerage.Common.Persistence;
 using MassTransit;
-using Microsoft.Extensions.Logging;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.MassTransit;
 
 namespace Brokerage.Worker.Messaging.Consumers
 {
     public class ExecuteWithdrawalConsumer : IConsumer<ExecuteWithdrawal>
     {
-        private readonly ILogger<ExecuteWithdrawalConsumer> _logger;
-        private readonly IWithdrawalRepository _withdrawalRepository;
-        private readonly IBrokerAccountDetailsRepository _brokerAccountDetailsRepository;
-        private readonly IBrokerAccountsBalancesRepository _brokerAccountsBalancesRepository;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
-        private readonly IOperationsExecutor _operationsExecutor;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
+        private readonly IOperationsFactory _operationsFactory;
 
-        public ExecuteWithdrawalConsumer(
-            ILogger<ExecuteWithdrawalConsumer> logger,
-            IWithdrawalRepository withdrawalRepository,
-            IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            IBrokerAccountsRepository brokerAccountsRepository,
-            IOperationsExecutor operationsExecutor)
+        public ExecuteWithdrawalConsumer(IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
+            IOperationsFactory operationsFactory)
         {
-            _logger = logger;
-            _withdrawalRepository = withdrawalRepository;
-            _brokerAccountDetailsRepository = brokerAccountDetailsRepository;
-            _brokerAccountsBalancesRepository = brokerAccountsBalancesRepository;
-            _brokerAccountsRepository = brokerAccountsRepository;
-            _operationsExecutor = operationsExecutor;
+            _unitOfWorkManager = unitOfWorkManager;
+            _operationsFactory = operationsFactory;
         }
 
         public async Task Consume(ConsumeContext<ExecuteWithdrawal> context)
         {
-            // TODO: Idempotency
+            var command = context.Message;
 
-            var evt = context.Message;
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"Withdrawals:Execute:{command.WithdrawalId}");
 
-            var withdrawal = await _withdrawalRepository.GetAsync(evt.WithdrawalId);
-            
-            var executionTask = withdrawal.Execute(
-                _brokerAccountsRepository,
-                _brokerAccountDetailsRepository, 
-                _operationsExecutor);
-
-            var brokerAccountBalances = await _brokerAccountsBalancesRepository.GetAsync(
-                new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
-
-            brokerAccountBalances.ReserveBalance(withdrawal.Unit.Amount);
-
-            await executionTask;
-
-            await _withdrawalRepository.SaveAsync(new[] {withdrawal});
-
-            await _brokerAccountsBalancesRepository.SaveAsync(
-                $"{BalanceChangingReason.OperationStarted}_{withdrawal.OperationId}",
-                new[] {brokerAccountBalances});
-
-            foreach (var @event in withdrawal.Events)
+            if (!unitOfWork.Outbox.IsClosed)
             {
-                await context.Publish(@event);
+                var withdrawal = await unitOfWork.Withdrawals.Get(command.WithdrawalId);
+
+                var operation = await withdrawal.Execute(
+                    unitOfWork.BrokerAccounts,
+                    unitOfWork.BrokerAccountDetails, 
+                    _operationsFactory);
+
+                var brokerAccountBalances = await unitOfWork.BrokerAccountBalances.Get(
+                    new BrokerAccountBalancesId(withdrawal.BrokerAccountId, withdrawal.Unit.AssetId));
+
+                brokerAccountBalances.ReserveBalance(withdrawal.Unit.Amount);
+
+                await unitOfWork.Withdrawals.Update(new[] {withdrawal});
+                await unitOfWork.BrokerAccountBalances.Save(new[] {brokerAccountBalances});
+                await unitOfWork.Operations.Add(operation);
+
+                foreach (var evt in withdrawal.Events)
+                {
+                    unitOfWork.Outbox.Publish(evt);
+                }
+
+                foreach (var evt in brokerAccountBalances.Events)
+                {
+                    unitOfWork.Outbox.Publish(evt);
+                }
+
+                await unitOfWork.Commit();
             }
 
-            foreach (var @event in brokerAccountBalances.Events)
-            {
-                await context.Publish(@event);
-            }
-
-            await Task.CompletedTask;
+            await unitOfWork.EnsureOutboxDispatched(context);
         }
     }
 }

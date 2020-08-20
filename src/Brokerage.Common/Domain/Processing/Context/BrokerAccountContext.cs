@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Brokerage.Common.Domain.BrokerAccounts;
 
 namespace Brokerage.Common.Domain.Processing.Context
@@ -8,6 +7,7 @@ namespace Brokerage.Common.Domain.Processing.Context
     {
         public BrokerAccountContext(string tenantId,
             long brokerAccountId,
+            BrokerAccount brokerAccount,
             BrokerAccountDetails activeDetails,
             IReadOnlyCollection<AccountContext> accounts,
             IReadOnlyCollection<BrokerAccountBalancesContext> balances,
@@ -15,7 +15,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IReadOnlyCollection<BrokerAccountContextEndpoint> outputs,
             IReadOnlyDictionary<(long brokerAccountDetailsId, long assetId), decimal> income,
             IReadOnlyDictionary<long, decimal> outcome,
-            IReadOnlyDictionary<long, BrokerAccountDetails> brokerAccountDetails)
+            IReadOnlyDictionary<long, BrokerAccountDetails> matchedBrokerAccountDetails,
+            IReadOnlyDictionary<long, BrokerAccountDetails> allBrokerAccountDetails)
         {
             Accounts = accounts;
             Balances = balances;
@@ -23,15 +24,19 @@ namespace Brokerage.Common.Domain.Processing.Context
             Outputs = outputs;
             Income = income;
             Outcome = outcome;
-            BrokerAccountDetails = brokerAccountDetails;
+            MatchedBrokerAccountDetails = matchedBrokerAccountDetails;
+            AllBrokerAccountDetails = allBrokerAccountDetails;
             TenantId = tenantId;
             BrokerAccountId = brokerAccountId;
+            BrokerAccount = brokerAccount;
             ActiveDetails = activeDetails;
         }
 
         public string TenantId { get; }
 
         public long BrokerAccountId { get; }
+
+        public BrokerAccount BrokerAccount { get; }
 
         /// <summary>
         /// Active broker account details
@@ -70,6 +75,16 @@ namespace Brokerage.Common.Domain.Processing.Context
         /// </summary>
         public IReadOnlyDictionary<long, decimal> Outcome { get; }
 
-        public IReadOnlyDictionary<long, BrokerAccountDetails> BrokerAccountDetails { get; }
+        /// <summary>
+        /// Broker account details of the given broker account which match either sources or destinations
+        /// of the transaction being processed
+        /// </summary>
+        public IReadOnlyDictionary<long, BrokerAccountDetails> MatchedBrokerAccountDetails { get; }
+
+        /// <summary>
+        /// Broker account details of the given broker account details including <see cref="MatchedBrokerAccountDetails"/>,
+        /// current <see cref="ActiveDetails"/> and details used by deposits in this transaction if any
+        /// </summary>
+        public IReadOnlyDictionary<long, BrokerAccountDetails> AllBrokerAccountDetails { get; }
     }
 }

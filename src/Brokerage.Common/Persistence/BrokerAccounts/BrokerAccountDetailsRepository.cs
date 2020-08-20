@@ -1,63 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
-namespace Brokerage.Common.Persistence.BrokerAccount
+namespace Brokerage.Common.Persistence.BrokerAccounts
 {
     public class BrokerAccountDetailsRepository : IBrokerAccountDetailsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public BrokerAccountDetailsRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public BrokerAccountDetailsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
-        }
-        
-        public async Task<long> GetNextIdAsync()
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.BrokerAccountDetails, nameof(BrokerAccountDetails.Id));
+            _dbContext = dbContext;
         }
 
-        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetByBrokerAccountAsync(long brokerAccountId,
-            int limit,
-            long? cursor)
+        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<BrokerAccountDetailsId> ids)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var query = context
-                .BrokerAccountsDetails
-                .Where(x => x.BrokerAccountId == brokerAccountId);
-        
-            if (cursor != null)
+            if (ids.Count == 0)
             {
-                // ReSharper disable once StringCompareToIsCultureSpecific
-                query = query.Where(x => cursor < 0);
+                return Array.Empty<BrokerAccountDetails>();
             }
-
-            query = query
-                .OrderBy(x => x.Id)
-                .Take(limit);
-
-            await query.LoadAsync();
-
-            return query
-                .AsEnumerable()
-                .Select(MapToDomain)
-                .ToArray();
-        }
-
-        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOfAsync(ISet<BrokerAccountDetailsId> ids)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var idStrings = ids.Select(x => x.ToString()).ToArray();
 
-            var query = context
+            var query = _dbContext
                 .BrokerAccountsDetails
                 .Where(x => idStrings.Contains(x.NaturalId));
             
@@ -69,16 +37,38 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                 .ToArray();
         }
 
-        public async Task<IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>> GetActiveAsync(
+        public async Task<IReadOnlyCollection<BrokerAccountDetails>> GetAnyOf(ISet<long> ids)
+        {
+            if (ids.Count == 0)
+            {
+                return Array.Empty<BrokerAccountDetails>();
+            }
+
+            var query = _dbContext
+                .BrokerAccountsDetails
+                .Where(x => ids.Contains(x.Id));
+            
+            await query.LoadAsync();
+
+            return query
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
+        public async Task<IReadOnlyDictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>> GetActive(
             ISet<ActiveBrokerAccountDetailsId> ids)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+            if (!ids.Any())
+            {
+                return new Dictionary<ActiveBrokerAccountDetailsId, BrokerAccountDetails>();
+            }
 
             var entities = new List<BrokerAccountDetailsEntity>();
 
             foreach (var id in ids)
             {
-                var entity = await context
+                var entity = await _dbContext
                     .BrokerAccountsDetails
                     .Where(x => x.ActiveId == id.ToString())
                     .OrderByDescending(x => x.Id)
@@ -94,11 +84,9 @@ namespace Brokerage.Common.Persistence.BrokerAccount
                     x => x);
         }
 
-        public async Task<BrokerAccountDetails> GetActiveAsync(ActiveBrokerAccountDetailsId id)
+        public async Task<BrokerAccountDetails> GetActive(ActiveBrokerAccountDetailsId id)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var result = await context
+            var result = await _dbContext
                 .BrokerAccountsDetails
                 .Where(x => x.ActiveId == id.ToString())
                 .OrderByDescending(x => x.Id)
@@ -107,32 +95,29 @@ namespace Brokerage.Common.Persistence.BrokerAccount
             return MapToDomain(result);
         }
 
-        public async Task AddOrIgnoreAsync(BrokerAccountDetails brokerAccount)
+        public async Task Add(BrokerAccountDetails brokerAccount)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            
             var entity = MapToEntity(brokerAccount);
 
-            try
-            {
-                await context.BrokerAccountsDetails.AddAsync(entity);
+            _dbContext.BrokerAccountsDetails.Add(entity);
 
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-            {
-            }
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<BrokerAccountDetails> GetAsync(long id)
+        public async Task<BrokerAccountDetails> Get(long id)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var details = await context
+            var details = await _dbContext
                 .BrokerAccountsDetails
                 .FirstAsync(x => x.Id == id);
 
             return MapToDomain(details);
+        }
+
+        public async Task<long> GetCountByBrokerAccountId(long brokerAccountId)
+        {
+            var count = await _dbContext.BrokerAccountsDetails.Where(x => x.BrokerAccountId == brokerAccountId).CountAsync();
+
+            return count;
         }
 
         private static BrokerAccountDetailsEntity MapToEntity(BrokerAccountDetails details)

@@ -22,9 +22,7 @@ namespace Brokerage.Common.Domain.Operations
 
         public long Id { get; }
         public OperationType Type { get; }
-
         public IReadOnlyCollection<Unit> ActualFees { get; private set; }
-
         public IReadOnlyCollection<Unit> ExpectedFees { get; private set; }
         public uint Version { get; }
 
@@ -37,12 +35,12 @@ namespace Brokerage.Common.Domain.Operations
 
         public void AddExpectedFees(IReadOnlyCollection<Unit> expectedFees)
         {
-            this.ExpectedFees = expectedFees;
+            ExpectedFees = expectedFees;
         }
 
         public void AddActualFees(IReadOnlyCollection<Unit> actualFees)
         {
-            this.ActualFees = actualFees;
+            ActualFees = actualFees;
         }
 
         public static Operation Restore(
@@ -50,9 +48,9 @@ namespace Brokerage.Common.Domain.Operations
                         OperationType type,
                         IReadOnlyCollection<Unit> actualFees,
                         IReadOnlyCollection<Unit> expectedFees,
-                        uint Version)
+                        uint version)
         {
-            return new Operation(id, type, actualFees, expectedFees, Version);
+            return new Operation(id, type, actualFees, expectedFees, version);
         }
     }
 }

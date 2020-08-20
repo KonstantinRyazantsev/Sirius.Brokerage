@@ -1,93 +1,57 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Brokerage.Common.Domain;
+﻿using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Blockchains;
-using Brokerage.Common.Persistence.BrokerAccount;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
+using Swisschain.Extensions.Idempotency;
+using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.VaultAgent.ApiClient;
-using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
 namespace Brokerage.Worker.Messaging.Consumers
 {
     public class FinalizeBrokerAccountCreationConsumer : IConsumer<FinalizeBrokerAccountCreation>
     {
-        private readonly ILogger<FinalizeBrokerAccountCreationConsumer> _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        private readonly IBrokerAccountsRepository _brokerAccountsRepository;
-
-        public FinalizeBrokerAccountCreationConsumer(
-            ILogger<FinalizeBrokerAccountCreationConsumer> logger,
+        
+        public FinalizeBrokerAccountCreationConsumer(ILoggerFactory loggerFactory,
+            IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             IBlockchainsRepository blockchainsRepository,
-            IVaultAgentClient vaultAgentClient,
-            IBrokerAccountsRepository brokerAccountsRepository)
+            IVaultAgentClient vaultAgentClient)
         {
-            _logger = logger;
+            _loggerFactory = loggerFactory;
+            _unitOfWorkManager = unitOfWorkManager;
             _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
-            _brokerAccountsRepository = brokerAccountsRepository;
         }
 
         public async Task Consume(ConsumeContext<FinalizeBrokerAccountCreation> context)
         {
-            // TODO: Use outbox correctly here
+            var command = context.Message;
 
-            var message = context.Message;
-            var brokerAccount = await _brokerAccountsRepository.GetAsync(message.BrokerAccountId);
-            var blockchainsCount = await _blockchainsRepository.GetCountAsync();
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"BrokerAccounts:FinalizeCreation:{command.BrokerAccountId}");
 
-            if (brokerAccount.State == BrokerAccountState.Creating)
+            if (!unitOfWork.Outbox.IsClosed)
             {
-                string cursor = null;
+                var brokerAccount = await unitOfWork.BrokerAccounts.Get(command.BrokerAccountId);
 
-                do
+                await brokerAccount.FinalizeCreation(
+                    _loggerFactory.CreateLogger<BrokerAccount>(),
+                    _blockchainsRepository,
+                    _vaultAgentClient);
+
+                foreach (var evt in brokerAccount.Events)
                 {
-                    var blockchains = await _blockchainsRepository.GetAllAsync(cursor, 100);
+                    unitOfWork.Outbox.Publish(evt);
+                }
 
-                    if (!blockchains.Any())
-                        break;
-
-                    cursor = blockchains.Last().Id;
-
-                    foreach (var blockchain in blockchains)
-                    {
-                        var requestIdForGeneration = $"Brokerage:BrokerAccountDetails:{message.RequestId}_{blockchain.Id}";
-
-                        var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext()
-                        {
-                            AggregateId = brokerAccount.Id,
-                            AggregateType = AggregateType.BrokerAccount,
-                            ExpectedCount = blockchainsCount
-                        });
-
-                        var response = await _vaultAgentClient.Wallets.GenerateAsync(new GenerateWalletRequest
-                        {
-                            BlockchainId = blockchain.Id,
-                            TenantId = message.TenantId,
-                            RequestId = requestIdForGeneration,
-                            VaultId = brokerAccount.VaultId,
-                            Component = nameof(Brokerage),
-                            Context = requesterContext
-                        });
-
-                        if (response.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
-                        {
-                            _logger.LogWarning("FinalizeBrokerAccountCreation command has been failed {@message}" +
-                                               "error response from vault agent {@response}",
-                                message,
-                                response);
-
-                            throw new InvalidOperationException($"FinalizeBrokerAccountCreation command " +
-                                                                $"has been failed with {response.Error.ErrorMessage}");
-                        }
-                    }
-
-                } while (true);
+                await unitOfWork.Commit();
             }
+
+            await unitOfWork.EnsureOutboxDispatched(context);
         }
     }
 }

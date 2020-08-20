@@ -4,92 +4,61 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Withdrawals;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Withdrawals
 {
-    public class WithdrawalRepository : IWithdrawalRepository
+    public class WithdrawalsRepository : IWithdrawalsRepository
     {
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
+        private readonly DatabaseContext _dbContext;
 
-        public WithdrawalRepository(DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder)
+        public WithdrawalsRepository(DatabaseContext dbContext)
         {
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _dbContext = dbContext;
         }
 
-        public async Task<Withdrawal> GetAsync(long withdrawalId)
+        public async Task<Withdrawal> Get(long withdrawalId)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
+            var entity = await _dbContext
                 .Withdrawals
                 .FirstAsync(x => x.Id == withdrawalId);
 
             return MapToDomain(entity);
         }
 
-        public async Task<long> GetNextIdAsync()
+        public async Task<Withdrawal> GetByOperationIdOrDefault(long operationId)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            return await context.GetNextId(Tables.Withdrawals, nameof(WithdrawalEntity.Id));
-        }
-
-        public async Task<Withdrawal> GetByOperationIdOrDefaultAsync(long operationId)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
-            var entity = await context
+            var entity = await _dbContext
                 .Withdrawals
                 .FirstOrDefaultAsync(x => x.OperationId == operationId);
 
             return entity != null ? MapToDomain(entity) : null;
         }
 
-        public async Task SaveAsync(IReadOnlyCollection<Withdrawal> withdrawals)
+        public async Task Update(IReadOnlyCollection<Withdrawal> withdrawals)
         {
             if (!withdrawals.Any())
             {
                 return;
             }
 
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
             foreach (var withdrawal in withdrawals)
             {
                 var entity = MapToEntity(withdrawal);
 
-                if (entity.Version == default)
-                {
-                    context.Withdrawals.Add(entity);
-                }
-                else
-                {
-                    // TODO: Research how to do it better
-                    context.Withdrawals.Update(entity);
-                    context.Entry(entity).State = EntityState.Modified;
-                }
+                _dbContext.Withdrawals.Update(entity);
             }
 
-            await context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task AddOrIgnoreAsync(Withdrawal withdrawal)
+        public async Task Add(Withdrawal withdrawal)
         {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-
             var entity = MapToEntity(withdrawal);
 
-            context.Withdrawals.Add(entity);
+            _dbContext.Withdrawals.Add(entity);
 
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException e) when (e.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-            {
-            }
+            await _dbContext.SaveChangesAsync();
         }
 
         private static WithdrawalEntity MapToEntity(Withdrawal withdrawal)
