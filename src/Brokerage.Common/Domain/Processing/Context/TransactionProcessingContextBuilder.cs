@@ -83,7 +83,7 @@ namespace Brokerage.Common.Domain.Processing.Context
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
                 .Union(matchedAccountDetails.Select(x => x.BrokerAccountId))
-                .ToArray();
+                .ToHashSet();
 
             var matchedAddress = matchedAccountDetails
                 .Select(x => x.NaturalId.Address)
@@ -198,6 +198,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Unit.Amount));
 
             var accounts = matchedAccountDetails
+                .Where(x => x.BrokerAccountId == brokerAccount.Id)
                 .Select(x => BuildAccountContext(
                     matchedDestinations,
                     matchedSources,
@@ -205,6 +206,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .ToArray();
 
             var balances = brokerAccountBalances
+                .Where(x => x.NaturalId.BrokerAccountId == brokerAccount.Id)
                 .Select(x =>
                 {
                     (long, long) incomeKey;
