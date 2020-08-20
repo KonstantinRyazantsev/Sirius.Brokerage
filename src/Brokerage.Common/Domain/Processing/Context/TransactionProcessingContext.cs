@@ -39,7 +39,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .SelectMany(x => x.Balances)
                 .ToDictionary(x => x.Balances.NaturalId, x => x.Balances);
         }
-
+         
         public IReadOnlyCollection<Deposit> Deposits => _deposits;
         public IReadOnlyCollection<Operation> NewOperations => _newOperations;
         public IReadOnlyCollection<BrokerAccountContext> BrokerAccounts { get; }
