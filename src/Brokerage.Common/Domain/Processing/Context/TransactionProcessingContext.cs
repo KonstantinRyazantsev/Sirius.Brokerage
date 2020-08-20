@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Brokerage.Common.Domain.BrokerAccounts;
@@ -10,6 +11,13 @@ namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class TransactionProcessingContext
     {
+        public static readonly TransactionProcessingContext Empty = new TransactionProcessingContext(
+            Array.Empty<BrokerAccountContext>(),
+            default,
+            default,
+            Array.Empty<Deposit>(),
+            default);
+
         private readonly ConcurrentBag<Deposit> _deposits;
         private readonly ConcurrentBag<Operation> _newOperations;
 

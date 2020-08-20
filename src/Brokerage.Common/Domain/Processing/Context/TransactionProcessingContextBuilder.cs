@@ -73,7 +73,12 @@ namespace Brokerage.Common.Domain.Processing.Context
             var matchedBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(matchedBrokerAccountDetailsIds);
             var matchedOperation = await operationsRepository.GetOrDefault(operationId);
 
-            // TODO: we can return empty result here
+            if (matchedOperation == null &&
+                !matchedAccountDetails.Any() &&
+                !matchedBrokerAccountDetails.Any())
+            {
+                return TransactionProcessingContext.Empty;
+            }
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
