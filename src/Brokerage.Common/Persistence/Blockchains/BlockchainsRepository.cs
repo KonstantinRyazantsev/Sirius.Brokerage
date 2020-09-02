@@ -46,23 +46,19 @@ namespace Brokerage.Common.Persistence.Blockchains
 
         public async Task AddOrReplaceAsync(Blockchain blockchain)
         {
-            int affectedRowsCount = 0;
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            if (blockchain.CreatedAt != blockchain.UpdatedAt)
-            {
-                affectedRowsCount = await context.Blockchains
-                    .Where(x => x.Id == blockchain.Id &&
-                                x.UpdatedAt <= blockchain.UpdatedAt)
-                    .UpdateAsync(x => new Blockchain
-                    {
-                        NetworkType = blockchain.NetworkType,
-                        UpdatedAt = blockchain.UpdatedAt,
-                        Protocol = blockchain.Protocol,
-                        CreatedAt = blockchain.CreatedAt,
-                        Id = blockchain.Id
-                    });
-            }
+            var affectedRowsCount = await context.Blockchains
+                .Where(x => x.Id == blockchain.Id &&
+                            x.UpdatedAt <= blockchain.UpdatedAt)
+                .UpdateAsync(x => new Blockchain
+                {
+                    NetworkType = blockchain.NetworkType,
+                    UpdatedAt = blockchain.UpdatedAt,
+                    Protocol = blockchain.Protocol,
+                    CreatedAt = blockchain.CreatedAt,
+                    Id = blockchain.Id
+                });
 
             if (affectedRowsCount == 0)
             {
@@ -78,7 +74,7 @@ namespace Brokerage.Common.Persistence.Blockchains
                 }
             }
         }
-        
+
         public async Task<Blockchain> GetAsync(string blockchainId)
         {
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
