@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
@@ -17,15 +19,36 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return Task.CompletedTask;
             }
 
+            var minDepositDictionary = processingContext.MinDeposits.ToDictionary(x => x.Id);
+            var minDepositLookup = processingContext.MinDepositResiduals
+                .Where(x => x.ConsolidationDepositId.HasValue)
+                .ToLookup(x => x.ConsolidationDepositId.Value, y => minDepositDictionary[y.DepositId]);
+
             //TODO: Fix it? Or should we?
-            foreach (var minDeposit in processingContext.MinDeposits)
-            {
-                minDeposit.Complete(Array.Empty<Unit>());
-            }
 
             foreach (var deposit in processingContext.Deposits)
             {
-                deposit.Complete(evt.ActualFees);
+                var minDeposits = minDepositLookup[deposit.Id].ToArray();
+                var assetId = deposit.Unit.AssetId;
+                var distributedFee = evt.ActualFees;
+
+                if (minDeposits.Any())
+                {
+                    var count = minDeposits.Count() + 1;
+                    var mainFeeUnit = distributedFee.FirstOrDefault(x => x.AssetId == assetId) ?? new Unit(assetId, 0m);
+                    var listFees = new List<Unit>(4);
+                    listFees.AddRange(distributedFee
+                            .Where(x => x.AssetId != assetId));
+                    listFees.Add(new Unit(assetId, mainFeeUnit.Amount / count));
+                    distributedFee = listFees;
+                }
+
+                deposit.Complete(distributedFee);
+
+                foreach (var minDeposit in minDeposits)
+                {
+                    minDeposit.AddFeesForMin(distributedFee);
+                }
             }
 
             return Task.CompletedTask;

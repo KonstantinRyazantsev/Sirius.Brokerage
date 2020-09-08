@@ -27,8 +27,20 @@ namespace Brokerage.Common.Persistence.Deposits
 
             var addressesInList = string.Join(", ", idStrings.Select(x => $"('{x}')"));
             var selectQuery = $@"
-                    select * from {DatabaseContext.SchemaName}.{Tables.MinDepositResiduals}
-                    where ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"" = null and 
+                    select 
+                    ""{nameof(MinDepositResidualEntity.DepositId)}"", 
+                    {nameof(MinDepositResidualEntity.xmin)}, 
+                    ""{nameof(MinDepositResidualEntity.Address)}"", 
+                    ""{nameof(MinDepositResidualEntity.Amount)}"", 
+                    ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"", 
+                    ""{nameof(MinDepositResidualEntity.BlockchainId)}"", 
+                    ""{nameof(MinDepositResidualEntity.CreatedAt)}"", 
+                    ""{nameof(MinDepositResidualEntity.NaturalId)}"", 
+                    ""{nameof(MinDepositResidualEntity.TagType)}"", 
+                    ""{nameof(MinDepositResidualEntity.Tag)}"", 
+                    ""{nameof(MinDepositResidualEntity.AssetId)}"" 
+                    from {DatabaseContext.SchemaName}.{Tables.MinDepositResiduals}
+                    where ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"" is null and 
                     ""{nameof(MinDepositResidualEntity.NaturalId)}"" in (values {addressesInList})
                     order by ""{nameof(MinDepositResidualEntity.NaturalId)}""
                     for update;";
@@ -51,7 +63,7 @@ namespace Brokerage.Common.Persistence.Deposits
 
             foreach (var entity in entities)
             {
-                if (entity.Version == default)
+                if (entity.xmin == default)
                 {
                     _dbContext.MinDepositResiduals.Add(entity);
                 }
@@ -108,7 +120,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 entity.AssetId,
                 entity.ConsolidationDepositId,
                 entity.CreatedAt,
-                entity.Version);
+                entity.xmin);
 
             return domainModel;
         }
@@ -127,7 +139,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 CreatedAt = model.CreatedAt,
                 TagType = model.AccountDetailsId.TagType,
                 NaturalId = model.AccountDetailsId.ToString(),
-                Version = model.Version
+                xmin = model.Version
             };
 
             return entity;

@@ -251,6 +251,14 @@ namespace Brokerage.Common.Domain.Deposits
             AddDepositUpdatedEvent();
         }
 
+        public void AddFeesForMin(IReadOnlyCollection<Unit> fees)
+        {
+            Fees = fees;
+            UpdatedAt = DateTime.UtcNow;
+
+            AddDepositUpdatedEvent();
+        }
+
         public void Fail(DepositError depositError)
         {
             SwitchState(new[] {DepositState.Confirmed}, DepositState.Failed);

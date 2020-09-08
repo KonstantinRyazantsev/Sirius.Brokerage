@@ -252,15 +252,17 @@ namespace Brokerage.Common.Persistence
 
             modelBuilder.Entity<MinDepositResidualEntity>()
                 .HasIndex(x => x.NaturalId)
-                .HasName("IX_MinDepositResiduals_NaturalId");
+                .HasName("IX_MinDepositResiduals_NaturalId")
+                .IsUnique(false);
 
             modelBuilder.Entity<MinDepositResidualEntity>()
                 .HasIndex(x => x.ConsolidationDepositId)
-                .HasName("IX_MinDepositResiduals_ConsolidationDepositId");
+                .HasName("IX_MinDepositResiduals_ConsolidationDepositId")
+                .IsUnique(false);
 
             modelBuilder.Entity<MinDepositResidualEntity>(e =>
             {
-                e.Property(p => p.Version)
+                e.Property(p => p.xmin)
                     .HasColumnName("xmin")
                     .HasColumnType("xid")
                     .ValueGeneratedOnAddOrUpdate()
