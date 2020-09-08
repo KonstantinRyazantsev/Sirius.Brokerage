@@ -6,6 +6,7 @@
         Confirmed,
         Completed,
         Failed,
-        Cancelled
+        Cancelled,
+        ConfirmedMin
     }
 }

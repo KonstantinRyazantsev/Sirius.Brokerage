@@ -31,7 +31,7 @@ namespace Brokerage.Common.Persistence.Deposits
                     where ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"" = null and 
                     ""{nameof(MinDepositResidualEntity.NaturalId)}"" in (values {addressesInList})
                     order by ""{nameof(MinDepositResidualEntity.NaturalId)}""
-                    for update wait";
+                    for update;";
             var lockedEntities = await _dbContext.Database.GetDbConnection()
                     .QueryAsync<MinDepositResidualEntity>(selectQuery);
 

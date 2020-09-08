@@ -248,17 +248,11 @@ namespace Brokerage.Common.Persistence
         {
             modelBuilder.Entity<MinDepositResidualEntity>()
                 .ToTable(Tables.MinDepositResiduals)
-                .HasNoKey();
+                .HasKey(x => x.DepositId);
 
             modelBuilder.Entity<MinDepositResidualEntity>()
                 .HasIndex(x => x.NaturalId)
                 .HasName("IX_MinDepositResiduals_NaturalId");
-
-            //Serves as key
-            modelBuilder.Entity<MinDepositResidualEntity>()
-                .HasIndex(x => x.DepositId)
-                .HasName("IX_MinDepositResiduals_DepositId")
-                .IsUnique(true);
 
             modelBuilder.Entity<MinDepositResidualEntity>()
                 .HasIndex(x => x.ConsolidationDepositId)

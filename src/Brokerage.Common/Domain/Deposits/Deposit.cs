@@ -316,6 +316,7 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
+                    DepositState.ConfirmedMin => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedMin,
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 }
             });

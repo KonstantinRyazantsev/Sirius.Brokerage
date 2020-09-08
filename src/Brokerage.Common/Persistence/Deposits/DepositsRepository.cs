@@ -108,6 +108,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositState.Completed => DepositStateEnum.Completed,
                 DepositState.Confirmed => DepositStateEnum.Confirmed,
                 DepositState.Failed =>    DepositStateEnum.Failed,
+                DepositState.ConfirmedMin => DepositStateEnum.ConfirmedMin,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(deposit.State),
                     deposit.State,
@@ -166,6 +167,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositStateEnum.Completed => DepositState.Completed,
                 DepositStateEnum.Confirmed => DepositState.Confirmed,
                 DepositStateEnum.Failed => DepositState.Failed,
+                DepositStateEnum.ConfirmedMin => DepositState.ConfirmedMin,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.State),
                     depositEntity.State,

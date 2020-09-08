@@ -41,8 +41,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 .Where(x => !x.IsBrokerDeposit)
                 .ToArray();
 
-            var groupedBalanceChanges = regularDeposits
-                .Where(x => x.Unit.Amount >= minDepositForConsolidation)
+            var normalDeposits = regularDeposits
+                .Where(x => x.Unit.Amount >= minDepositForConsolidation);
+
+            var groupedBalanceChanges = normalDeposits
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId));
 
             var balanceChanges = groupedBalanceChanges
@@ -88,7 +90,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     processingContext.AddNewMinDepositResidual(minDepositResidual);
                 }
 
-                foreach (var deposit in regularDeposits)
+                foreach (var deposit in normalDeposits)
                 {
                     var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == deposit.BrokerAccountId);
                     var brokerAccountDetails = brokerAccountContext.AllBrokerAccountDetails[deposit.BrokerAccountDetailsId];
