@@ -40,6 +40,7 @@ namespace Brokerage.Common.Persistence
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<DepositEntity> Deposits { get; set; }
+        public DbSet<MinDepositResidualEntity> MinDepositResiduals { get; set; }
         public DbSet<AccountDetailsEntity> AccountDetails { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
@@ -73,6 +74,7 @@ namespace Brokerage.Common.Persistence
             BuildAccountDetails(modelBuilder);
 
             BuildDeposits(modelBuilder);
+            BuildMinDepositResiduals(modelBuilder);
             BuildWithdrawals(modelBuilder);
 
             BuildOperations(modelBuilder);
@@ -240,6 +242,36 @@ namespace Brokerage.Common.Persistence
                             JsonSerializingSettings));
 
             #endregion
+        }
+
+        private static void BuildMinDepositResiduals(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .ToTable(Tables.MinDepositResiduals)
+                .HasNoKey();
+
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .HasIndex(x => x.NaturalId)
+                .HasName("IX_MinDepositResiduals_NaturalId");
+
+            //Serves as key
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .HasIndex(x => x.DepositId)
+                .HasName("IX_MinDepositResiduals_DepositId")
+                .IsUnique(true);
+
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .HasIndex(x => x.ConsolidationDepositId)
+                .HasName("IX_MinDepositResiduals_ConsolidationDepositId");
+
+            modelBuilder.Entity<MinDepositResidualEntity>(e =>
+            {
+                e.Property(p => p.Version)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
         }
 
         private static void BuildBrokerAccountBalances(ModelBuilder modelBuilder)

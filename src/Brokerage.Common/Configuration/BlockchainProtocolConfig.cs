@@ -9,4 +9,11 @@ namespace Brokerage.Common.Configuration
         public long? DesiredMaxNumberTag { get; set; }
         public DestinationTagType DestinationTagType { get; set; }
     }
+
+    public class BlockchainConfig
+    {
+        public string ProtocolCode { get; set; }
+
+        public decimal MinDepositForConsolidation { get; set; }
+    }
 }

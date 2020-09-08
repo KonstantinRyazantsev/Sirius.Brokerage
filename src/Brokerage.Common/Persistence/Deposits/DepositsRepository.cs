@@ -58,6 +58,23 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<IReadOnlyCollection<Deposit>> GetAnyFor(HashSet<long> consolidationDepositsIds)
+        {
+            if (!consolidationDepositsIds.Any())
+                return Array.Empty<Deposit>();
+
+            var deposits = _dbContext
+                .Deposits
+                .AsQueryable();
+
+            await deposits.Where(x => consolidationDepositsIds.Contains(x.Id)).LoadAsync();
+
+            return deposits
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task Save(IReadOnlyCollection<Deposit> deposits)
         {
             if (!deposits.Any())

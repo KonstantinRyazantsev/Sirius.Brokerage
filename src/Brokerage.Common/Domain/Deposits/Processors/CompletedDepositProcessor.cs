@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Swisschain.Sirius.Executor.MessagingContract;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits.Processors
 {
@@ -13,6 +15,12 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             if (processingContext.Operation.Type != OperationType.DepositConsolidation)
             {
                 return Task.CompletedTask;
+            }
+
+            //TODO: Fix it? Or should we?
+            foreach (var minDeposit in processingContext.MinDeposits)
+            {
+                minDeposit.Complete(Array.Empty<Unit>());
             }
 
             foreach (var deposit in processingContext.Deposits)

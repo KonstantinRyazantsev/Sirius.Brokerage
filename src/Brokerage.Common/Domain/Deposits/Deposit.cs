@@ -60,7 +60,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountDetailsId { get; }
-        public Unit Unit { get; }
+        public Unit Unit { get; private set; }
         public IReadOnlyCollection<Unit> Fees { get; private set; }
         public TransactionInfo TransactionInfo { get; private set; }
         public DepositError Error { get; private set; }
@@ -69,7 +69,6 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
-        
         public List<object> Events { get; } = new List<object>();
         
         public bool IsBrokerDeposit => AccountDetailsId == null;
@@ -157,7 +156,8 @@ namespace Brokerage.Common.Domain.Deposits
             BrokerAccountDetails brokerAccountDetails,
             AccountDetails accountDetails,
             TransactionConfirmed tx, 
-            IOperationsFactory operationsFactory)
+            IOperationsFactory operationsFactory,
+            decimal residual)
         {
             if (IsBrokerDeposit)
             {
@@ -165,6 +165,10 @@ namespace Brokerage.Common.Domain.Deposits
             }
 
             SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed);
+
+            this.Unit = new Unit(
+                this.Unit.AssetId,
+                this.Unit.Amount + residual);
 
             var consolidationOperation = await operationsFactory.StartDepositConsolidation(
                 TenantId,
@@ -182,6 +186,25 @@ namespace Brokerage.Common.Domain.Deposits
             AddDepositUpdatedEvent();
 
             return consolidationOperation;
+        }
+
+        public Task<MinDepositResidual> ConfirmMin(
+            AccountDetails accountDetails,
+            TransactionConfirmed tx)
+        {
+            if (IsBrokerDeposit)
+            {
+                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
+            }
+
+            SwitchState(new[] { DepositState.Detected }, DepositState.ConfirmedMin);
+
+            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
+            UpdatedAt = DateTime.UtcNow;
+
+            AddDepositUpdatedEvent();
+
+            return Task.FromResult(MinDepositResidual.Create(this.Id, this.Unit.Amount, accountDetails.NaturalId, this.Unit.AssetId));
         }
 
         public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)

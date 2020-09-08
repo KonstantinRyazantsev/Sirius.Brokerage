@@ -15,6 +15,7 @@
         public const string Deposits = "deposits";
         public const string DepositSources = "deposit_sources";
         public const string DepositFees = "deposit_fees";
+        public const string MinDepositResiduals = "min_deposit_residuals";
 
         public const string Withdrawals = "withdrawals";
         public const string WithdrawalFees = "withdrawals_fees";

@@ -42,7 +42,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.Operations,
                     unitOfWork.Deposits,
                     unitOfWork.BrokerAccountBalances,
-                    unitOfWork.Withdrawals);
+                    unitOfWork.Withdrawals,
+                    unitOfWork.MinDepositResiduals);
                 
                 if (processingContext.IsEmpty)
                 {
@@ -57,6 +58,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                 }
 
                 var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
+                var updatedMinDeposits = processingContext.MinDeposits.Where(x => x.Events.Any()).ToArray();
+                var minDepositResiduals = processingContext.MinDepositResiduals;
                 var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
                 var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
                 var operation = processingContext.Operation;
@@ -65,11 +68,18 @@ namespace Brokerage.Worker.Messaging.Consumers
                 operation.AddActualFees(evt.ActualFees);
 
                 await unitOfWork.Deposits.Save(updatedDeposits);
+                await unitOfWork.Deposits.Save(updatedMinDeposits);
                 await unitOfWork.Withdrawals.Update(updatedWithdrawals);
                 await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
                 await unitOfWork.Operations.Update(operation);
+                await unitOfWork.MinDepositResiduals.Remove(minDepositResiduals);
 
                 foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
+                {
+                    unitOfWork.Outbox.Publish(@event);
+                }
+
+                foreach (var @event in updatedMinDeposits.SelectMany(x => x.Events))
                 {
                     unitOfWork.Outbox.Publish(@event);
                 }

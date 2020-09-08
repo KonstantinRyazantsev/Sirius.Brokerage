@@ -37,7 +37,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IDepositsRepository depositsRepository,
-            IOperationsRepository operationsRepository)
+            IOperationsRepository operationsRepository,
+            IMinDepositResidualsRepository minDepositResidualsRepository)
         {
             var sourceAddresses = sources
                 .Select(x => x.Address)
@@ -130,6 +131,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 .Except(allBrokerAccountDetails.Select(x => x.Id))
                 .ToHashSet();
             var depositBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(depositBrokerAccountDetailIdsToLoad);
+            var minimumDepositResiduals = await minDepositResidualsRepository
+                .GetAnyOfForUpdate(matchedAccountDetails.Select(x => x.NaturalId).ToHashSet());
 
             allBrokerAccountDetails.AddRange(depositBrokerAccountDetails);
 
@@ -150,7 +153,8 @@ namespace Brokerage.Common.Domain.Processing.Context
                 matchedOperation,
                 transactionInfo,
                 deposits,
-                blockchain);
+                blockchain,
+                minimumDepositResiduals);
         }
 
         private static BrokerAccountContext BuildBrokerAccountContext(BrokerAccount brokerAccount,

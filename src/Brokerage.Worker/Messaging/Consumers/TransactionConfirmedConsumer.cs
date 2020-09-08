@@ -62,7 +62,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.BrokerAccountDetails,
                     unitOfWork.BrokerAccountBalances,
                     unitOfWork.Deposits,
-                    unitOfWork.Operations);
+                    unitOfWork.Operations,
+                    unitOfWork.MinDepositResiduals);
 
                 if (processingContext.IsEmpty)
                 {
@@ -92,6 +93,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     await processor.Process(tx, processingContext);
                 }
 
+                var newMinDepositResiduals = processingContext.NewMinDepositResiduals;
+                var prevMinDepositResiduals = processingContext.MinDepositResiduals;
                 var updatedBrokerAccountBalances = processingContext.BrokerAccounts
                     .SelectMany(x => x.Balances.Select(b => b.Balances))
                     .Where(x => x.Events.Any())
@@ -103,6 +106,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                 await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
                 await unitOfWork.Deposits.Save(updatedDeposits);
                 await unitOfWork.Operations.Add(processingContext.NewOperations);
+                await unitOfWork.MinDepositResiduals.Save(newMinDepositResiduals);
+                await unitOfWork.MinDepositResiduals.Save(prevMinDepositResiduals);
 
                 foreach (var evt in updatedBrokerAccountBalances.SelectMany(x => x.Events))
                 {

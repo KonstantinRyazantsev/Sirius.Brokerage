@@ -19,7 +19,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IOperationsRepository operationsRepository,
             IDepositsRepository depositsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
-            IWithdrawalsRepository withdrawalsRepository)
+            IWithdrawalsRepository withdrawalsRepository,
+            IMinDepositResidualsRepository minDepositResidualsRepository)
         {
             var operation = await operationsRepository.GetOrDefault(operationId);
 
@@ -41,12 +42,21 @@ namespace Brokerage.Common.Domain.Processing.Context
                         .ToHashSet();
                     var brokerAccountBalances = (await brokerAccountsBalancesRepository.GetAnyOf(brokerAccountIds))
                         .ToDictionary(x => x.NaturalId);
+                    var minDepositResiduals = await minDepositResidualsRepository.GetForConsolidationDeposits(
+                        deposits.Select(x => x.Id).ToHashSet());
+                    var minDeposits = await depositsRepository.GetAnyFor(
+                        minDepositResiduals
+                            .Where(x => x.ConsolidationDepositId.HasValue)
+                        .Select(x => x.ConsolidationDepositId.Value)
+                        .ToHashSet());
 
                     return new OperationProcessingContext(
                         operation,
                         deposits,
                         Array.Empty<Withdrawal>(),
-                        brokerAccountBalances);
+                        brokerAccountBalances,
+                        minDepositResiduals,
+                        minDeposits);
                 }
 
                 // TODO:
@@ -66,7 +76,9 @@ namespace Brokerage.Common.Domain.Processing.Context
                         new Dictionary<BrokerAccountBalancesId, BrokerAccountBalances>
                         {
                             [brokerAccountBalances.NaturalId] = brokerAccountBalances
-                        });
+                        },
+                        Array.Empty<MinDepositResidual>(),
+                        Array.Empty<Deposit>());
                 }
 
                 default:

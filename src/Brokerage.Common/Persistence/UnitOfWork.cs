@@ -20,6 +20,8 @@ namespace Brokerage.Common.Persistence
         public IOperationsRepository Operations { get; private set; }
         public IDetectedTransactionsRepository DetectedTransactions { get; private set; }
 
+        public IMinDepositResidualsRepository MinDepositResiduals { get; private set; }
+
         protected override void ProvisionRepositories(DatabaseContext dbContext)
         {
             AccountDetails = new AccountDetailsRepository(dbContext);
@@ -31,6 +33,7 @@ namespace Brokerage.Common.Persistence
             Withdrawals = new WithdrawalsRepository(dbContext);
             Operations = new OperationsRepository(dbContext);
             DetectedTransactions = new DetectedTransactionsRepository(dbContext);
+            MinDepositResiduals = new MinDepositResidualsRepository(dbContext);
         }
     }
 }
