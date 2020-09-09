@@ -166,7 +166,7 @@ namespace Brokerage.Common.Domain.Deposits
 
             SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed);
 
-            this.Unit = new Unit(
+            var consolidationAmount = new Unit(
                 this.Unit.AssetId,
                 this.Unit.Amount + residual);
 
@@ -175,7 +175,7 @@ namespace Brokerage.Common.Domain.Deposits
                 Id,
                 accountDetails.NaturalId.Address,
                 brokerAccountDetails.NaturalId.Address,
-                Unit,
+                consolidationAmount,
                 tx.BlockNumber,
                 brokerAccount.VaultId);
 

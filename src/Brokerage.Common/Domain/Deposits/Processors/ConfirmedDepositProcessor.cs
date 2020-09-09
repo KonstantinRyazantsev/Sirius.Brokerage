@@ -44,7 +44,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             var normalDeposits = regularDeposits
                 .Where(x => x.Unit.Amount >= minDepositForConsolidation);
 
-            var groupedBalanceChanges = normalDeposits
+            var groupedBalanceChanges = regularDeposits
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId));
 
             var balanceChanges = groupedBalanceChanges
@@ -118,6 +118,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     processingContext.AddNewOperation(consolidationOperation);
                 }
 
+
+                //Moves pending to Owned
                 foreach (var change in balanceChanges)
                 {
                     var balances = processingContext.BrokerAccountBalances[change.Id];
