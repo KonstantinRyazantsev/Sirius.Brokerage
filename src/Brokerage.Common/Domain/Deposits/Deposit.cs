@@ -203,7 +203,8 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            SwitchState(new[] {DepositState.Detected}, DepositState.Confirmed);
+            // It is still possible(probably due to configuration change)
+            SwitchState(new[] {DepositState.Detected, DepositState.DetectedMin }, DepositState.Confirmed);
 
             var consolidationAmount = new Unit(
                 this.Unit.AssetId,
