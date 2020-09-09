@@ -8,5 +8,6 @@ namespace Brokerage.Common.Persistence.Deposits
     {
         Task Save(IReadOnlyCollection<Deposit> deposits);
         Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, string transactionId, long? consolidationOperationId);
+        Task<IReadOnlyCollection<Deposit>> GetAnyFor(HashSet<long> toHashSet);
     }
 }

@@ -58,6 +58,23 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<IReadOnlyCollection<Deposit>> GetAnyFor(HashSet<long> consolidationDepositsIds)
+        {
+            if (!consolidationDepositsIds.Any())
+                return Array.Empty<Deposit>();
+
+            var deposits = _dbContext
+                .Deposits
+                .AsQueryable();
+
+            await deposits.Where(x => consolidationDepositsIds.Contains(x.Id)).LoadAsync();
+
+            return deposits
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task Save(IReadOnlyCollection<Deposit> deposits)
         {
             if (!deposits.Any())
@@ -91,6 +108,9 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositState.Completed => DepositStateEnum.Completed,
                 DepositState.Confirmed => DepositStateEnum.Confirmed,
                 DepositState.Failed =>    DepositStateEnum.Failed,
+                DepositState.ConfirmedTiny => DepositStateEnum.ConfirmedTiny,
+                DepositState.DetectedTiny => DepositStateEnum.DetectedTiny,
+                DepositState.CompletedTiny => DepositStateEnum.CompletedTiny,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(deposit.State),
                     deposit.State,
@@ -131,6 +151,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
                 CreatedAt = deposit.CreatedAt,
                 UpdatedAt = deposit.UpdatedAt,
+                MinDepositForConsolidation = deposit.MinDepositForConsolidation
             };
 
             return depositEntity;
@@ -149,6 +170,9 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositStateEnum.Completed => DepositState.Completed,
                 DepositStateEnum.Confirmed => DepositState.Confirmed,
                 DepositStateEnum.Failed => DepositState.Failed,
+                DepositStateEnum.ConfirmedTiny => DepositState.ConfirmedTiny,
+                DepositStateEnum.DetectedTiny => DepositState.DetectedTiny,
+                DepositStateEnum.CompletedTiny => DepositState.CompletedTiny,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.State),
                     depositEntity.State,
@@ -180,7 +204,8 @@ namespace Brokerage.Common.Persistence.Deposits
                     .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray(),
                 depositEntity.CreatedAt.UtcDateTime,
-                depositEntity.UpdatedAt.UtcDateTime);
+                depositEntity.UpdatedAt.UtcDateTime,
+                depositEntity.MinDepositForConsolidation);
 
             return deposit;
         }

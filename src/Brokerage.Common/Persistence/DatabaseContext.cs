@@ -40,6 +40,7 @@ namespace Brokerage.Common.Persistence
         public DbSet<BrokerAccountBalancesEntity> BrokerAccountBalances { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<DepositEntity> Deposits { get; set; }
+        public DbSet<MinDepositResidualEntity> MinDepositResiduals { get; set; }
         public DbSet<AccountDetailsEntity> AccountDetails { get; set; }
         public DbSet<Blockchain> Blockchains { get; set; }
         public DbSet<WithdrawalEntity> Withdrawals { get; set; }
@@ -73,6 +74,7 @@ namespace Brokerage.Common.Persistence
             BuildAccountDetails(modelBuilder);
 
             BuildDeposits(modelBuilder);
+            BuildMinDepositResiduals(modelBuilder);
             BuildWithdrawals(modelBuilder);
 
             BuildOperations(modelBuilder);
@@ -240,6 +242,32 @@ namespace Brokerage.Common.Persistence
                             JsonSerializingSettings));
 
             #endregion
+        }
+
+        private static void BuildMinDepositResiduals(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .ToTable(Tables.MinDepositResiduals)
+                .HasKey(x => x.DepositId);
+
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .HasIndex(x => x.NaturalId)
+                .HasName("IX_MinDepositResiduals_NaturalId")
+                .IsUnique(false);
+
+            modelBuilder.Entity<MinDepositResidualEntity>()
+                .HasIndex(x => x.ConsolidationDepositId)
+                .HasName("IX_MinDepositResiduals_ConsolidationDepositId")
+                .IsUnique(false);
+
+            modelBuilder.Entity<MinDepositResidualEntity>(e =>
+            {
+                e.Property(p => p.xmin)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
+            });
         }
 
         private static void BuildBrokerAccountBalances(ModelBuilder modelBuilder)

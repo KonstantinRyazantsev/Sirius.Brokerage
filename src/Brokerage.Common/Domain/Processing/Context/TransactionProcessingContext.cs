@@ -10,23 +10,26 @@ using Brokerage.Common.ReadModels.Blockchains;
 namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class TransactionProcessingContext
-    {
-        public static readonly TransactionProcessingContext Empty = new TransactionProcessingContext(
+    { public static readonly TransactionProcessingContext Empty = new TransactionProcessingContext(
             Array.Empty<BrokerAccountContext>(),
             default,
             default,
             Array.Empty<Deposit>(),
+            default,
             default);
 
         private readonly ConcurrentBag<Deposit> _deposits;
         private readonly ConcurrentBag<Operation> _newOperations;
+        private readonly ConcurrentBag<MinDepositResidual> _newMinDepositResiduals;
 
         public TransactionProcessingContext(IReadOnlyCollection<BrokerAccountContext> brokerAccounts, 
             Operation operation,
             TransactionInfo transactionInfo,
             IReadOnlyCollection<Deposit> deposits,
-            Blockchain blockchain)
+            Blockchain blockchain,
+            IReadOnlyCollection<MinDepositResidual> minDepositResiduals)
         {
+            MinDepositResiduals = minDepositResiduals;
             BrokerAccounts = brokerAccounts;
             Operation = operation;
             TransactionInfo = transactionInfo;
@@ -34,14 +37,19 @@ namespace Brokerage.Common.Domain.Processing.Context
 
             _deposits = new ConcurrentBag<Deposit>(deposits);
             _newOperations = new ConcurrentBag<Operation>();
-            
+            _newMinDepositResiduals = new ConcurrentBag<MinDepositResidual>();
+
             BrokerAccountBalances = brokerAccounts
                 .SelectMany(x => x.Balances)
                 .ToDictionary(x => x.Balances.NaturalId, x => x.Balances);
         }
-         
+
+        public IReadOnlyCollection<MinDepositResidual> MinDepositResiduals { get; private set; }
+
         public IReadOnlyCollection<Deposit> Deposits => _deposits;
         public IReadOnlyCollection<Operation> NewOperations => _newOperations;
+
+        public IReadOnlyCollection<MinDepositResidual> NewMinDepositResiduals => _newMinDepositResiduals;
         public IReadOnlyCollection<BrokerAccountContext> BrokerAccounts { get; }
         public Operation Operation { get; }
         public TransactionInfo TransactionInfo { get; }
@@ -61,6 +69,11 @@ namespace Brokerage.Common.Domain.Processing.Context
         public void AddNewOperation(Operation operation)
         {
             _newOperations.Add(operation);
+        }
+        
+        public void AddNewMinDepositResidual(MinDepositResidual minDepositResidual)
+        {
+            _newMinDepositResiduals.Add(minDepositResidual);
         }
     }
 }

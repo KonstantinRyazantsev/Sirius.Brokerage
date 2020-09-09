@@ -9,5 +9,6 @@ namespace Brokerage.Common.Configuration
         public VaultAgentConfig VaultAgent { get; set; }
         public ExecutorConfig Executor { get; set; }
         public IReadOnlyDictionary<string, BlockchainProtocolConfig> BlockchainProtocols { get; set; }
+        public IReadOnlyDictionary<string, BlockchainConfig> Blockchains { get; set; }
     }
 }

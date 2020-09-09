@@ -6,6 +6,9 @@
         Confirmed,
         Completed,
         Failed,
-        Cancelled
+        Cancelled,
+        ConfirmedTiny,
+        DetectedTiny,
+        CompletedTiny
     }
 }

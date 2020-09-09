@@ -42,7 +42,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.Operations,
                     unitOfWork.Deposits,
                     unitOfWork.BrokerAccountBalances,
-                    unitOfWork.Withdrawals);
+                    unitOfWork.Withdrawals,
+                    unitOfWork.MinDepositResiduals);
 
                 if (processingContext.IsEmpty)
                 {
