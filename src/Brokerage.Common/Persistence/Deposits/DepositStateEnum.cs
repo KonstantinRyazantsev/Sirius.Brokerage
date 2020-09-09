@@ -7,6 +7,7 @@
         Completed,
         Failed,
         Cancelled,
-        ConfirmedMin
+        ConfirmedMin,
+        DetectedMin,
     }
 }

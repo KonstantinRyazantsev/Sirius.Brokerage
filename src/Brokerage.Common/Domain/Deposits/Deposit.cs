@@ -112,6 +112,45 @@ namespace Brokerage.Common.Domain.Deposits
             return deposit;
         }
 
+        public static Deposit CreateMin(
+            long id,
+            string tenantId,
+            string blockchainId,
+            long brokerAccountId,
+            long brokerAccountDetailsId,
+            long? accountDetailsId,
+            Unit unit,
+            TransactionInfo transactionInfo,
+            IReadOnlyCollection<DepositSource> sources)
+        {
+            var createdAt = DateTime.UtcNow;
+            var deposit = new Deposit(
+                id,
+                default,
+                0,
+                tenantId,
+                blockchainId,
+                brokerAccountId,
+                brokerAccountDetailsId,
+                accountDetailsId,
+                unit,
+                null,
+                Array.Empty<Unit>(),
+                transactionInfo,
+                null,
+                DepositState.DetectedMin,
+                sources
+                    .GroupBy(x => x.Address)
+                    .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
+                    .ToArray(),
+                createdAt,
+                createdAt);
+
+            deposit.AddDepositUpdatedEvent();
+
+            return deposit;
+        }
+
         public static Deposit Restore(
             long id,
             uint version,
@@ -197,7 +236,7 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            SwitchState(new[] { DepositState.Detected }, DepositState.ConfirmedMin);
+            SwitchState(new[] { DepositState.DetectedMin }, DepositState.ConfirmedMin);
 
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
             UpdatedAt = DateTime.UtcNow;
@@ -325,6 +364,7 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
                     DepositState.ConfirmedMin => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedMin,
+                    DepositState.DetectedMin => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedMin,
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 }
             });

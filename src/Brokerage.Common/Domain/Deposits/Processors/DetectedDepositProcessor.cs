@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
@@ -15,10 +16,12 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     public class DetectedDepositProcessor : IDetectedTransactionProcessor
     {
         private readonly IIdGenerator _idGenerator;
+        private IReadOnlyDictionary<string, BlockchainConfig> _blockchainsConfig;
 
-        public DetectedDepositProcessor(IIdGenerator idGenerator)
+        public DetectedDepositProcessor(IIdGenerator idGenerator, AppConfig appConfig)
         {
             _idGenerator = idGenerator;
+            _blockchainsConfig = appConfig.Blockchains;
         }
 
         public async Task Process(TransactionDetected tx, TransactionProcessingContext processingContext)
@@ -29,29 +32,50 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return;
             }
 
+            var minDepositForConsolidation = 0m;
+            if (processingContext.Blockchain.Protocol.Capabilities.DestinationTag == null &&
+                _blockchainsConfig.TryGetValue(processingContext.Blockchain.Id, out var blockchainConfiguration))
+            {
+                minDepositForConsolidation = blockchainConfiguration.MinDepositForConsolidation;
+            }
+
             var deposits = new List<Deposit>();
 
             foreach (var brokerAccountContext in processingContext.BrokerAccounts)
             {
                 foreach (var accountContext in brokerAccountContext.Accounts)
                 {
-                    foreach (var (assetId, value) in accountContext.Income.Where(x => x.Value> 0))
+                    foreach (var (assetId, value) in accountContext.Income.Where(x => x.Value > 0))
                     {
                         var depositId = await _idGenerator.GetId($"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", IdGenerators.Deposits);
 
-                        var deposit = Deposit.Create(
+                        var deposit = value >= minDepositForConsolidation ? Deposit.Create(
                             depositId,
                             brokerAccountContext.TenantId,
                             tx.BlockchainId,
                             brokerAccountContext.BrokerAccountId,
                             brokerAccountContext.ActiveDetails.Id,
                             accountContext.Details.Id,
-                            new Unit(assetId, value), 
+                            new Unit(assetId, value),
                             processingContext.TransactionInfo,
                             tx.Sources
                                 .Where(x => x.Unit.AssetId == assetId)
                                 .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                                .ToArray());
+                                .ToArray()) :
+                                Deposit.CreateMin(
+                                    depositId,
+                                    brokerAccountContext.TenantId,
+                                    tx.BlockchainId,
+                                    brokerAccountContext.BrokerAccountId,
+                                    brokerAccountContext.ActiveDetails.Id,
+                                    accountContext.Details.Id,
+                                    new Unit(assetId, value),
+                                    processingContext.TransactionInfo,
+                                    tx.Sources
+                                        .Where(x => x.Unit.AssetId == assetId)
+                                        .Select(x => new DepositSource(x.Address, x.Unit.Amount))
+                                        .ToArray())
+                            ;
 
                         processingContext.AddDeposit(deposit);
 
