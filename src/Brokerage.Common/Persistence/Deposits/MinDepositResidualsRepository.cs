@@ -28,7 +28,7 @@ namespace Brokerage.Common.Persistence.Deposits
             var addressesInList = string.Join(", ", idStrings.Select(x => $"('{x}')"));
             var selectQuery = $@"
                     select *, 
-                    {nameof(MinDepositResidualEntity.xmin)}, 
+                    {nameof(MinDepositResidualEntity.xmin)} 
                     from {DatabaseContext.SchemaName}.{Tables.MinDepositResiduals}
                     where ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"" is null and 
                     ""{nameof(MinDepositResidualEntity.NaturalId)}"" in (values {addressesInList})
