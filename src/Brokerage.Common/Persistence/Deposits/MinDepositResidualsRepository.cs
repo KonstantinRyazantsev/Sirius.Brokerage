@@ -27,18 +27,8 @@ namespace Brokerage.Common.Persistence.Deposits
 
             var addressesInList = string.Join(", ", idStrings.Select(x => $"('{x}')"));
             var selectQuery = $@"
-                    select 
-                    ""{nameof(MinDepositResidualEntity.DepositId)}"", 
+                    select *, 
                     {nameof(MinDepositResidualEntity.xmin)}, 
-                    ""{nameof(MinDepositResidualEntity.Address)}"", 
-                    ""{nameof(MinDepositResidualEntity.Amount)}"", 
-                    ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"", 
-                    ""{nameof(MinDepositResidualEntity.BlockchainId)}"", 
-                    ""{nameof(MinDepositResidualEntity.CreatedAt)}"", 
-                    ""{nameof(MinDepositResidualEntity.NaturalId)}"", 
-                    ""{nameof(MinDepositResidualEntity.TagType)}"", 
-                    ""{nameof(MinDepositResidualEntity.Tag)}"", 
-                    ""{nameof(MinDepositResidualEntity.AssetId)}"" 
                     from {DatabaseContext.SchemaName}.{Tables.MinDepositResiduals}
                     where ""{nameof(MinDepositResidualEntity.ConsolidationDepositId)}"" is null and 
                     ""{nameof(MinDepositResidualEntity.NaturalId)}"" in (values {addressesInList})
