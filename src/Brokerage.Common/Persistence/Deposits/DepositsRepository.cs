@@ -151,6 +151,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
                 CreatedAt = deposit.CreatedAt,
                 UpdatedAt = deposit.UpdatedAt,
+                MinDepositForConsolidation = deposit.MinDepositForConsolidation
             };
 
             return depositEntity;
@@ -203,7 +204,8 @@ namespace Brokerage.Common.Persistence.Deposits
                     .Select(x => new DepositSource(x.Address, x.Amount))
                     .ToArray(),
                 depositEntity.CreatedAt.UtcDateTime,
-                depositEntity.UpdatedAt.UtcDateTime);
+                depositEntity.UpdatedAt.UtcDateTime,
+                depositEntity.MinDepositForConsolidation);
 
             return deposit;
         }

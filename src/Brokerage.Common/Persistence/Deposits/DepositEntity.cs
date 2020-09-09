@@ -38,5 +38,7 @@ namespace Brokerage.Common.Persistence.Deposits
         public IReadOnlyCollection<DepositSourceEntity> Sources { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public decimal? MinDepositForConsolidation { get; set; }
     }
 }

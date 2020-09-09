@@ -45,7 +45,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     {
                         var depositId = await _idGenerator.GetId($"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", IdGenerators.Deposits);
 
-                        var deposit = value >= minDepositForConsolidation ? Deposit.Create(
+                        var deposit = Deposit.Create(
                             depositId,
                             brokerAccountContext.TenantId,
                             tx.BlockchainId,
@@ -57,21 +57,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                             tx.Sources
                                 .Where(x => x.Unit.AssetId == assetId)
                                 .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                                .ToArray()) :
-                                Deposit.CreateTiny(
-                                    depositId,
-                                    brokerAccountContext.TenantId,
-                                    tx.BlockchainId,
-                                    brokerAccountContext.BrokerAccountId,
-                                    brokerAccountContext.ActiveDetails.Id,
-                                    accountContext.Details.Id,
-                                    new Unit(assetId, value),
-                                    processingContext.TransactionInfo,
-                                    tx.Sources
-                                        .Where(x => x.Unit.AssetId == assetId)
-                                        .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                                        .ToArray())
-                            ;
+                                .ToArray(),
+                            minDepositForConsolidation);
 
                         processingContext.AddDeposit(deposit);
 

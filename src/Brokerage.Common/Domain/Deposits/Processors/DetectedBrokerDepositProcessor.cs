@@ -61,7 +61,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         tx.Sources
                             .Where(x => x.Unit.AssetId == assetId)
                             .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                            .ToArray());
+                            .ToArray(),
+                        null);
 
                     processingContext.AddDeposit(deposit);
 

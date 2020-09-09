@@ -31,7 +31,8 @@ namespace Brokerage.Common.Domain.Deposits
             DepositState state,
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
-            DateTime updatedAt)
+            DateTime updatedAt,
+            decimal? minDepositForConsolidation)
         {
             Id = id;
             Version = version;
@@ -50,6 +51,7 @@ namespace Brokerage.Common.Domain.Deposits
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;
             ConsolidationOperationId = consolidationOperationId;
+            MinDepositForConsolidation = minDepositForConsolidation;
         }
 
         public long Id { get; }
@@ -70,9 +72,11 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
         public List<object> Events { get; } = new List<object>();
-        
+        public decimal? MinDepositForConsolidation { get; }
         public bool IsBrokerDeposit => AccountDetailsId == null;
-        
+
+        public bool IsTiny => MinDepositForConsolidation.HasValue &&
+                              Unit.Amount < MinDepositForConsolidation;
         public static Deposit Create(
             long id,
             string tenantId,
@@ -82,9 +86,13 @@ namespace Brokerage.Common.Domain.Deposits
             long? accountDetailsId,
             Unit unit,
             TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources)
+            IReadOnlyCollection<DepositSource> sources,
+            decimal? minDepositForConsolidation)
         {
             var createdAt = DateTime.UtcNow;
+            var state = !minDepositForConsolidation.HasValue ||
+                        unit.Amount >= minDepositForConsolidation
+                ? DepositState.Detected : DepositState.DetectedTiny;
             var deposit = new Deposit(
                 id,
                 default,
@@ -99,52 +107,14 @@ namespace Brokerage.Common.Domain.Deposits
                 Array.Empty<Unit>(),
                 transactionInfo,
                 null,
-                DepositState.Detected,
+                state,
                 sources
                     .GroupBy(x => x.Address)
                     .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
                     .ToArray(),
                 createdAt,
-                createdAt);
-
-            deposit.AddDepositUpdatedEvent();
-
-            return deposit;
-        }
-
-        public static Deposit CreateTiny(
-            long id,
-            string tenantId,
-            string blockchainId,
-            long brokerAccountId,
-            long brokerAccountDetailsId,
-            long? accountDetailsId,
-            Unit unit,
-            TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources)
-        {
-            var createdAt = DateTime.UtcNow;
-            var deposit = new Deposit(
-                id,
-                default,
-                0,
-                tenantId,
-                blockchainId,
-                brokerAccountId,
-                brokerAccountDetailsId,
-                accountDetailsId,
-                unit,
-                null,
-                Array.Empty<Unit>(),
-                transactionInfo,
-                null,
-                DepositState.DetectedTiny,
-                sources
-                    .GroupBy(x => x.Address)
-                    .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
-                    .ToArray(),
                 createdAt,
-                createdAt);
+                minDepositForConsolidation);
 
             deposit.AddDepositUpdatedEvent();
 
@@ -168,7 +138,8 @@ namespace Brokerage.Common.Domain.Deposits
             DepositState depositState,
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
-            DateTime updatedAt)
+            DateTime updatedAt,
+            decimal? minDepositForConsolidation)
         {
             return new Deposit(
                 id,
@@ -187,7 +158,8 @@ namespace Brokerage.Common.Domain.Deposits
                 depositState,
                 sources,
                 createdAt,
-                updatedAt);
+                updatedAt,
+                minDepositForConsolidation);
         }
 
         public async Task<Operation> ConfirmRegular(
@@ -204,7 +176,7 @@ namespace Brokerage.Common.Domain.Deposits
             }
 
             // It is still possible(probably due to configuration change)
-            SwitchState(new[] {DepositState.Detected, DepositState.DetectedTiny }, DepositState.Confirmed);
+            SwitchState(new[] {DepositState.Detected, }, DepositState.Confirmed);
 
             var consolidationAmount = new Unit(
                 this.Unit.AssetId,
@@ -228,7 +200,7 @@ namespace Brokerage.Common.Domain.Deposits
             return consolidationOperation;
         }
 
-        public Task<MinDepositResidual> ConfirmMin(
+        public Task<MinDepositResidual> ConfirmTiny(
             AccountDetails accountDetails,
             TransactionConfirmed tx)
         {

@@ -26,8 +26,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             foreach (var deposit in processingContext.Deposits)
             {
-                var minDeposits = minDepositLookup[deposit.Id].ToArray();
                 var assetId = deposit.Unit.AssetId;
+                var minDeposits = minDepositLookup[deposit.Id]
+                    .Where(x => x.Unit.AssetId == assetId)
+                    .ToArray();
                 var distributedFee = evt.ActualFees;
 
                 if (minDeposits.Any())
