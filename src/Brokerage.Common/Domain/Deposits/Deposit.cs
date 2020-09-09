@@ -112,7 +112,7 @@ namespace Brokerage.Common.Domain.Deposits
             return deposit;
         }
 
-        public static Deposit CreateMin(
+        public static Deposit CreateTiny(
             long id,
             string tenantId,
             string blockchainId,
@@ -138,7 +138,7 @@ namespace Brokerage.Common.Domain.Deposits
                 Array.Empty<Unit>(),
                 transactionInfo,
                 null,
-                DepositState.DetectedMin,
+                DepositState.DetectedTiny,
                 sources
                     .GroupBy(x => x.Address)
                     .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
@@ -204,7 +204,7 @@ namespace Brokerage.Common.Domain.Deposits
             }
 
             // It is still possible(probably due to configuration change)
-            SwitchState(new[] {DepositState.Detected, DepositState.DetectedMin }, DepositState.Confirmed);
+            SwitchState(new[] {DepositState.Detected, DepositState.DetectedTiny }, DepositState.Confirmed);
 
             var consolidationAmount = new Unit(
                 this.Unit.AssetId,
@@ -237,7 +237,7 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            SwitchState(new[] { DepositState.DetectedMin }, DepositState.ConfirmedMin);
+            SwitchState(new[] { DepositState.DetectedTiny }, DepositState.ConfirmedTiny);
 
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
             UpdatedAt = DateTime.UtcNow;
@@ -364,8 +364,8 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
-                    DepositState.ConfirmedMin => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedMin,
-                    DepositState.DetectedMin => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedMin,
+                    DepositState.ConfirmedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedTiny,
+                    DepositState.DetectedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedTiny,
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 }
             });

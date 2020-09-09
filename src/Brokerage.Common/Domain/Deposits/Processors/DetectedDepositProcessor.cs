@@ -62,7 +62,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                                 .Where(x => x.Unit.AssetId == assetId)
                                 .Select(x => new DepositSource(x.Address, x.Unit.Amount))
                                 .ToArray()) :
-                                Deposit.CreateMin(
+                                Deposit.CreateTiny(
                                     depositId,
                                     brokerAccountContext.TenantId,
                                     tx.BlockchainId,
