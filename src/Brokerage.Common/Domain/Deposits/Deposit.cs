@@ -60,7 +60,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountDetailsId { get; }
-        public Unit Unit { get; private set; }
+        public Unit Unit { get; }
         public IReadOnlyCollection<Unit> Fees { get; private set; }
         public TransactionInfo TransactionInfo { get; private set; }
         public DepositError Error { get; private set; }
@@ -234,7 +234,7 @@ namespace Brokerage.Common.Domain.Deposits
         {
             if (IsBrokerDeposit)
             {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
+                throw new InvalidOperationException("Can't confirm a broker deposit as a tiny deposit");
             }
 
             SwitchState(new[] { DepositState.DetectedTiny }, DepositState.ConfirmedTiny);
@@ -291,8 +291,10 @@ namespace Brokerage.Common.Domain.Deposits
             AddDepositUpdatedEvent();
         }
 
-        public void AddFeesForMin(IReadOnlyCollection<Unit> fees)
+        public void CompleteTiny(IReadOnlyCollection<Unit> fees)
         {
+            SwitchState(new[] { DepositState.ConfirmedTiny }, DepositState.CompletedTiny);
+
             Fees = fees;
             UpdatedAt = DateTime.UtcNow;
 
@@ -366,6 +368,7 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
                     DepositState.ConfirmedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedTiny,
                     DepositState.DetectedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedTiny,
+                    DepositState.CompletedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.CompletedTiny,
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 }
             });

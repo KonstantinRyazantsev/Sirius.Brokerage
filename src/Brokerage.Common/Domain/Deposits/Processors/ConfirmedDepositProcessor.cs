@@ -30,12 +30,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             }
 
             //Always 0 for tag type blockchains
-            var minDepositForConsolidation = 0m;
-            if (processingContext.Blockchain.Protocol.Capabilities.DestinationTag == null &&
-                _blockchainsConfig.TryGetValue(processingContext.Blockchain.Id, out var blockchainConfiguration))
-            {
-                minDepositForConsolidation = blockchainConfiguration.MinDepositForConsolidation;
-            }
+            var minDepositForConsolidation = TinyDepositsAmountExtractor.GetMinDepositForConsolidation(processingContext.Blockchain,
+                _blockchainsConfig);
 
             var regularDeposits = processingContext.Deposits
                 .Where(x => !x.IsBrokerDeposit)
@@ -73,17 +69,17 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 var prevMinResiduals = processingContext.MinDepositResiduals
                     .ToLookup(x => x.AccountDetailsId);
 
-                var lessThanMinRegularDeposits = regularDeposits
+                var tinyDeposits = regularDeposits
                     .Where(x => x.Unit.Amount < minDepositForConsolidation);
 
                 //Added new residuals
-                foreach (var minDeposit in lessThanMinRegularDeposits)
+                foreach (var tinyDeposit in tinyDeposits)
                 {
-                    var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == minDeposit.BrokerAccountId);
-                    var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == minDeposit.AccountDetailsId);
+                    var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == tinyDeposit.BrokerAccountId);
+                    var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == tinyDeposit.AccountDetailsId);
                     var accountDetails = accountDetailsContext.Details;
 
-                    var minDepositResidual = await minDeposit.ConfirmMin(
+                    var minDepositResidual = await tinyDeposit.ConfirmMin(
                         accountDetails,
                         tx);
 

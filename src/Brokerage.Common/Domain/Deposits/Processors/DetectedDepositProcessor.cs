@@ -32,12 +32,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return;
             }
 
-            var minDepositForConsolidation = 0m;
-            if (processingContext.Blockchain.Protocol.Capabilities.DestinationTag == null &&
-                _blockchainsConfig.TryGetValue(processingContext.Blockchain.Id, out var blockchainConfiguration))
-            {
-                minDepositForConsolidation = blockchainConfiguration.MinDepositForConsolidation;
-            }
+            var minDepositForConsolidation = TinyDepositsAmountExtractor.GetMinDepositForConsolidation(processingContext.Blockchain,
+                _blockchainsConfig);
 
             var deposits = new List<Deposit>();
 

@@ -9,5 +9,6 @@
         Cancelled,
         ConfirmedTiny,
         DetectedTiny,
+        CompletedTiny,
     }
 }

@@ -24,8 +24,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 .Where(x => x.ConsolidationDepositId.HasValue)
                 .ToLookup(x => x.ConsolidationDepositId.Value, y => minDepositDictionary[y.DepositId]);
 
-            //TODO: Fix it? Or should we?
-
             foreach (var deposit in processingContext.Deposits)
             {
                 var minDeposits = minDepositLookup[deposit.Id].ToArray();
@@ -47,7 +45,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                 foreach (var minDeposit in minDeposits)
                 {
-                    minDeposit.AddFeesForMin(distributedFee);
+                    minDeposit.CompleteTiny(distributedFee);
                 }
             }
 
