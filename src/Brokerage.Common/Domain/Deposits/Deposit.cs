@@ -32,7 +32,7 @@ namespace Brokerage.Common.Domain.Deposits
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal? minDepositForConsolidation)
+            decimal minDepositForConsolidation)
         {
             Id = id;
             Version = version;
@@ -72,11 +72,10 @@ namespace Brokerage.Common.Domain.Deposits
         public DateTime UpdatedAt { get; private set; }
         public long? ConsolidationOperationId { get; private set; }
         public List<object> Events { get; } = new List<object>();
-        public decimal? MinDepositForConsolidation { get; }
+        public decimal MinDepositForConsolidation { get; }
         public bool IsBrokerDeposit => AccountDetailsId == null;
 
-        public bool IsTiny => MinDepositForConsolidation.HasValue &&
-                              Unit.Amount < MinDepositForConsolidation;
+        public bool IsTiny => Unit.Amount < MinDepositForConsolidation;
         public static Deposit Create(
             long id,
             string tenantId,
@@ -87,11 +86,10 @@ namespace Brokerage.Common.Domain.Deposits
             Unit unit,
             TransactionInfo transactionInfo,
             IReadOnlyCollection<DepositSource> sources,
-            decimal? minDepositForConsolidation)
+            decimal minDepositForConsolidation)
         {
             var createdAt = DateTime.UtcNow;
-            var state = !minDepositForConsolidation.HasValue ||
-                        unit.Amount >= minDepositForConsolidation
+            var state = unit.Amount >= minDepositForConsolidation
                 ? DepositState.Detected : DepositState.DetectedTiny;
             var deposit = new Deposit(
                 id,
@@ -139,7 +137,7 @@ namespace Brokerage.Common.Domain.Deposits
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal? minDepositForConsolidation)
+            decimal minDepositForConsolidation)
         {
             return new Deposit(
                 id,
@@ -175,7 +173,6 @@ namespace Brokerage.Common.Domain.Deposits
                 throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
             }
 
-            // It is still possible(probably due to configuration change)
             SwitchState(new[] {DepositState.Detected, }, DepositState.Confirmed);
 
             var consolidationAmount = new Unit(

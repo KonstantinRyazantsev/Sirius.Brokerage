@@ -39,6 +39,6 @@ namespace Brokerage.Common.Persistence.Deposits
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
-        public decimal? MinDepositForConsolidation { get; set; }
+        public decimal MinDepositForConsolidation { get; set; }
     }
 }
