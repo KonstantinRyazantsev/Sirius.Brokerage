@@ -6,6 +6,11 @@ namespace Brokerage.Common.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql($@"
+                            UPDATE brokerage.deposits 
+                            SET ""MinDepositForConsolidation"" = 0 
+                            WHERE ""MinDepositForConsolidation"" is null;");
+
             migrationBuilder.AlterColumn<decimal>(
                 name: "MinDepositForConsolidation",
                 schema: "brokerage",
