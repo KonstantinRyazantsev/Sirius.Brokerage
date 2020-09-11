@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Sirius.Sdk.Primitives;
@@ -13,17 +15,20 @@ namespace Brokerage.Worker.Messaging.Consumers
 {
     public class CreateAccountDetailsForTagConsumer : IConsumer<CreateAccountDetailsForTag>
     {
+        private readonly ILogger<CreateAccountDetailsForTagConsumer> _logger;
         private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IIdGenerator _idGenerator;
         private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
 
         public CreateAccountDetailsForTagConsumer(
+            ILogger<CreateAccountDetailsForTagConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             IIdGenerator idGenerator,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
         {
+            _logger = logger;
             _blockchainsRepository = blockchainsRepository;
             _unitOfWorkManager = unitOfWorkManager;
             _idGenerator = idGenerator;
@@ -45,7 +50,15 @@ namespace Brokerage.Worker.Messaging.Consumers
                 var account = await unitOfWork.Accounts.Get(command.AccountId);
                 var brokerAccountDetails = await unitOfWork.BrokerAccountDetails.GetActive(
                     new ActiveBrokerAccountDetailsId(blockchain.Id, account.BrokerAccountId));
-                
+
+                if (brokerAccountDetails == null)
+                {
+                    _logger.LogWarning("No broker account details {@context}", command);
+                    await context.Redeliver(TimeSpan.FromSeconds(30));
+
+                    return;
+                }
+
                 var id = await _idGenerator.GetId($"AccountDetails:{account.Id}:{blockchain.Id}", IdGenerators.AccountDetails);
                 
                 var accountDetails = AccountDetails.Create(

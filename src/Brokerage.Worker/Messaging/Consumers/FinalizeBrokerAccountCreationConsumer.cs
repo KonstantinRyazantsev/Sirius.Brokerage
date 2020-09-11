@@ -14,17 +14,14 @@ namespace Brokerage.Worker.Messaging.Consumers
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
-        private readonly IBlockchainsRepository _blockchainsRepository;
         private readonly IVaultAgentClient _vaultAgentClient;
-        
+
         public FinalizeBrokerAccountCreationConsumer(ILoggerFactory loggerFactory,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
-            IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient)
         {
             _loggerFactory = loggerFactory;
             _unitOfWorkManager = unitOfWorkManager;
-            _blockchainsRepository = blockchainsRepository;
             _vaultAgentClient = vaultAgentClient;
         }
 
@@ -40,7 +37,6 @@ namespace Brokerage.Worker.Messaging.Consumers
 
                 await brokerAccount.FinalizeCreation(
                     _loggerFactory.CreateLogger<BrokerAccount>(),
-                    _blockchainsRepository,
                     _vaultAgentClient);
 
                 foreach (var evt in brokerAccount.Events)

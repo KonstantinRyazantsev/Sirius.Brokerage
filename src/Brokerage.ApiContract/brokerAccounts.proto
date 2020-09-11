@@ -9,6 +9,8 @@ package services;
 
 service BrokerAccounts {
   rpc Create (CreateRequest) returns (CreateResponse);
+
+  rpc AddBlockchain (AddBlockchainRequest) returns (AddBlockchainResponse);
 }
 
 message CreateRequest {
@@ -19,6 +21,18 @@ message CreateRequest {
   string name = 3;
 
   int64 vaultId = 4;
+
+  repeated string blockchain_ids = 5;
+}
+
+message AddBlockchainRequest {
+  string tenantId = 1;
+
+  string requestId = 2;
+
+  int64 broker_account_id = 3;
+
+  repeated string blockchain_ids = 4;
 }
 
 message CreateResponseBody {
@@ -42,9 +56,19 @@ message CreateResponseBody {
   } 
 }
 
+message AddBlockchainResponseBody {
+}
+
 message CreateResponse {
    oneof body{
      CreateResponseBody response = 1;
      common.ErrorResponseBody error = 2;
    }
+}
+
+message AddBlockchainResponse {
+  oneof body{
+    AddBlockchainResponseBody response = 1;
+    common.ErrorResponseBody error = 2;
+  }
 }

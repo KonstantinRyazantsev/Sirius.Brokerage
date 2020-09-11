@@ -14,16 +14,19 @@ namespace Brokerage.Common.Domain.BrokerAccounts
     public class BrokerAccount
     {
         private readonly List<object> _events = new List<object>();
+        private readonly List<object> _commands = new List<object>();
+        private readonly HashSet<string> _blockchainIds = new HashSet<string>();
 
         private BrokerAccount(
-            long id, 
+            long id,
             string name,
-            string tenantId, 
-            DateTime createdAt, 
-            DateTime updatedAt, 
+            string tenantId,
+            DateTime createdAt,
+            DateTime updatedAt,
             BrokerAccountState state,
             long vaultId,
-            long sequence)
+            long sequence,
+            IReadOnlyCollection<string> blockchainIds)
         {
             Id = id;
             Name = name;
@@ -33,8 +36,13 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             State = state;
             VaultId = vaultId;
             Sequence = sequence;
+
+            if (blockchainIds != null && blockchainIds.Any())
+            {
+                _blockchainIds.AddRange(blockchainIds);
+            }
         }
-        
+
         public long Id { get; }
         public string Name { get; }
         public string TenantId { get; }
@@ -42,23 +50,34 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         public DateTime UpdatedAt { get; private set; }
         public BrokerAccountState State { get; private set; }
         public long VaultId { get; }
-        public long Sequence { get; }
+        public long Sequence { get; private set; }
+        public IReadOnlyCollection<string> BlockchainIds => _blockchainIds;
         public IReadOnlyCollection<object> Events => _events;
 
-        public static BrokerAccount Create(long id, string name, string tenantId, long vaultId)
+        public IReadOnlyCollection<object> Commands => _commands;
+
+        public static BrokerAccount Create(long id, string name, string tenantId, long vaultId, IReadOnlyCollection<string> blockchainIds)
         {
             var utcNow = DateTime.UtcNow;
+
+            var state = blockchainIds == null || !blockchainIds.Any() ? BrokerAccountState.Active : BrokerAccountState.Creating;
+
             var brokerAccount = new BrokerAccount(
                 id,
-                name, 
+                name,
                 tenantId,
-                utcNow, 
-                utcNow, 
-                BrokerAccountState.Creating, 
+                utcNow,
+                utcNow,
+                state,
                 vaultId,
-                0);
+                0,
+                blockchainIds);
 
             brokerAccount.AddBrokerAccountUpdatedEvent();
+            brokerAccount._commands.Add(new FinalizeBrokerAccountCreation
+            {
+                BrokerAccountId = brokerAccount.Id
+            });
 
             return brokerAccount;
         }
@@ -71,29 +90,40 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             DateTime updatedAt,
             BrokerAccountState state,
             long vaultId,
-            long sequence)
+            long sequence,
+            IReadOnlyCollection<string> blockchainIds)
         {
             return new BrokerAccount(
-                id, 
-                name, 
-                tenantId, 
-                createdAt, 
-                updatedAt, 
-                state, 
+                id,
+                name,
+                tenantId,
+                createdAt,
+                updatedAt,
+                state,
                 vaultId,
-                sequence);
+                sequence,
+                blockchainIds);
         }
 
-        public void Activate()
+        public void AddBlockchain(IReadOnlyCollection<string> blockchainIds)
         {
-            UpdatedAt = DateTime.UtcNow;
-            State = BrokerAccountState.Active;
-            
-            _events.Add(new BrokerAccountActivated
+            SwitchState(new BrokerAccountState[]
             {
-                BrokerAccountId = Id,
-                UpdatedAt = UpdatedAt
+                BrokerAccountState.Active
+            }, BrokerAccountState.Updating);
+
+            foreach (var blockchainId in blockchainIds)
+            {
+                _blockchainIds.Add(blockchainId);
+            }
+
+            _commands.Add(new AddBlockchainToBrokerAccount()
+            {
+                BlockchainIds = blockchainIds,
+                BrokerAccountId = this.Id
             });
+
+            AddBrokerAccountUpdatedEvent();
         }
 
         public async Task AddBrokerAccountDetails(
@@ -103,7 +133,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             long expectedCount)
         {
             await brokerAccountDetailsRepository.Add(brokerAccountDetails);
-            
+
             _events.Add(new BrokerAccountDetailsAdded
             {
                 BlockchainId = brokerAccountDetails.NaturalId.BlockchainId,
@@ -117,27 +147,68 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             if (accountDetailsCount >= expectedCount)
             {
-                Activate();
-                await brokerAccountsRepository.Update(this);
+                if (State != BrokerAccountState.Updating)
+                {
+                    Activate();
+                    await brokerAccountsRepository.Update(this);
+                }
             }
         }
 
         public async Task FinalizeCreation(ILogger<BrokerAccount> logger,
-            IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient)
         {
             if (State == BrokerAccountState.Creating)
             {
-                await RequestDetailsGeneration(logger, blockchainsRepository, vaultAgentClient);
+                await RequestDetailsGeneration(
+                    logger,
+                    vaultAgentClient,
+                    this.BlockchainIds.Count,
+                    this.BlockchainIds);
             }
         }
-        
-        private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
-            IBlockchainsRepository blockchainsRepository,
-            IVaultAgentClient vaultAgentClient)
+
+        public async Task FinalizeBlockchainAdd(ILogger<BrokerAccount> logger,
+            IVaultAgentClient vaultAgentClient,
+            IReadOnlyCollection<string> blockchainIds)
         {
-            string cursor = null;
-            var expectedCount = await blockchainsRepository.GetCountAsync();
+            if (State == BrokerAccountState.Updating)
+            {
+                await RequestDetailsGeneration(
+                    logger,
+                    vaultAgentClient,
+                    this.BlockchainIds.Count,
+                    blockchainIds);
+            }
+        }
+
+        private void Activate()
+        {
+            SwitchState(new BrokerAccountState[]
+                {
+                    BrokerAccountState.Blocked,
+                    BrokerAccountState.Updating,
+                    BrokerAccountState.Creating
+                },
+                BrokerAccountState.Active);
+
+            _events.Add(new BrokerAccountActivated
+            {
+                BrokerAccountId = Id,
+                UpdatedAt = UpdatedAt
+            });
+        }
+
+        private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
+            IVaultAgentClient vaultAgentClient,
+            int expectedCount,
+            IReadOnlyCollection<string> blockchainIds)
+        {
+            if (!blockchainIds.Any())
+            {
+                return;
+            }
+
             var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
             {
                 AggregateId = Id,
@@ -145,43 +216,44 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 ExpectedCount = expectedCount
             });
 
-            do
+            foreach (var blockchainId in blockchainIds)
             {
-                var blockchains = await blockchainsRepository.GetAllAsync(cursor, 100);
-
-                if (!blockchains.Any())
+                var walletGenerationRequest = new GenerateWalletRequest
                 {
-                    break;
-                }
+                    RequestId = $"Brokerage:BrokerAccountDetails:{Id}:{blockchainId}",
+                    BlockchainId = blockchainId,
+                    TenantId = TenantId,
+                    VaultId = VaultId,
+                    Component = nameof(Brokerage),
+                    Context = requesterContext
+                };
 
-                cursor = blockchains.Last().Id;
+                var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
 
-                foreach (var blockchain in blockchains)
+                if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
                 {
-                    var walletGenerationRequest = new GenerateWalletRequest
+                    logger.LogWarning("Wallet generation failed {@context}", new
                     {
-                        RequestId = $"Brokerage:BrokerAccountDetails:{Id}:{blockchain.Id}",
-                        BlockchainId = blockchain.Id,
-                        TenantId = TenantId,
-                        VaultId = VaultId,
-                        Component = nameof(Brokerage),
-                        Context = requesterContext
-                    };
+                        Request = walletGenerationRequest,
+                        Response = walletGenerationResponse
+                    });
 
-                    var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
-
-                    if (walletGenerationResponse.BodyCase == GenerateWalletResponse.BodyOneofCase.Error)
-                    {
-                        logger.LogWarning("Wallet generation failed {@context}", new
-                        {
-                            Request = walletGenerationRequest,
-                            Response = walletGenerationResponse
-                        });
-
-                        throw new InvalidOperationException($"Wallet generation request has been failed: {walletGenerationResponse.Error.ErrorMessage}");
-                    }
+                    throw new InvalidOperationException($"Wallet generation request has been failed: {walletGenerationResponse.Error.ErrorMessage}");
                 }
-            } while (true);
+            }
+        }
+
+        private void SwitchState(IEnumerable<BrokerAccountState> allowedStates, BrokerAccountState targetState)
+        {
+            if (!allowedStates.Contains(State))
+            {
+                throw new InvalidOperationException($"Can't switch broker account to the {targetState} from the state {State}");
+            }
+
+            UpdatedAt = DateTime.UtcNow;
+            Sequence++;
+
+            State = targetState;
         }
 
         private void AddBrokerAccountUpdatedEvent()
@@ -195,7 +267,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 CreatedAt = CreatedAt,
                 Name = Name,
                 TenantId = TenantId,
-                State = State
+                State = State,
+                BlockchainIds = this.BlockchainIds
             });
         }
     }

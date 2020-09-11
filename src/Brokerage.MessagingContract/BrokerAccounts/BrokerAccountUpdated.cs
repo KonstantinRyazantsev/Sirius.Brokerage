@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts
 {
@@ -12,5 +13,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts
         public BrokerAccountState State { get; set; }
         public long VaultId { get; set; }
         public long Sequence { get; set; }
+
+        public IReadOnlyCollection<string> BlockchainIds { get; set; }
     }
 }
