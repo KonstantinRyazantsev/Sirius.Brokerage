@@ -374,6 +374,19 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasKey(c => c.Id);
 
+            #region Conversions
+
+            modelBuilder.Entity<BrokerAccountEntity>()
+                .Property(e => e.BlockchainIds)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        JsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<ICollection<string>>(v,
+                            JsonSerializingSettings));
+
+            #endregion
+
         }
     }
 }

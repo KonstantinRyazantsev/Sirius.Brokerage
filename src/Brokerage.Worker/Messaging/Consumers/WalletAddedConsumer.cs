@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Limiters;
 using Brokerage.Common.Persistence;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -17,14 +18,17 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly ILogger<WalletAddedConsumer> _logger;
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IIdGenerator _idGenerator;
+        private readonly ConcurrencyLimiter _concurrencyLimiter;
 
         public WalletAddedConsumer(ILogger<WalletAddedConsumer> logger,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
-            IIdGenerator idGenerator)
+            IIdGenerator idGenerator,
+            ConcurrencyLimiter concurrencyLimiter)
         {
             _logger = logger;
             _unitOfWorkManager = unitOfWorkManager;
             _idGenerator = idGenerator;
+            _concurrencyLimiter = concurrencyLimiter;
         }
 
         public async Task Consume(ConsumeContext<WalletAdded> context)
@@ -47,25 +51,88 @@ namespace Brokerage.Worker.Messaging.Consumers
 
             var requesterContext = Newtonsoft.Json.JsonConvert.DeserializeObject<WalletGenerationRequesterContext>(evt.Context);
 
-            switch (requesterContext.AggregateType)
+            switch (requesterContext.WalletGenerationReason)
             {
-                case AggregateType.Account:
+                case WalletGenerationReason.Account:
                     await CreateAccountDetails(evt, requesterContext, context);
                     break;
 
-                case AggregateType.BrokerAccount:
+                case WalletGenerationReason.BrokerAccount:
+                    await CreateBrokerAccountDetails(evt, requesterContext, context);
+                    break;
+
+                case WalletGenerationReason.AccountUpdate:
+                    await CreateAccountDetailsWithinUpdate(evt, requesterContext, context);
+                    break;
+
+                case WalletGenerationReason.BrokerAccountUpdate:
                     await CreateBrokerAccountDetails(evt, requesterContext, context);
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(requesterContext.AggregateType), requesterContext.AggregateType, "");
+                    throw new ArgumentOutOfRangeException(nameof(requesterContext.WalletGenerationReason), requesterContext.WalletGenerationReason, "");
             }
+        }
+
+        private async Task CreateAccountDetailsWithinUpdate(WalletAdded evt,
+            WalletGenerationRequesterContext requesterContext,
+            ConsumeContext<WalletAdded> consumeContext)
+        {
+            using var limit = await _concurrencyLimiter.Enter($"BrokerAccount:{requesterContext.RootId}");
+            await using var unitOfWork = await _unitOfWorkManager.Begin($"AccountDetails:Create:{evt.WalletGenerationRequestId}");
+
+            if (!unitOfWork.Outbox.IsClosed)
+            {
+                var account = await unitOfWork.Accounts.Get(requesterContext.AggregateId);
+                var brokerAccount = await unitOfWork.BrokerAccounts.Get(account.BrokerAccountId);
+
+                var accountDetailsId = await _idGenerator.GetId(unitOfWork.Outbox.IdempotencyId, IdGenerators.AccountDetails);
+                var accountDetails = AccountDetails.Create(
+                    accountDetailsId,
+                    new AccountDetailsId(evt.BlockchainId, evt.Address),
+                    account.Id,
+                    account.BrokerAccountId);
+
+                await account.AddAccountDetails(
+                    unitOfWork.BrokerAccounts,
+                    unitOfWork.AccountDetails,
+                    unitOfWork.Accounts,
+                    accountDetails,
+                    brokerAccount,
+                    requesterContext.ExpectedBlockchainsCount,
+                    requesterContext.ExpectedAccountsCount);
+
+                foreach (var item in account.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
+
+                foreach (var item in account.Events)
+                {
+                    unitOfWork.Outbox.Publish(item);
+                }
+
+                foreach (var item in brokerAccount.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
+
+                foreach (var item in brokerAccount.Events)
+                {
+                    unitOfWork.Outbox.Publish(item);
+                }
+
+                await unitOfWork.Commit();
+            }
+
+            await unitOfWork.EnsureOutboxDispatched(consumeContext);
         }
 
         private async Task CreateAccountDetails(WalletAdded evt,
             WalletGenerationRequesterContext requesterContext,
             ConsumeContext<WalletAdded> consumeContext)
         {
+            using var limit = await _concurrencyLimiter.Enter($"BrokerAccount:{requesterContext.RootId}");
             await using var unitOfWork = await _unitOfWorkManager.Begin($"AccountDetails:Create:{evt.WalletGenerationRequestId}");
 
             if (!unitOfWork.Outbox.IsClosed)
@@ -82,7 +149,12 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.AccountDetails,
                     unitOfWork.Accounts,
                     accountDetails,
-                    requesterContext.ExpectedCount);
+                    requesterContext.ExpectedBlockchainsCount);
+
+                foreach (var item in account.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
 
                 foreach (var item in account.Events)
                 {
@@ -99,6 +171,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             WalletGenerationRequesterContext requesterContext,
             ConsumeContext<WalletAdded> consumeContext)
         {
+            using var limit = await _concurrencyLimiter.Enter($"BrokerAccount:{requesterContext.AggregateId}");
             await using var unitOfWork = await _unitOfWorkManager.Begin($"BrokerAccountDetails:Create:{evt.WalletGenerationRequestId}");
 
             if (!unitOfWork.Outbox.IsClosed)
@@ -115,7 +188,13 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.BrokerAccountDetails,
                     unitOfWork.BrokerAccounts,
                     brokerAccountDetails,
-                    requesterContext.ExpectedCount);
+                    requesterContext.ExpectedBlockchainsCount,
+                    requesterContext.ExpectedAccountsCount);
+
+                foreach (var item in brokerAccount.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
 
                 foreach (var item in brokerAccount.Events)
                 {

@@ -130,7 +130,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IBrokerAccountsRepository brokerAccountsRepository,
             BrokerAccountDetails brokerAccountDetails,
-            long expectedCount)
+            long expectedBlockchainsCount,
+            int expectedAccountsCount)
         {
             await brokerAccountDetailsRepository.Add(brokerAccountDetails);
 
@@ -145,9 +146,10 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var accountDetailsCount = await brokerAccountDetailsRepository.GetCountByBrokerAccountId(Id);
 
-            if (accountDetailsCount >= expectedCount)
+            //TODO: fix issue with isolation levels during Activation
+            if (accountDetailsCount >= expectedBlockchainsCount)
             {
-                if (State != BrokerAccountState.Updating)
+                if (State != BrokerAccountState.Updating || expectedAccountsCount == 0)
                 {
                     Activate();
                     await brokerAccountsRepository.Update(this);
@@ -160,29 +162,46 @@ namespace Brokerage.Common.Domain.BrokerAccounts
         {
             if (State == BrokerAccountState.Creating)
             {
+                var requesterContext = new WalletGenerationRequesterContext
+                {
+                    AggregateId = Id,
+                    WalletGenerationReason = WalletGenerationReason.BrokerAccount,
+                    ExpectedBlockchainsCount = this.BlockchainIds.Count,
+                    ExpectedAccountsCount = 0
+                };
+
                 await RequestDetailsGeneration(
                     logger,
                     vaultAgentClient,
-                    this.BlockchainIds.Count,
-                    this.BlockchainIds);
+                    this.BlockchainIds,
+                    requesterContext);
             }
         }
 
         public async Task FinalizeBlockchainAdd(ILogger<BrokerAccount> logger,
             IVaultAgentClient vaultAgentClient,
-            IReadOnlyCollection<string> blockchainIds)
+            IReadOnlyCollection<string> blockchainIds,
+            int expectedAccountsCount)
         {
             if (State == BrokerAccountState.Updating)
             {
+                var requesterContext = new WalletGenerationRequesterContext
+                {
+                    AggregateId = Id,
+                    WalletGenerationReason = WalletGenerationReason.BrokerAccount,
+                    ExpectedBlockchainsCount = this.BlockchainIds.Count,
+                    ExpectedAccountsCount = expectedAccountsCount
+                };
+
                 await RequestDetailsGeneration(
                     logger,
                     vaultAgentClient,
-                    this.BlockchainIds.Count,
-                    blockchainIds);
+                    blockchainIds,
+                    requesterContext);
             }
         }
 
-        private void Activate()
+        public void Activate()
         {
             SwitchState(new BrokerAccountState[]
                 {
@@ -201,20 +220,15 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
         private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
             IVaultAgentClient vaultAgentClient,
-            int expectedCount,
-            IReadOnlyCollection<string> blockchainIds)
+            IReadOnlyCollection<string> blockchainIds,
+            WalletGenerationRequesterContext walletGenerationRequesterContext)
         {
             if (!blockchainIds.Any())
             {
                 return;
             }
 
-            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
-            {
-                AggregateId = Id,
-                AggregateType = AggregateType.BrokerAccount,
-                ExpectedCount = expectedCount
-            });
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(walletGenerationRequesterContext);
 
             foreach (var blockchainId in blockchainIds)
             {

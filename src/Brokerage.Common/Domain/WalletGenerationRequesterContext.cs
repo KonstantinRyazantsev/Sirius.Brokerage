@@ -3,7 +3,11 @@
     public class WalletGenerationRequesterContext
     {
         public long AggregateId { get; set; }
-        public AggregateType AggregateType { get; set; }
-        public long ExpectedCount { get; set; }
+
+        public long RootId { get; set; }
+        public WalletGenerationReason WalletGenerationReason { get; set; }
+        public long ExpectedBlockchainsCount { get; set; }
+
+        public int ExpectedAccountsCount { get; set; }
     }
 }

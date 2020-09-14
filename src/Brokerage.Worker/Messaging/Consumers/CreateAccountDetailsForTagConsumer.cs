@@ -48,6 +48,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                 var tagGenerator = _destinationTagGeneratorFactory.Create(blockchain);
                 var tag = tagGenerator.Generate();
                 var account = await unitOfWork.Accounts.Get(command.AccountId);
+                var brokerAccount = await unitOfWork.BrokerAccounts.Get(account.BrokerAccountId);
                 var brokerAccountDetails = await unitOfWork.BrokerAccountDetails.GetActive(
                     new ActiveBrokerAccountDetailsId(blockchain.Id, account.BrokerAccountId));
 
@@ -71,10 +72,13 @@ namespace Brokerage.Worker.Messaging.Consumers
                     account.BrokerAccountId);
 
                 await account.AddAccountDetails(
+                    unitOfWork.BrokerAccounts,
                     unitOfWork.AccountDetails,
                     unitOfWork.Accounts,
                     accountDetails,
-                    command.ExpectedCount);
+                    brokerAccount,
+                    command.ExpectedBlockchainsCount,
+                    command.ExpectedAccountsCount);
 
                 foreach (var item in account.Events)
                 {

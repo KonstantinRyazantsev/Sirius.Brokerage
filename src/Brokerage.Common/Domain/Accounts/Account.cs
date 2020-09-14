@@ -6,9 +6,11 @@ using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Tags;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.Blockchains;
+using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.ReadModels.Blockchains;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 using Swisschain.Sirius.VaultAgent.ApiClient;
 using Swisschain.Sirius.VaultAgent.ApiContract.Wallets;
 
@@ -104,45 +106,71 @@ namespace Brokerage.Common.Domain.Accounts
             BrokerAccount brokerAccount,
             IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
-            IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
+            IAccountsRepository accountsRepository)
         {
             if (State == AccountState.Creating)
             {
                 var blockchains = await blockchainsRepository.GetByIds(brokerAccount.BlockchainIds);
+
+                if (!blockchains.Any())
+                {
+                    Activate();
+                    await accountsRepository.Update(this);
+
+                    return;
+                }
+
+                var walletGenerationRequesterContext = new WalletGenerationRequesterContext
+                {
+                    RootId = brokerAccount.Id,
+                    AggregateId = Id,
+                    WalletGenerationReason = WalletGenerationReason.Account,
+                    ExpectedBlockchainsCount = brokerAccount.BlockchainIds.Count
+                };
+
                 await RequestDetailsGeneration(
                     logger,
                     brokerAccount,
                     vaultAgentClient,
                     destinationTagGeneratorFactory,
-                    brokerAccount.BlockchainIds.Count,
-                    blockchains
+                    blockchains,
+                    walletGenerationRequesterContext
                 );
             }
         }
 
-        public async Task FinalizeBrokerUpdate(
+        public async Task AddBlockchains(
             ILogger<Account> logger,
             BrokerAccount brokerAccount,
-            IBlockchainsRepository blockchainsRepository,
             IVaultAgentClient vaultAgentClient,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            IReadOnlyCollection<string> blockchainIds)
+            IReadOnlyCollection<Blockchain> blockchains,
+            int expectedAccountsCount)
         {
-            var blockchains = await blockchainsRepository.GetByIds(blockchainIds);
+            var walletGenerationContext = new WalletGenerationRequesterContext()
+            {
+                RootId = brokerAccount.Id,
+                AggregateId = this.Id,
+                WalletGenerationReason = WalletGenerationReason.AccountUpdate,
+                ExpectedBlockchainsCount = brokerAccount.BlockchainIds.Count,
+                ExpectedAccountsCount = expectedAccountsCount
+            };
+
             await RequestDetailsGeneration(
                 logger,
                 brokerAccount,
                 vaultAgentClient,
                 destinationTagGeneratorFactory,
-                brokerAccount.BlockchainIds.Count,
-                blockchains);
+                blockchains,
+                walletGenerationContext);
         }
 
         public async Task AddAccountDetails(
             IAccountDetailsRepository accountDetailsRepository,
             IAccountsRepository accountsRepository,
             AccountDetails accountDetails,
-            long expectedCount)
+            long expectedBlockchainsCount)
         {
             await accountDetailsRepository.Add(accountDetails);
 
@@ -150,10 +178,42 @@ namespace Brokerage.Common.Domain.Accounts
 
             var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
 
-            if (accountDetailsCount >= expectedCount)
+            if (accountDetailsCount >= expectedBlockchainsCount)
             {
                 Activate();
                 await accountsRepository.Update(this);
+            }
+        }
+
+        public async Task AddAccountDetails(
+            IBrokerAccountsRepository brokerAccountsRepository,
+            IAccountDetailsRepository accountDetailsRepository,
+            IAccountsRepository accountsRepository,
+            AccountDetails accountDetails,
+            BrokerAccount brokerAccount,
+            long expectedBlockchainsCount,
+            long expectedAccountsCount)
+        {
+            await accountDetailsRepository.Add(accountDetails);
+
+            _events.Add(GetAccountDetailsAddedEvent(accountDetails));
+
+            var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
+
+            //TODO: fix issue with isolation levels during Activation
+            if (accountDetailsCount >= expectedBlockchainsCount)
+            {
+                Activate();
+                await accountsRepository.Update(this);
+            }
+
+            var accountsCount = await accountsRepository.GetCountForBrokerId(brokerAccount.Id, AccountState.Active);
+
+            //TODO: fix issue with isolation levels during Activation
+            if (brokerAccount.State == BrokerAccountState.Updating && accountsCount >= expectedAccountsCount)
+            {
+                brokerAccount.Activate();
+                await brokerAccountsRepository.Update(brokerAccount);
             }
         }
 
@@ -170,20 +230,10 @@ namespace Brokerage.Common.Domain.Accounts
             BrokerAccount brokerAccount,
             IVaultAgentClient vaultAgentClient,
             IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
-            int expectedCount,
-            IReadOnlyCollection<Blockchain> blockchains)
+            IReadOnlyCollection<Blockchain> blockchains,
+            WalletGenerationRequesterContext walletGenerationRequesterContext)
         {
-            if (!blockchains.Any())
-            {
-                return;
-            }
-
-            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(new WalletGenerationRequesterContext
-            {
-                AggregateId = Id,
-                AggregateType = AggregateType.Account,
-                ExpectedCount = expectedCount
-            });
+            var requesterContext = Newtonsoft.Json.JsonConvert.SerializeObject(walletGenerationRequesterContext);
 
             foreach (var blockchainId in blockchains)
             {
@@ -195,7 +245,8 @@ namespace Brokerage.Common.Domain.Accounts
                     {
                         AccountId = Id,
                         BlockchainId = blockchainId.Id,
-                        ExpectedCount = expectedCount
+                        ExpectedBlockchainsCount = walletGenerationRequesterContext.ExpectedBlockchainsCount,
+                        ExpectedAccountsCount = walletGenerationRequesterContext.ExpectedAccountsCount
                     });
 
                     continue;

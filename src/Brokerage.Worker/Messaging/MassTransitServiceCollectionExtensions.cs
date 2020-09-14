@@ -1,6 +1,7 @@
 ﻿using System;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain.Accounts;
+using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Worker.Messaging.Consumers;
 using GreenPipes;
 using MassTransit;
@@ -27,6 +28,9 @@ namespace Brokerage.Worker.Messaging
             services.AddTransient<ExecuteWithdrawalConsumer>();
             services.AddTransient<WalletAddedConsumer>();
             services.AddTransient<CreateAccountDetailsForTagConsumer>();
+            services.AddTransient<AddBlockchainsToAccountsConsumer>();
+            services.AddTransient<AddBlockchainToBrokerAccountConsumer>();
+            
 
             ConfigureCommands();
 
@@ -60,6 +64,8 @@ namespace Brokerage.Worker.Messaging
         private static void ConfigureCommands()
         {
             EndpointConvention.Map<CreateAccountDetailsForTag>(new Uri("queue:sirius-brokerage-create-account-details-for-tag"));
+            EndpointConvention.Map<AddBlockchainToBrokerAccount>(new Uri("queue:sirius-brokerage-add-blockchains-to-broker-account"));
+            EndpointConvention.Map<AddBlockchainsToAccounts>(new Uri("queue:sirius-brokerage-add-blockchains-to-accounts"));
         }
 
         private static void ConfigureReceivingEndpoints(IRabbitMqBusFactoryConfigurator cfg, IBusRegistrationContext context)
@@ -131,6 +137,16 @@ namespace Brokerage.Worker.Messaging
             cfg.ReceiveEndpoint("sirius-brokerage-wallet-added", e =>
             {
                 e.Consumer(context.GetRequiredService<WalletAddedConsumer>);
+            });
+
+            cfg.ReceiveEndpoint("sirius-brokerage-add-blockchains-to-broker-account", e =>
+            {
+                e.Consumer(context.GetRequiredService<AddBlockchainToBrokerAccountConsumer>);
+            });
+
+            cfg.ReceiveEndpoint("sirius-brokerage-add-blockchains-to-accounts", e =>
+            {
+                e.Consumer(context.GetRequiredService<AddBlockchainsToAccountsConsumer>);
             });
         }
     }

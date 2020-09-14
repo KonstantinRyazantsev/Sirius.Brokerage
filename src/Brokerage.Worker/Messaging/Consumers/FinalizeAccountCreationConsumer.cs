@@ -49,7 +49,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     brokerAccount,
                     _blockchainsRepository,
                     _vaultAgentClient,
-                    _destinationTagGeneratorFactory);
+                    _destinationTagGeneratorFactory,
+                    unitOfWork.Accounts);
 
                 foreach (var evt in account.Commands)
                 {

@@ -76,6 +76,7 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 BrokerAccountState.Active => BrokerAccountStateEnum.Active,
                 BrokerAccountState.Blocked => BrokerAccountStateEnum.Blocked,
                 BrokerAccountState.Creating => BrokerAccountStateEnum.Creating,
+                BrokerAccountState.Updating => BrokerAccountStateEnum.Updating,
 
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -89,7 +90,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 UpdatedAt = brokerAccount.UpdatedAt,
                 VaultId = brokerAccount.VaultId,
                 Id = brokerAccount.Id,
-                Sequence = brokerAccount.Sequence
+                Sequence = brokerAccount.Sequence,
+                BlockchainIds = brokerAccount.BlockchainIds.ToHashSet()
             };
             return newEntity;
         }
@@ -101,6 +103,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 BrokerAccountStateEnum.Active => BrokerAccountState.Active,
                 BrokerAccountStateEnum.Blocked => BrokerAccountState.Blocked,
                 BrokerAccountStateEnum.Creating => BrokerAccountState.Creating,
+                BrokerAccountStateEnum.Updating => BrokerAccountState.Updating,
+
                 _ => throw new ArgumentOutOfRangeException($"{brokerAccountEntity.State} is not processed")
             };
 
@@ -112,7 +116,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
                 brokerAccountEntity.UpdatedAt.UtcDateTime,
                 state,
                 brokerAccountEntity.VaultId,
-                brokerAccountEntity.Sequence
+                brokerAccountEntity.Sequence,
+                brokerAccountEntity.BlockchainIds.ToArray()
             );
 
             return brokerAccount;

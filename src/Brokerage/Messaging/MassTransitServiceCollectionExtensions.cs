@@ -49,6 +49,8 @@ namespace Brokerage.Messaging
             EndpointConvention.Map<PublishAccountDetails>(new Uri("queue:sirius-brokerage-publish-account-details"));
             EndpointConvention.Map<ExecuteWithdrawal>(new Uri("queue:sirius-brokerage-execute-withdrawal"));
             EndpointConvention.Map<CreateAccountDetailsForTag>(new Uri("queue:sirius-brokerage-create-account-details-for-tag"));
+            EndpointConvention.Map<AddBlockchainToBrokerAccount>(new Uri("queue:sirius-brokerage-add-blockchains-to-broker-account"));
+            EndpointConvention.Map<AddBlockchainsToAccounts>(new Uri("queue:sirius-brokerage-add-blockchains-to-accounts"));
         }
     }
 }
