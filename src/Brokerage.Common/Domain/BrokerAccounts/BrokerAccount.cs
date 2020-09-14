@@ -214,7 +214,8 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             _events.Add(new BrokerAccountActivated
             {
                 BrokerAccountId = Id,
-                UpdatedAt = UpdatedAt
+                UpdatedAt = UpdatedAt,
+                Sequence = Sequence
             });
         }
 

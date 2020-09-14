@@ -6,5 +6,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts
     {
         public long BrokerAccountId { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public long Sequence { get; set; }
     }
 }
