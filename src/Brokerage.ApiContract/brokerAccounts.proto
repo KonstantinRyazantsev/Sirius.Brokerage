@@ -13,6 +13,13 @@ service BrokerAccounts {
   rpc AddBlockchain (AddBlockchainRequest) returns (AddBlockchainResponse);
 }
 
+enum BrokerAccountStatus {
+  CREATING = 0;
+  ACTIVE = 1;
+  BLOCKED = 2;
+  UPDATING = 3;
+} 
+
 message CreateRequest {
   string tenantId = 1;
 
@@ -50,16 +57,22 @@ message CreateResponseBody {
   int64 vaultId = 6;
 
   repeated string blockchain_ids = 7;
-
-  enum BrokerAccountStatus {
-    CREATING = 0;
-    ACTIVE = 1;
-    BLOCKED = 2;
-    UPDATING = 3;
-  } 
 }
 
 message AddBlockchainResponseBody {
+  int64 id = 1;
+
+  string name = 2;
+
+  BrokerAccountStatus status = 3;
+
+  google.protobuf.Timestamp createdAt = 4;
+
+  google.protobuf.Timestamp updatedAt = 5;
+
+  int64 vaultId = 6;
+
+  repeated string blockchain_ids = 7;
 }
 
 message CreateResponse {

@@ -241,6 +241,15 @@ namespace Brokerage.GrpcServices
                     unitOfWork.Outbox.Return(new AddBlockchainResponse
                     {
                         Response = new AddBlockchainResponseBody()
+                        {
+                            VaultId = brokerAccount.VaultId,
+                            CreatedAt = Timestamp.FromDateTime(brokerAccount.CreatedAt),
+                            UpdatedAt = Timestamp.FromDateTime(brokerAccount.UpdatedAt),
+                            Name = brokerAccount.Name,
+                            BlockchainIds = { brokerAccount.BlockchainIds },
+                            Id = brokerAccount.Id,
+                            Status = MapToResponse(brokerAccount.State)
+                        }
                     });
 
                     await unitOfWork.Commit();
@@ -270,14 +279,14 @@ namespace Brokerage.GrpcServices
             }
         }
 
-        private static CreateResponseBody.Types.BrokerAccountStatus MapToResponse(BrokerAccountState resultState)
+        private static BrokerAccountStatus MapToResponse(BrokerAccountState resultState)
         {
             var result = resultState switch
             {
-                BrokerAccountState.Creating => CreateResponseBody.Types.BrokerAccountStatus.Creating,
-                BrokerAccountState.Active => CreateResponseBody.Types.BrokerAccountStatus.Active,
-                BrokerAccountState.Blocked => CreateResponseBody.Types.BrokerAccountStatus.Blocked,
-                BrokerAccountState.Updating => CreateResponseBody.Types.BrokerAccountStatus.Updating,
+                BrokerAccountState.Creating => BrokerAccountStatus.Creating,
+                BrokerAccountState.Active =>   BrokerAccountStatus.Active,
+                BrokerAccountState.Blocked =>  BrokerAccountStatus.Blocked,
+                BrokerAccountState.Updating => BrokerAccountStatus.Updating,
                 _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
             };
 
