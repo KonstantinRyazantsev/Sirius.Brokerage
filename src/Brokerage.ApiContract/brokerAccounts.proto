@@ -49,6 +49,8 @@ message CreateResponseBody {
 
   int64 vaultId = 6;
 
+  repeated string blockchain_ids = 7;
+
   enum BrokerAccountStatus {
     CREATING = 0;
     ACTIVE = 1;
