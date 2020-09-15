@@ -57,6 +57,8 @@ message CreateResponseBody {
   int64 vaultId = 6;
 
   repeated string blockchain_ids = 7;
+
+  int64 sequence = 8;
 }
 
 message AddBlockchainResponseBody {
@@ -73,6 +75,8 @@ message AddBlockchainResponseBody {
   int64 vaultId = 6;
 
   repeated string blockchain_ids = 7;
+
+  int64 sequence = 8;
 }
 
 message CreateResponse {

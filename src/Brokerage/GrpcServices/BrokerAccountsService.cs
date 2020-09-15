@@ -98,7 +98,8 @@ namespace Brokerage.GrpcServices
                             CreatedAt = Timestamp.FromDateTime(brokerAccount.CreatedAt),
                             UpdatedAt = Timestamp.FromDateTime(brokerAccount.UpdatedAt),
                             VaultId = brokerAccount.VaultId,
-                            BlockchainIds = { brokerAccount.BlockchainIds }
+                            BlockchainIds = { brokerAccount.BlockchainIds },
+                            Sequence = brokerAccount.Sequence
                         }
                     });
 
@@ -248,7 +249,8 @@ namespace Brokerage.GrpcServices
                             Name = brokerAccount.Name,
                             BlockchainIds = { brokerAccount.BlockchainIds },
                             Id = brokerAccount.Id,
-                            Status = MapToResponse(brokerAccount.State)
+                            Status = MapToResponse(brokerAccount.State),
+                            Sequence = brokerAccount.Sequence
                         }
                     });
 
