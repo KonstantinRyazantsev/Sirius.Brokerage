@@ -97,7 +97,8 @@ namespace Brokerage.GrpcServices
                             Status = MapToResponse(brokerAccount.State),
                             CreatedAt = Timestamp.FromDateTime(brokerAccount.CreatedAt),
                             UpdatedAt = Timestamp.FromDateTime(brokerAccount.UpdatedAt),
-                            VaultId = brokerAccount.VaultId
+                            VaultId = brokerAccount.VaultId,
+                            BlockchainIds = { brokerAccount.BlockchainIds }
                         }
                     });
 
@@ -240,7 +241,6 @@ namespace Brokerage.GrpcServices
                     unitOfWork.Outbox.Return(new AddBlockchainResponse
                     {
                         Response = new AddBlockchainResponseBody()
-
                     });
 
                     await unitOfWork.Commit();
@@ -277,6 +277,7 @@ namespace Brokerage.GrpcServices
                 BrokerAccountState.Creating => CreateResponseBody.Types.BrokerAccountStatus.Creating,
                 BrokerAccountState.Active => CreateResponseBody.Types.BrokerAccountStatus.Active,
                 BrokerAccountState.Blocked => CreateResponseBody.Types.BrokerAccountStatus.Blocked,
+                BrokerAccountState.Updating => CreateResponseBody.Types.BrokerAccountStatus.Updating,
                 _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
             };
 
