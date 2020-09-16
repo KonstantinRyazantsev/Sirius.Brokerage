@@ -68,16 +68,7 @@ namespace Brokerage.Common.Domain.Accounts
                 createdAt,
                 0);
 
-            account._events.Add(new AccountUpdated()
-            {
-                BrokerAccountId = account.BrokerAccountId,
-                CreatedAt = account.CreatedAt,
-                AccountId = account.Id,
-                Sequence = account.Sequence,
-                UpdatedAt = account.UpdatedAt,
-                State = account.State,
-                ReferenceId = account.ReferenceId
-            });
+            account.AddAccountUpdatedEvent();
 
             return account;
         }
@@ -200,17 +191,15 @@ namespace Brokerage.Common.Domain.Accounts
 
             var accountDetailsCount = await accountDetailsRepository.GetCountByAccountId(Id);
 
-            //TODO: fix issue with isolation levels during Activation
             if (accountDetailsCount >= expectedBlockchainsCount)
             {
                 Activate();
                 await accountsRepository.Update(this);
             }
 
-            var accountsCount = await accountsRepository.GetCountForBrokerId(brokerAccount.Id, AccountState.Active);
-
-            //TODO: fix issue with isolation levels during Activation
-            if (brokerAccount.State == BrokerAccountState.Updating && accountsCount >= expectedAccountsCount)
+            var accountDetailsCountForBrokerAccount = await accountDetailsRepository.GetCountForBrokerAccountId(brokerAccount.Id);
+            var expectedDetailsCount = expectedAccountsCount * expectedBlockchainsCount;
+            if (brokerAccount.State == BrokerAccountState.Updating && accountDetailsCountForBrokerAccount >= expectedDetailsCount)
             {
                 brokerAccount.Activate();
                 await brokerAccountsRepository.Update(brokerAccount);
@@ -219,10 +208,14 @@ namespace Brokerage.Common.Domain.Accounts
 
         private void Activate()
         {
-            State = AccountState.Active;
-            UpdatedAt = DateTime.UtcNow;
+            if (State == AccountState.Creating ||
+                State == AccountState.Blocked)
+            {
+                State = AccountState.Active;
+                UpdatedAt = DateTime.UtcNow;
 
-            _events.Add(GetAccountActivatedEvent(UpdatedAt));
+                AddAccountUpdatedEvent();
+            }
         }
 
         private async Task RequestDetailsGeneration(
@@ -277,15 +270,6 @@ namespace Brokerage.Common.Domain.Accounts
             }
         }
 
-        private AccountActivated GetAccountActivatedEvent(DateTime activationDateTime)
-        {
-            return new AccountActivated
-            {
-                UpdatedAt = activationDateTime,
-                AccountId = Id
-            };
-        }
-
         private static AccountDetailsAdded GetAccountDetailsAddedEvent(AccountDetails details)
         {
             return new AccountDetailsAdded
@@ -298,6 +282,21 @@ namespace Brokerage.Common.Domain.Accounts
                 AccountId = details.AccountId,
                 AccountDetailsId = details.Id
             };
+        }
+
+        private void AddAccountUpdatedEvent()
+        {
+            this._events.Add(
+                new AccountUpdated()
+                {
+                    BrokerAccountId = BrokerAccountId,
+                    CreatedAt = CreatedAt,
+                    AccountId = Id,
+                    Sequence = Sequence,
+                    UpdatedAt = UpdatedAt,
+                    State = State,
+                    ReferenceId = ReferenceId
+                });
         }
     }
 }

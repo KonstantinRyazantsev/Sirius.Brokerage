@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccounts;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
@@ -146,7 +145,6 @@ namespace Brokerage.Common.Domain.BrokerAccounts
 
             var accountDetailsCount = await brokerAccountDetailsRepository.GetCountByBrokerAccountId(Id);
 
-            //TODO: fix issue with isolation levels during Activation
             if (accountDetailsCount >= expectedBlockchainsCount)
             {
                 if (State != BrokerAccountState.Updating || expectedAccountsCount == 0)
@@ -211,12 +209,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 },
                 BrokerAccountState.Active);
 
-            _events.Add(new BrokerAccountActivated
-            {
-                BrokerAccountId = Id,
-                UpdatedAt = UpdatedAt,
-                Sequence = Sequence
-            });
+            AddBrokerAccountUpdatedEvent();
         }
 
         private async Task RequestDetailsGeneration(ILogger<BrokerAccount> logger,
@@ -283,7 +276,7 @@ namespace Brokerage.Common.Domain.BrokerAccounts
                 Name = Name,
                 TenantId = TenantId,
                 State = State,
-                BlockchainIds = this.BlockchainIds
+                BlockchainIds = BlockchainIds
             });
         }
     }

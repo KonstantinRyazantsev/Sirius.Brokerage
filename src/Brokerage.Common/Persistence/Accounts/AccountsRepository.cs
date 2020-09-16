@@ -59,7 +59,7 @@ namespace Brokerage.Common.Persistence.Accounts
                 .ToArray();
         }
 
-        public async Task<int> GetCountForBrokerId(long brokerAccountId, AccountState? accountState)
+        public async Task<int> GetCountForBrokerAccountId(long brokerAccountId, AccountState? accountState)
         {
             var state = accountState.HasValue ? accountState.Value switch
             {

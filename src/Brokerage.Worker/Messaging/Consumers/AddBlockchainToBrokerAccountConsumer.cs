@@ -48,7 +48,7 @@ namespace Brokerage.Worker.Messaging.Consumers
             if (!unitOfWork.Outbox.IsClosed)
             {
                 var brokerAccount = await unitOfWork.BrokerAccounts.Get(command.BrokerAccountId);
-                var expectedAccountsCount = await unitOfWork.Accounts.GetCountForBrokerId(brokerAccount.Id);
+                var expectedAccountsCount = await unitOfWork.Accounts.GetCountForBrokerAccountId(brokerAccount.Id);
 
                 await brokerAccount.FinalizeBlockchainAdd(
                     _loggerFactory.CreateLogger<BrokerAccount>(),

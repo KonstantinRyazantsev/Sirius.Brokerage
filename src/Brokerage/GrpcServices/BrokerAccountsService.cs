@@ -53,12 +53,14 @@ namespace Brokerage.GrpcServices
 
                     if (blockchains.Count != blockchainIds.Length)
                     {
+                        var notSupportedIds = blockchainIds.Except(blockchains.Select(x => x.Id)).ToArray();
+                        var joinedString = string.Join(',', notSupportedIds);
                         var errorResponse = new CreateResponse
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
                                 ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotValid,
-                                ErrorMessage = "Given list of blockchains contains unsupported blockchain"
+                                ErrorMessage = $"Given list of blockchains contains unsupported blockchain {joinedString}"
                             }
                         };
 
@@ -156,12 +158,15 @@ namespace Brokerage.GrpcServices
 
                     if (blockchains.Count != blockchainIds.Length)
                     {
+                        var notSupportedIds = blockchainIds.Except(blockchains.Select(x => x.Id)).ToArray();
+                        var joinedString = string.Join(',', notSupportedIds);
+
                         var errorResponse = new AddBlockchainResponse
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
                                 ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotValid,
-                                ErrorMessage = "Given list of blockchains contains unsupported blockchain"
+                                ErrorMessage = $"Given list of blockchains contains unsupported blockchain {joinedString}"
                             }
                         };
 
@@ -196,8 +201,8 @@ namespace Brokerage.GrpcServices
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
-                               ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
-                               ErrorMessage = "Not authorized to perform action"
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotAuthorized,
+                                ErrorMessage = "Not authorized to perform action"
                             }
                         };
 
@@ -207,18 +212,19 @@ namespace Brokerage.GrpcServices
                         return errorResponse;
                     }
 
-                    try
+                    if (brokerAccount.State == BrokerAccountState.Active)
                     {
                         brokerAccount.AddBlockchain(request.BlockchainIds);
                     }
-                    catch (InvalidOperationException e)
+                    else
                     {
                         var errorResponse = new AddBlockchainResponse
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
                                 ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.Transient,
-                                ErrorMessage = e.Message
+                                ErrorMessage = $"Broker account expected to be in {BrokerAccountState.Active}, " +
+                                               $"current state is {brokerAccount.State}"
                             }
                         };
 
@@ -261,11 +267,6 @@ namespace Brokerage.GrpcServices
 
                 var response = unitOfWork.Outbox.GetResponse<AddBlockchainResponse>();
 
-                if (response.BodyCase == AddBlockchainResponse.BodyOneofCase.Error)
-                {
-                    return response;
-                }
-
                 return response;
             }
             catch (Exception e)
@@ -286,8 +287,8 @@ namespace Brokerage.GrpcServices
             var result = resultState switch
             {
                 BrokerAccountState.Creating => BrokerAccountStatus.Creating,
-                BrokerAccountState.Active =>   BrokerAccountStatus.Active,
-                BrokerAccountState.Blocked =>  BrokerAccountStatus.Blocked,
+                BrokerAccountState.Active => BrokerAccountStatus.Active,
+                BrokerAccountState.Blocked => BrokerAccountStatus.Blocked,
                 BrokerAccountState.Updating => BrokerAccountStatus.Updating,
                 _ => throw new ArgumentOutOfRangeException(nameof(resultState), resultState, null)
             };

@@ -12,6 +12,6 @@ namespace Brokerage.Common.Persistence.Accounts
         Task Add(Account account);
         Task Update(Account account);
         Task<IReadOnlyCollection<Account>> GetForBrokerAccount(long brokerAccountId, long cursor, int limit);
-        Task<int> GetCountForBrokerId(long brokerAccountId, AccountState? accountState = null);
+        Task<int> GetCountForBrokerAccountId(long brokerAccountId, AccountState? accountState = null);
     }
 }

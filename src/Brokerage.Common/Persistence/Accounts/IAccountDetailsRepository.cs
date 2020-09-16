@@ -11,5 +11,6 @@ namespace Brokerage.Common.Persistence.Accounts
         Task<AccountDetails> Get(long id);
         Task Add(AccountDetails details);
         Task<long> GetCountByAccountId(long accountId);
+        Task<int> GetCountForBrokerAccountId(long brokerAccountId);
     }
 }
