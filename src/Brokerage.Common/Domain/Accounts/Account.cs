@@ -51,7 +51,7 @@ namespace Brokerage.Common.Domain.Accounts
         public AccountState State { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
-        public long Sequence { get; }
+        public long Sequence { get; private set; }
 
         public static Account Create(
             long id,
@@ -213,6 +213,7 @@ namespace Brokerage.Common.Domain.Accounts
             {
                 State = AccountState.Active;
                 UpdatedAt = DateTime.UtcNow;
+                Sequence++;
 
                 AddAccountUpdatedEvent();
             }

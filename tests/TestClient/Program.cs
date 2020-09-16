@@ -29,7 +29,7 @@ namespace TestClient
                     {
                         var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
-                            Name = "Broker_2",
+                            Name = "Broker_5",
                             RequestId = requestId,
                             TenantId = tenantId,
                             VaultId = 100002,
@@ -44,7 +44,7 @@ namespace TestClient
                         Console.WriteLine("Press enter to continue");
                         Console.ReadLine();
 
-                        for (int i = 0; i < 15; i++)
+                        for (int i = 0; i < 3; i++)
                         {
                             var account = await client.Accounts.CreateAsync(new CreateAccountRequest
                             {
