@@ -244,6 +244,7 @@ namespace Brokerage.Common.Domain.Accounts
                 {
                     _commands.Add(new CreateAccountDetailsForTag
                     {
+                        BrokerAccountId = brokerAccount.Id,
                         AccountId = Id,
                         BlockchainId = blockchainId.Id,
                         ExpectedBlockchainsCount = walletGenerationRequesterContext.ExpectedBlockchainsCount,

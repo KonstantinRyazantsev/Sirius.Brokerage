@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Tags;
+using Brokerage.Common.Limiters;
 using Brokerage.Common.Persistence;
 using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
@@ -20,25 +21,29 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IIdGenerator _idGenerator;
         private readonly IDestinationTagGeneratorFactory _destinationTagGeneratorFactory;
+        private readonly ConcurrencyLimiter _concurrencyLimiter;
 
         public CreateAccountDetailsForTagConsumer(
             ILogger<CreateAccountDetailsForTagConsumer> logger,
             IBlockchainsRepository blockchainsRepository,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             IIdGenerator idGenerator,
-            IDestinationTagGeneratorFactory destinationTagGeneratorFactory)
+            IDestinationTagGeneratorFactory destinationTagGeneratorFactory,
+            ConcurrencyLimiter concurrencyLimiter)
         {
             _logger = logger;
             _blockchainsRepository = blockchainsRepository;
             _unitOfWorkManager = unitOfWorkManager;
             _idGenerator = idGenerator;
             _destinationTagGeneratorFactory = destinationTagGeneratorFactory;
+            _concurrencyLimiter = concurrencyLimiter;
         }
 
         public async Task Consume(ConsumeContext<CreateAccountDetailsForTag> context)
         {
             var command = context.Message;
-            
+
+            using var limit = await _concurrencyLimiter.Enter($"BrokerAccount:{command.BrokerAccountId}");
             await using var unitOfWork = await _unitOfWorkManager.Begin($"AccountDetails:Create:{command.AccountId}:{command.BlockchainId}");
             
             if (!unitOfWork.Outbox.IsClosed)
