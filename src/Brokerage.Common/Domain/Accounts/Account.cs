@@ -171,8 +171,10 @@ namespace Brokerage.Common.Domain.Accounts
 
             if (accountDetailsCount >= expectedBlockchainsCount)
             {
-                Activate();
-                await accountsRepository.Update(this);
+                if (Activate())
+                {
+                    await accountsRepository.Update(this);
+                }
             }
         }
 
@@ -193,8 +195,10 @@ namespace Brokerage.Common.Domain.Accounts
 
             if (accountDetailsCount >= expectedBlockchainsCount)
             {
-                Activate();
-                await accountsRepository.Update(this);
+                if (Activate())
+                {
+                    await accountsRepository.Update(this);
+                }
             }
 
             var accountDetailsCountForBrokerAccount = await accountDetailsRepository.GetCountForBrokerAccountId(brokerAccount.Id);
@@ -206,7 +210,7 @@ namespace Brokerage.Common.Domain.Accounts
             }
         }
 
-        private void Activate()
+        private bool Activate()
         {
             if (State == AccountState.Creating ||
                 State == AccountState.Blocked)
@@ -216,7 +220,10 @@ namespace Brokerage.Common.Domain.Accounts
                 Sequence++;
 
                 AddAccountUpdatedEvent();
+                return true;
             }
+
+            return false;
         }
 
         private async Task RequestDetailsGeneration(
