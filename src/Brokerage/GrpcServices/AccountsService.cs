@@ -7,6 +7,7 @@ using Grpc.Core;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Sirius.Brokerage.ApiContract;
 using Swisschain.Sirius.Brokerage.MessagingContract.Accounts;
+using Swisschain.Sirius.Brokerage.MessagingContract.BrokerAccounts;
 
 namespace Brokerage.GrpcServices
 {
@@ -30,6 +31,23 @@ namespace Brokerage.GrpcServices
 
                 if (!unitOfWork.Outbox.IsClosed)
                 {
+                    var brokerAccount = await unitOfWork.BrokerAccounts.Get(request.BrokerAccountId);
+
+                    //TODO: Now we block account creation before update or creation is completed to make system consistent.
+                    if (brokerAccount.State != BrokerAccountState.Active)
+                    {
+                        var errorResponse = new CreateAccountResponse
+                        {
+                            Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
+                            {
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.BrokerAccountInactive,
+                                ErrorMessage = $"Broker account {request.BrokerAccountId} is in {brokerAccount.State} state. Wait for activation.",
+                            }
+                        };
+
+                        return errorResponse;
+                    }
+
                     var accountId = await _idGenerator.GetId($"Accounts:{request.RequestId}", IdGenerators.Accounts);
                     var account = Account.Create(
                         accountId,

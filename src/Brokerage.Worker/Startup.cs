@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain;
+using Brokerage.Common.Limiters;
 using Brokerage.Common.Persistence;
 using Brokerage.Worker.HostedServices;
 using Brokerage.Worker.Messaging;
@@ -29,6 +30,7 @@ namespace Brokerage.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
+            services.AddSingleton<ConcurrencyLimiter>(new ConcurrencyLimiter(1));
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
             services.AddTransient<IExecutorClient>(x => new ExecutorClient(Config.Executor.Url));
             services.AddTransient<IAddressFormatterFactory, AddressFormatterFactory>();

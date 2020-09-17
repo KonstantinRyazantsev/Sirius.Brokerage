@@ -88,6 +88,13 @@ namespace Brokerage.Common.Persistence.Accounts
             return count;
         }
 
+        public async Task<int> GetCountForBrokerAccountId(long brokerAccountId)
+        {
+            var count = await _dbContext.AccountDetails.Where(x => x.BrokerAccountId == brokerAccountId).CountAsync();
+
+            return count;
+        }
+
         private static AccountDetails MapToDomain(AccountDetailsEntity entity)
         {
             var brokerAccount = AccountDetails.Restore(

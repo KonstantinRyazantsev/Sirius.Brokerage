@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +42,44 @@ namespace Brokerage.Common.Persistence.Accounts
             _dbContext.Accounts.Update(entity);
             
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IReadOnlyCollection<Account>> GetForBrokerAccount(long brokerAccountId, long cursor, int limit)
+        {
+            var accounts = _dbContext.Accounts
+                .Where(x => x.BrokerAccountId == brokerAccountId &&
+                            x.Id > cursor)
+                .Take(limit);
+
+            await accounts.LoadAsync();
+
+            return accounts
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
+        public async Task<int> GetCountForBrokerAccountId(long brokerAccountId, AccountState? accountState)
+        {
+            var state = accountState.HasValue ? accountState.Value switch
+            {
+                AccountState.Creating => AccountStateEnum.Creating,
+                AccountState.Active => AccountStateEnum.Active,
+                AccountState.Blocked => AccountStateEnum.Blocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(accountState), accountState, null)
+            } : (AccountStateEnum?)null;
+
+            var query = _dbContext.Accounts
+                .Where(x => x.BrokerAccountId == brokerAccountId);
+
+            if (state != null)
+            {
+                query = query.Where(x => x.State == state);
+            }
+
+            var count = await query.CountAsync();
+
+            return count;
         }
 
         public async Task Add(Account account)

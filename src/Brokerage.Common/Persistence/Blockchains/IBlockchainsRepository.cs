@@ -16,5 +16,6 @@ namespace Brokerage.Common.Persistence.Blockchains
 
         Task<Blockchain> GetOrDefaultAsync(string blockchainId);
 
+        Task<IReadOnlyCollection<Blockchain>> GetByIds(IReadOnlyCollection<string> brokerAccountBlockchainIds);
     }
 }

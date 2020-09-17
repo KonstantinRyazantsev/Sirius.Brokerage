@@ -4,6 +4,7 @@
     {
         Creating,
         Active,
-        Blocked
+        Blocked,
+        Updating
     }
 }

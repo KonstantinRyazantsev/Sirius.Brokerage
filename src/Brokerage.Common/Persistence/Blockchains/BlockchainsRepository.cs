@@ -92,5 +92,16 @@ namespace Brokerage.Common.Persistence.Blockchains
 
             return blockchain;
         }
+
+        public async Task<IReadOnlyCollection<Blockchain>> GetByIds(IReadOnlyCollection<string> brokerAccountBlockchainIds)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var blockchains = context.Blockchains.Where(x => brokerAccountBlockchainIds.Contains(x.Id));
+
+            await blockchains.LoadAsync();
+
+            return blockchains.AsEnumerable().ToArray();
+        }
     }
 }

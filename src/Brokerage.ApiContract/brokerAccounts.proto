@@ -9,7 +9,16 @@ package services;
 
 service BrokerAccounts {
   rpc Create (CreateRequest) returns (CreateResponse);
+
+  rpc AddBlockchain (AddBlockchainRequest) returns (AddBlockchainResponse);
 }
+
+enum BrokerAccountStatus {
+  CREATING = 0;
+  ACTIVE = 1;
+  BLOCKED = 2;
+  UPDATING = 3;
+} 
 
 message CreateRequest {
   string tenantId = 1;
@@ -19,6 +28,18 @@ message CreateRequest {
   string name = 3;
 
   int64 vaultId = 4;
+
+  repeated string blockchain_ids = 5;
+}
+
+message AddBlockchainRequest {
+  string tenantId = 1;
+
+  string requestId = 2;
+
+  int64 broker_account_id = 3;
+
+  repeated string blockchain_ids = 4;
 }
 
 message CreateResponseBody {
@@ -35,11 +56,27 @@ message CreateResponseBody {
 
   int64 vaultId = 6;
 
-  enum BrokerAccountStatus {
-    CREATING = 0;
-    ACTIVE = 1;
-    BLOCKED = 2;
-  } 
+  repeated string blockchain_ids = 7;
+
+  int64 sequence = 8;
+}
+
+message AddBlockchainResponseBody {
+  int64 id = 1;
+
+  string name = 2;
+
+  BrokerAccountStatus status = 3;
+
+  google.protobuf.Timestamp createdAt = 4;
+
+  google.protobuf.Timestamp updatedAt = 5;
+
+  int64 vaultId = 6;
+
+  repeated string blockchain_ids = 7;
+
+  int64 sequence = 8;
 }
 
 message CreateResponse {
@@ -47,4 +84,11 @@ message CreateResponse {
      CreateResponseBody response = 1;
      common.ErrorResponseBody error = 2;
    }
+}
+
+message AddBlockchainResponse {
+  oneof body{
+    AddBlockchainResponseBody response = 1;
+    common.ErrorResponseBody error = 2;
+  }
 }

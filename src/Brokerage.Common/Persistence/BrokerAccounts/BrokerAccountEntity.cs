@@ -12,6 +12,7 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
         public BrokerAccountEntity()
         {
             Accounts = new HashSet<AccountEntity>();
+            BlockchainIds= new HashSet<string>();
         }
 
         public string TenantId { get; set; }
@@ -31,6 +32,8 @@ namespace Brokerage.Common.Persistence.BrokerAccounts
         public long VaultId { get; set; }
 
         public ICollection<AccountEntity> Accounts { get; set; }
+
+        public ICollection<string> BlockchainIds { get; set; }
 
         public long Sequence { get; set; }
     }
