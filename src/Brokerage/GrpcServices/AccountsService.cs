@@ -40,7 +40,7 @@ namespace Brokerage.GrpcServices
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
-                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.Transient,
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.BrokerAccountInactive,
                                 ErrorMessage = $"Broker account {request.BrokerAccountId} is in {brokerAccount.State} state. Wait for activation.",
                             }
                         };

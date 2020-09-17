@@ -13,9 +13,9 @@ message ErrorResponseBody {
     UNKNOWN = 0;
     NAME_IS_EMPTY = 1;
     IS_NOT_AUTHORIZED = 2;
-    IS_NOT_VALID = 3;
+    INVALID_PARAMETERS = 3;
     IS_NOT_FOUND = 4;
-    TRANSIENT =5;
+    BROKER_ACCOUNT_INACTIVE =5;
   }
 
   ErrorCode errorCode = 1;

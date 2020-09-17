@@ -59,7 +59,7 @@ namespace Brokerage.GrpcServices
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
-                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotValid,
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.InvalidParameters,
                                 ErrorMessage = $"Given list of blockchains contains unsupported blockchain {joinedString}"
                             }
                         };
@@ -165,7 +165,7 @@ namespace Brokerage.GrpcServices
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
-                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.IsNotValid,
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.InvalidParameters,
                                 ErrorMessage = $"Given list of blockchains contains unsupported blockchain {joinedString}"
                             }
                         };
@@ -222,7 +222,7 @@ namespace Brokerage.GrpcServices
                         {
                             Error = new Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody
                             {
-                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.Transient,
+                                ErrorCode = Swisschain.Sirius.Brokerage.ApiContract.Common.ErrorResponseBody.Types.ErrorCode.BrokerAccountInactive,
                                 ErrorMessage = $"Broker account expected to be in {BrokerAccountState.Active}, " +
                                                $"current state is {brokerAccount.State}"
                             }
