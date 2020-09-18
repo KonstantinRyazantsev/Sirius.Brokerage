@@ -149,8 +149,11 @@ namespace Brokerage.Common.Domain.BrokerAccounts
             {
                 if (State != BrokerAccountState.Updating || expectedAccountsCount == 0)
                 {
-                    Activate();
-                    await brokerAccountsRepository.Update(this);
+                    if (State != BrokerAccountState.Active)
+                    {
+                        Activate();
+                        await brokerAccountsRepository.Update(this);
+                    }
                 }
             }
         }
