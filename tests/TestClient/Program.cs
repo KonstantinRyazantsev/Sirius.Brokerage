@@ -35,7 +35,7 @@ namespace TestClient
                             VaultId = 100002,
                             BlockchainIds =
                                 {
-                                    "bitcoin-private", "stellar-test"
+                                    "bitcoin-private",
                                 }
                         });
 
@@ -44,7 +44,7 @@ namespace TestClient
                         Console.WriteLine("Press enter to continue");
                         Console.ReadLine();
 
-                        for (int i = 0; i < 3; i++)
+                        for (int i = 0; i < 1; i++)
                         {
                             var account = await client.Accounts.CreateAsync(new CreateAccountRequest
                             {
@@ -57,13 +57,41 @@ namespace TestClient
                         Console.WriteLine("Press enter to continue");
                         Console.ReadLine();
 
-                        var response = await client.BrokerAccounts.AddBlockchainAsync(new AddBlockchainRequest()
                         {
-                            BrokerAccountId = brokerAccountId,
-                            RequestId = requestId,
-                            BlockchainIds = { "litecoin-private" },
-                            TenantId = tenantId
-                        });
+                            var response = await client.BrokerAccounts.AddBlockchainAsync(new AddBlockchainRequest()
+                            {
+                                BrokerAccountId = brokerAccountId,
+                                RequestId = requestId,
+                                BlockchainIds = {"litecoin-private"},
+                                TenantId = tenantId
+                            });
+                        }
+
+                        Console.WriteLine("Press enter to continue");
+                        Console.ReadLine();
+
+                        {
+                            var response = await client.BrokerAccounts.AddBlockchainAsync(new AddBlockchainRequest()
+                            {
+                                BrokerAccountId = brokerAccountId,
+                                RequestId = requestId,
+                                BlockchainIds = { "stellar-test" },
+                                TenantId = tenantId
+                            });
+                        }
+
+                        Console.WriteLine("Press enter to continue");
+                        Console.ReadLine();
+
+                        {
+                            var response = await client.BrokerAccounts.AddBlockchainAsync(new AddBlockchainRequest()
+                            {
+                                BrokerAccountId = brokerAccountId,
+                                RequestId = requestId,
+                                BlockchainIds = { "ethereum-ropsten" },
+                                TenantId = tenantId
+                            });
+                        }
                     }
 
                     //{

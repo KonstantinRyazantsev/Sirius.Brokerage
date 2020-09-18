@@ -85,7 +85,22 @@ namespace Brokerage.Worker.Messaging.Consumers
                     command.ExpectedBlockchainsCount,
                     command.ExpectedAccountsCount);
 
+                foreach (var item in account.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
+
                 foreach (var item in account.Events)
+                {
+                    unitOfWork.Outbox.Publish(item);
+                }
+
+                foreach(var item in brokerAccount.Commands)
+                {
+                    unitOfWork.Outbox.Send(item);
+                }
+
+                foreach (var item in brokerAccount.Events)
                 {
                     unitOfWork.Outbox.Publish(item);
                 }

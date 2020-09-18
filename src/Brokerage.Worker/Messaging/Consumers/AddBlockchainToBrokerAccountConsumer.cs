@@ -63,6 +63,11 @@ namespace Brokerage.Worker.Messaging.Consumers
                     BrokerAccountId = brokerAccount.Id
                 });
 
+                foreach (var cmd in brokerAccount.Commands)
+                {
+                    unitOfWork.Outbox.Send(cmd);
+                }
+
                 foreach (var evt in brokerAccount.Events)
                 {
                     unitOfWork.Outbox.Publish(evt);
