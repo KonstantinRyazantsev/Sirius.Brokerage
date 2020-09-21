@@ -28,12 +28,12 @@
     <PackageReference Include="MassTransit" Version="7.0.2" />
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.0.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="7.0.2" />
-    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="3.0.1" />
+    <PackageReference Include="Swisschain.Extensions.MassTransit" Version="3.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swisschain.Sdk.Server" Version="6.4.0" />
-    <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.2.4" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="6.8.0" />
+    <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
