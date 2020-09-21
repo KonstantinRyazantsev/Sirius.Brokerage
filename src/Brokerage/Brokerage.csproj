@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.4.0" />
-    <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.2.4" />
+    <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>

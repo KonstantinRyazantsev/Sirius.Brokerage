@@ -26,6 +26,28 @@ namespace TestClient
 
                 {
                     var tenantId = "c06c3f79-7e34-44f9-aac9-94c6ef438f58";
+
+                    var withdrawalResult = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
+                    {
+                        BrokerAccountId = 100000029,
+                        AssetId = 100003,
+                        Amount = 0.1m,
+                        TenantId = tenantId,
+                        DestinationDetails = new DestinationDetails()
+                        {
+                            Address = "GAQTTY7VVW54IDSZHU6YRMI3FFB2FE4VWKFT3YQ3G2ZXQPMQSOSJHRXDs",
+                            Tag = null,
+                            TagType = new NullableDestinationTagType()
+                            {
+                                Null = NullValue.NullValue,
+                            }
+                        },
+                        RequestId = requestId,
+                    });
+
+                    var withdrawalResultSerialized = Newtonsoft.Json.JsonConvert.SerializeObject(withdrawalResult);
+                    Console.WriteLine(withdrawalResultSerialized);
+
                     {
                         var brokerAccount = await client.BrokerAccounts.CreateAsync(new CreateRequest
                         {
@@ -126,28 +148,8 @@ namespace TestClient
                     //    BrokerAccountId = 1
                     //});
 
-                    //var resultч = await client.Withdrawals.ExecuteAsync(new ExecuteWithdrawalRequest()
-                    //{
-                    //    BrokerAccountId = 10000007,
-                    //    AssetId = 100_000,
-                    //    Amount = 0.1m,
-                    //    TenantId = "c06c3f79-7e34-44f9-aac9-94c6ef438f58",
-                    //    DestinationDetails = new DestinationDetails()
-                    //    {
-                    //        Address = "2N3PkwDpEUwdb2Fm58v4x4XZGcaeMX9h93b",
-                    //        Tag = null,
-                    //        TagType = new NullableDestinationTagType()
-                    //        {
-                    //            Null = NullValue.NullValue,
-                    //        }
-                    //    },
-                    //    RequestId = "Api:c06c3f79-7e34-44f9-aac9-94c6ef438f58:jhk,uib",
-                    //});
-
-                    //var serializedBrokerAccount = Newtonsoft.Json.JsonConvert.SerializeObject(brokerAccount);
                     //var serializedAccount = Newtonsoft.Json.JsonConvert.SerializeObject(account);
 
-                    //Console.WriteLine(serializedBrokerAccount);
                     //Console.WriteLine();
                     //Console.WriteLine(serializedAccount);
                 }
