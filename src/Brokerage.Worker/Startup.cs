@@ -15,6 +15,7 @@ using Swisschain.Extensions.Idempotency.EfCore;
 using Swisschain.Extensions.Idempotency.MassTransit;
 using Swisschain.Extensions.Postgres;
 using Swisschain.Sirius.Executor.ApiClient;
+using Swisschain.Sirius.Indexer.ApiClient;
 using Swisschain.Sirius.Sdk.Crypto.AddressFormatting;
 
 namespace Brokerage.Worker
@@ -32,6 +33,7 @@ namespace Brokerage.Worker
             services.AddHttpClient();
             services.AddSingleton<ConcurrencyLimiter>(new ConcurrencyLimiter(1));
             services.AddTransient<IVaultAgentClient>(x => new VaultAgentClient(Config.VaultAgent.Url));
+            services.AddTransient<IIndexerClient>(x => new IndexerClient(Config.Indexer.Url));
             services.AddTransient<IExecutorClient>(x => new ExecutorClient(Config.Executor.Url));
             services.AddTransient<IAddressFormatterFactory, AddressFormatterFactory>();
             services.AddPersistence(Config.Db.ConnectionString);

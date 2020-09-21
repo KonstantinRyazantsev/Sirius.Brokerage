@@ -9,6 +9,8 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
 using Swisschain.Extensions.Idempotency.MassTransit;
+using Swisschain.Sirius.Indexer.ApiClient;
+using Swisschain.Sirius.Indexer.ApiContract.ObservedAddresses;
 using Swisschain.Sirius.VaultAgent.MessagingContract.Wallets;
 
 namespace Brokerage.Worker.Messaging.Consumers
@@ -16,16 +18,19 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class WalletAddedConsumer : IConsumer<WalletAdded>
     {
         private readonly ILogger<WalletAddedConsumer> _logger;
+        private readonly IIndexerClient _indexerClient;
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly IIdGenerator _idGenerator;
         private readonly ConcurrencyLimiter _concurrencyLimiter;
 
         public WalletAddedConsumer(ILogger<WalletAddedConsumer> logger,
+            IIndexerClient indexerClient,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             IIdGenerator idGenerator,
             ConcurrencyLimiter concurrencyLimiter)
         {
             _logger = logger;
+            _indexerClient = indexerClient;
             _unitOfWorkManager = unitOfWorkManager;
             _idGenerator = idGenerator;
             _concurrencyLimiter = concurrencyLimiter;
@@ -48,6 +53,13 @@ namespace Brokerage.Worker.Messaging.Consumers
 
                 throw new ArgumentException("Context is empty", nameof(evt.Context));
             }
+
+            await _indexerClient.ObservedAddresses.AddObservedAddressAsync(new AddObservedAddressRequest
+            {
+                RequestId = $"Brokerage:{evt.WalletId}",
+                BlockchainId = evt.BlockchainId,
+                Address = evt.Address
+            });
 
             var requesterContext = Newtonsoft.Json.JsonConvert.DeserializeObject<WalletGenerationRequesterContext>(evt.Context);
 
