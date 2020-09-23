@@ -28,7 +28,7 @@
     <PackageReference Include="Swisschain.Sirius.Indexer.ApiClient" Version="2.2.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0" />
     <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="8.1.0" />
-    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="2.4.0" />
+    <PackageReference Include="Swisschain.Sirius.VaultAgent.MessagingContract" Version="2.5.0" />
   </ItemGroup>
 
   <ItemGroup>

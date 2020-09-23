@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
@@ -261,7 +262,8 @@ namespace Brokerage.Common.Domain.Accounts
                     TenantId = brokerAccount.TenantId,
                     VaultId = brokerAccount.VaultId,
                     Component = nameof(Brokerage),
-                    Context = requesterContext
+                    Context = requesterContext,
+                    Group = brokerAccount.Id.ToString(CultureInfo.InvariantCulture)
                 };
 
                 var walletGenerationResponse = await vaultAgentClient.Wallets.GenerateAsync(walletGenerationRequest);
