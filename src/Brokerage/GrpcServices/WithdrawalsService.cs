@@ -54,7 +54,7 @@ namespace Brokerage.GrpcServices
                 if (!unitOfWork.Outbox.IsClosed)
                 {
                     var asset = await _assetsRepository.GetOrDefaultAsync(request.AssetId);
-                    var amount = (decimal) request.Amount;
+                    var amount = (decimal)request.Amount;
                     var validationError = await ValidateRequest(
                         unitOfWork,
                         request,
@@ -70,7 +70,16 @@ namespace Brokerage.GrpcServices
                         .GetActive(new ActiveBrokerAccountDetailsId(asset.BlockchainId, request.BrokerAccountId));
 
                     var withdrawalId = await _idGenerator.GetId($"Withdrawals:{request.RequestId}", IdGenerators.Withdrawals);
-                    
+
+                    var userContext = request.UserContext != null ? new Common.Domain.Withdrawals.UserContext()
+                    {
+                        UserId = request.UserContext.UserId,
+                        ApiKeyId = request.UserContext.ApiKeyId,
+                        WithdrawalReferenceId = request.UserContext.WithdrawalReferenceId,
+                        AccountReferenceId = request.UserContext.AccountReferenceId,
+                        PassClientIp = request.UserContext.PassClientIp
+                    } : new Common.Domain.Withdrawals.UserContext();
+
                     var withdrawal = Withdrawal.Create(
                         withdrawalId,
                         request.BrokerAccountId,
@@ -84,7 +93,7 @@ namespace Brokerage.GrpcServices
                             request.DestinationDetails.Address,
                             request.DestinationDetails.Tag,
                             request.DestinationDetails.TagType.KindCase == NullableDestinationTagType.KindOneofCase.Null
-                                ? (DestinationTagType?) null
+                                ? (DestinationTagType?)null
                                 : request.DestinationDetails.TagType.Value switch
                                 {
                                     Swisschain.Sirius.Brokerage.ApiContract.Common.DestinationTagType.Text =>
@@ -95,7 +104,8 @@ namespace Brokerage.GrpcServices
                                         nameof(request.DestinationDetails.TagType.Value),
                                         request.DestinationDetails.TagType,
                                         null)
-                                }));
+                                }),
+                        userContext);
 
                     await unitOfWork.Withdrawals.Add(withdrawal);
 
@@ -133,12 +143,12 @@ namespace Brokerage.GrpcServices
                                 Amount = withdrawal.Unit.Amount,
                                 AssetId = withdrawal.Unit.AssetId
                             },
-                            ReferenceId = withdrawal.ReferenceId,
+                            ReferenceId = withdrawal.AccountReferenceId,
                             DestinationDetails = new Swisschain.Sirius.Brokerage.ApiContract.DestinationDetails()
                             {
                                 Address = withdrawal.DestinationDetails.Address,
                                 TagType = withdrawal.DestinationDetails.TagType == null
-                                    ? new NullableDestinationTagType() {Null = NullValue.NullValue}
+                                    ? new NullableDestinationTagType() { Null = NullValue.NullValue }
                                     : new NullableDestinationTagType()
                                     {
                                         Value = withdrawal.DestinationDetails.TagType.Value switch

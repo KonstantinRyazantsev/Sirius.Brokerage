@@ -27,7 +27,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public long? AccountId { get; set; }
 
-        public string ReferenceId { get; set; }
+        //[Obsolete("Will be deleted. Use account reference from UserContext")]
+        public string AccountReferenceId { get; set; }
 
         public long AssetId { get; set; }
 
@@ -62,5 +63,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public UserContextEntity UserContext { get; set; }
     }
 }

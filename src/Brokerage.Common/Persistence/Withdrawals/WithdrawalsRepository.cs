@@ -93,7 +93,15 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 DestinationAddress = withdrawal.DestinationDetails.Address,
                 AccountId = withdrawal.AccountId,
                 DestinationTag = withdrawal.DestinationDetails.Tag,
-                ReferenceId = withdrawal.ReferenceId
+                AccountReferenceId = withdrawal.AccountReferenceId,
+                UserContext = new UserContextEntity()
+                {
+                    AccountReferenceId = withdrawal.UserContext.AccountReferenceId,
+                    ApiKeyId = withdrawal.UserContext.ApiKeyId,
+                    PassClientIp = withdrawal.UserContext.PassClientIp,
+                    UserId = withdrawal.UserContext.UserId,
+                    WithdrawalReferenceId = withdrawal.UserContext.WithdrawalReferenceId
+                }
             };
 
             return depositEntity;
@@ -108,7 +116,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 withdrawalEntity.BrokerAccountId,
                 withdrawalEntity.BrokerAccountDetailsId,
                 withdrawalEntity.AccountId,
-                withdrawalEntity.ReferenceId,
+                withdrawalEntity.AccountReferenceId,
                 new Unit(withdrawalEntity.AssetId, withdrawalEntity.Amount),
                 withdrawalEntity.TenantId,
                 withdrawalEntity.Fees?
@@ -132,7 +140,15 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     new WithdrawalError(withdrawalEntity.WithdrawalErrorMessage, withdrawalEntity.WithdrawalErrorCode.Value),
                 withdrawalEntity.OperationId,
                 withdrawalEntity.CreatedAt.UtcDateTime,
-                withdrawalEntity.UpdatedAt.UtcDateTime);
+                withdrawalEntity.UpdatedAt.UtcDateTime,
+                new UserContext()
+                {
+                    AccountReferenceId = withdrawalEntity.UserContext.AccountReferenceId,
+                    UserId = withdrawalEntity.UserContext.UserId,
+                    ApiKeyId = withdrawalEntity.UserContext.ApiKeyId,
+                    WithdrawalReferenceId = withdrawalEntity.UserContext.WithdrawalReferenceId,
+                    PassClientIp = withdrawalEntity.UserContext.PassClientIp
+                });
 
             return withdrawal;
         }

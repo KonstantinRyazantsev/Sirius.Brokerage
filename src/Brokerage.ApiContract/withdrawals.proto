@@ -28,6 +28,8 @@ message ExecuteWithdrawalRequest {
   common.BigDecimal amount = 7;
 
   .services.DestinationDetails destinationDetails = 8;
+
+  .services.UserContext userContext = 9;
 }
 
 message DestinationDetails {
@@ -131,4 +133,13 @@ message TransactionInfo{
   int64 requiredConfirmationsCount = 3;
 
   google.protobuf.Timestamp dateTime = 4;
+}
+
+
+message UserContext{
+  string pass_client_ip = 1;
+  google.protobuf.StringValue user_id = 2;
+  google.protobuf.StringValue api_key_id = 3;
+  google.protobuf.StringValue account_reference_id = 4;
+  google.protobuf.StringValue withdrawal_reference_id = 5;
 }

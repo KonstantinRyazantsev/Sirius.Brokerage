@@ -16,6 +16,8 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
 
         public string ReferenceId { get; set; }
 
+        public string AccountReferenceId { get; set; }
+
         public Unit Unit { get; set; }
 
         public string TenantId { get; set; }
@@ -35,5 +37,7 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+
+        public UserContext UserContext { get; set; }
     }
 }
