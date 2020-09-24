@@ -104,6 +104,8 @@ message ExecuteWithdrawalResponse{
   google.protobuf.Timestamp updatedAt = 15;
 
   int64 sequence = 16;
+
+  .services.UserContext userContext = 17;
 }
 
 message WithdrawalError

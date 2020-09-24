@@ -165,7 +165,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountDetails.NaturalId.Address,
                 DestinationDetails,
                 Unit,
-                brokerAccount.VaultId);
+                brokerAccount.VaultId,
+                UserContext);
             
             OperationId = operation.Id;
             UpdatedAt = DateTime.UtcNow;

@@ -19,6 +19,7 @@ namespace Brokerage.Common.Domain.Operations
             string brokerAccountAddress,
             DestinationDetails destinationDetails,
             Unit unit,
-            long vaultId);
+            long vaultId,
+            UserContext userContext);
     }
 }

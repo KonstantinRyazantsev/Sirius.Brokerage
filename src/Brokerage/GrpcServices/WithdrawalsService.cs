@@ -164,7 +164,8 @@ namespace Brokerage.GrpcServices
                                         }
                                     },
                                 Tag = withdrawal.DestinationDetails.Tag
-                            }
+                            },
+                            UserContext = request.UserContext
                         }
                     });
 

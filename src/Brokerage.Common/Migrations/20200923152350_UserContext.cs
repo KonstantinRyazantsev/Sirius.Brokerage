@@ -16,7 +16,7 @@ namespace Brokerage.Common.Migrations
 
             migrationBuilder.Sql(@"
                             UPDATE brokerage.withdrawals 
-                            SET ""UserContext"" = '{}' 
+                            SET ""UserContext"" = '{""PassClientIp"": ""127.0.0.1""}' 
                             WHERE ""UserContext"" is null;");
         }
 
