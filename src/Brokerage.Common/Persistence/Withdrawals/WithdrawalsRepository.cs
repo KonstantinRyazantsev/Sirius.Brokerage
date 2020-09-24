@@ -93,7 +93,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 DestinationAddress = withdrawal.DestinationDetails.Address,
                 AccountId = withdrawal.AccountId,
                 DestinationTag = withdrawal.DestinationDetails.Tag,
-                AccountReferenceId = withdrawal.AccountReferenceId,
                 UserContext = new UserContextEntity()
                 {
                     AccountReferenceId = withdrawal.UserContext.AccountReferenceId,
@@ -116,7 +115,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 withdrawalEntity.BrokerAccountId,
                 withdrawalEntity.BrokerAccountDetailsId,
                 withdrawalEntity.AccountId,
-                withdrawalEntity.AccountReferenceId,
                 new Unit(withdrawalEntity.AssetId, withdrawalEntity.Amount),
                 withdrawalEntity.TenantId,
                 withdrawalEntity.Fees?

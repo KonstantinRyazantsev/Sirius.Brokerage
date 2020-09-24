@@ -85,7 +85,6 @@ namespace Brokerage.GrpcServices
                         request.BrokerAccountId,
                         brokerAccountDetails.Id,
                         request.AccountId,
-                        request.ReferenceId,
                         new Swisschain.Sirius.Sdk.Primitives.Unit(request.AssetId, amount),
                         request.TenantId,
                         Array.Empty<Swisschain.Sirius.Sdk.Primitives.Unit>(),
@@ -143,7 +142,6 @@ namespace Brokerage.GrpcServices
                                 Amount = withdrawal.Unit.Amount,
                                 AssetId = withdrawal.Unit.AssetId
                             },
-                            ReferenceId = withdrawal.AccountReferenceId,
                             DestinationDetails = new Swisschain.Sirius.Brokerage.ApiContract.DestinationDetails()
                             {
                                 Address = withdrawal.DestinationDetails.Address,

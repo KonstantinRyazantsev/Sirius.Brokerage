@@ -14,10 +14,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
 
         public long? AccountId { get; set; }
 
-        public string ReferenceId { get; set; }
-
-        public string AccountReferenceId { get; set; }
-
         public Unit Unit { get; set; }
 
         public string TenantId { get; set; }

@@ -27,9 +27,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public long? AccountId { get; set; }
 
-        //[Obsolete("Will be deleted. Use account reference from UserContext")]
-        public string AccountReferenceId { get; set; }
-
         public long AssetId { get; set; }
 
         public decimal Amount { get; set; }

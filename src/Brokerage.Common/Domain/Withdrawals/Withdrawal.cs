@@ -17,7 +17,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string accountReferenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
@@ -34,7 +33,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             BrokerAccountId = brokerAccountId;
             BrokerAccountDetailsId = brokerAccountDetailsId;
             AccountId = accountId;
-            AccountReferenceId = accountReferenceId;
             Unit = unit;
             TenantId = tenantId;
             Fees = fees;
@@ -56,7 +54,6 @@ namespace Brokerage.Common.Domain.Withdrawals
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountId { get; }
-        public string AccountReferenceId { get; }
         public Unit Unit { get; }
         public string TenantId { get; }
         public IReadOnlyCollection<Unit> Fees { get; }
@@ -75,7 +72,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string accountReferenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
@@ -90,7 +86,6 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountId,
                 brokerAccountDetailsId,
                 accountId,
-                accountReferenceId,
                 unit,
                 tenantId,
                 fees,
@@ -115,7 +110,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string accountReferenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
@@ -135,7 +129,6 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountId,
                 brokerAccountDetailsId,
                 accountId,
-                accountReferenceId,
                 unit,
                 tenantId,
                 fees,
@@ -278,11 +271,9 @@ namespace Brokerage.Common.Domain.Withdrawals
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
                 OperationId = OperationId,
-                ReferenceId = AccountReferenceId,
                 AccountId = AccountId,
                 CreatedAt = CreatedAt,
                 UpdatedAt = UpdatedAt,
-                AccountReferenceId = AccountReferenceId,
                 UserContext = new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.UserContext()
                 {
                     AccountReferenceId = UserContext.AccountReferenceId,
