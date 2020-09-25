@@ -52,7 +52,7 @@ namespace Brokerage.Common.Domain.Operations
                     OperationType = "Deposit consolidation",
                     VaultId = vaultId,
                     //TODO: What should we pass here
-                    UserContext =
+                    UserContext = new UserContext()
                     {
                         WithdrawalReferenceId = "",
                         UserId = "",
