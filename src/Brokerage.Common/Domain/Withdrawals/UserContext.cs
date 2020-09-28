@@ -11,5 +11,7 @@ namespace Brokerage.Common.Domain.Withdrawals
         public string ApiKeyId { get; set; }
         public string AccountReferenceId { get; set; }
         public string WithdrawalReferenceId { get; set; }
+
+        public string WithdrawalParamsSignature { get; set; }
     }
 }

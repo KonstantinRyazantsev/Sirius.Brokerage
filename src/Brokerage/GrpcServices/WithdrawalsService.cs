@@ -77,7 +77,8 @@ namespace Brokerage.GrpcServices
                         ApiKeyId = request.UserContext.ApiKeyId,
                         WithdrawalReferenceId = request.UserContext.WithdrawalReferenceId,
                         AccountReferenceId = request.UserContext.AccountReferenceId,
-                        PassClientIp = request.UserContext.PassClientIp
+                        PassClientIp = request.UserContext.PassClientIp,
+                        WithdrawalParamsSignature = request.UserContext.WithdrawalParamsSignature
                     } : new Common.Domain.Withdrawals.UserContext();
 
                     var withdrawal = Withdrawal.Create(

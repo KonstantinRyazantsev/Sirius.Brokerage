@@ -280,7 +280,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                     ApiKeyId = UserContext.ApiKeyId,
                     WithdrawalReferenceId = UserContext.WithdrawalReferenceId,
                     UserId = UserContext.UserId,
-                    PassClientIp = UserContext.PassClientIp
+                    PassClientIp = UserContext.PassClientIp,
+                    WithdrawalParamsSignature = UserContext.WithdrawalParamsSignature,
                 }
             });
         }

@@ -99,7 +99,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     ApiKeyId = withdrawal.UserContext.ApiKeyId,
                     PassClientIp = withdrawal.UserContext.PassClientIp,
                     UserId = withdrawal.UserContext.UserId,
-                    WithdrawalReferenceId = withdrawal.UserContext.WithdrawalReferenceId
+                    WithdrawalReferenceId = withdrawal.UserContext.WithdrawalReferenceId,
+                    WithdrawalParamsSignature = withdrawal.UserContext.WithdrawalParamsSignature,
                 }
             };
 
@@ -145,7 +146,8 @@ namespace Brokerage.Common.Persistence.Withdrawals
                     UserId = withdrawalEntity.UserContext.UserId,
                     ApiKeyId = withdrawalEntity.UserContext.ApiKeyId,
                     WithdrawalReferenceId = withdrawalEntity.UserContext.WithdrawalReferenceId,
-                    PassClientIp = withdrawalEntity.UserContext.PassClientIp
+                    PassClientIp = withdrawalEntity.UserContext.PassClientIp,
+                    WithdrawalParamsSignature = withdrawalEntity.UserContext.WithdrawalParamsSignature
                 });
 
             return withdrawal;

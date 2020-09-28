@@ -54,6 +54,7 @@ namespace Brokerage.Common.Domain.Operations
                     //TODO: What should we pass here
                     UserContext = new UserContext()
                     {
+                        WithdrawalParamsSignature = "",
                         WithdrawalReferenceId = "",
                         UserId = "",
                         AccountReferenceId = "",
@@ -121,7 +122,8 @@ namespace Brokerage.Common.Domain.Operations
                     ApiKeyId = userContext.ApiKeyId,
                     WithdrawalReferenceId = userContext.WithdrawalReferenceId,
                     UserId = userContext.UserId,
-                    PassClientIp = userContext.PassClientIp
+                    PassClientIp = userContext.PassClientIp,
+                    WithdrawalParamsSignature = userContext.WithdrawalParamsSignature
                 }
             });
 

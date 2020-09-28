@@ -140,4 +140,5 @@ message UserContext{
   google.protobuf.StringValue api_key_id = 3;
   google.protobuf.StringValue account_reference_id = 4;
   google.protobuf.StringValue withdrawal_reference_id = 5;
+  google.protobuf.StringValue withdrawal_params_signature = 6;
 }
