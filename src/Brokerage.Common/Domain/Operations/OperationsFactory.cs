@@ -55,11 +55,11 @@ namespace Brokerage.Common.Domain.Operations
                     //TODO: What should we pass here
                     UserContext = new UserContext()
                     {
-                        WithdrawalParamsSignature = "",
-                        WithdrawalReferenceId = "",
-                        UserId = "",
+                        WithdrawalParamsSignature = null,
+                        WithdrawalReferenceId = null,
+                        UserId = null,
                         AccountReferenceId = accountReferenceId,
-                        ApiKeyId = "",
+                        ApiKeyId = null,
                         PassClientIp = "127.0.0.1"
                     }
                 }));
