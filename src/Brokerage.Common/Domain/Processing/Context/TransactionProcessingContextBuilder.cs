@@ -74,7 +74,6 @@ namespace Brokerage.Common.Domain.Processing.Context
             var matchedAccountDetails = await accountDetailsRepository.GetAnyOf(allAccountDetailsIds);
             var matchedBrokerAccountDetails = await brokerAccountDetailsRepository.GetAnyOf(matchedBrokerAccountDetailsIds);
             var matchedOperation = await operationsRepository.GetOrDefault(operationId);
-            var matchedAccounts = await accountsRepository.GetAnyOf(matchedAccountDetails.Select(x => x.AccountId).ToArray());
 
             if (matchedOperation == null &&
                 !matchedAccountDetails.Any() &&
@@ -82,6 +81,12 @@ namespace Brokerage.Common.Domain.Processing.Context
             {
                 return TransactionProcessingContext.Empty;
             }
+
+            var matchedAccounts = await accountsRepository.GetAnyOf(
+                matchedAccountDetails
+                    .Select(x => x.AccountId)
+                    .Distinct()
+                    .ToArray());
 
             var matchedBrokerAccountIds = matchedBrokerAccountDetails
                 .Select(x => x.BrokerAccountId)
