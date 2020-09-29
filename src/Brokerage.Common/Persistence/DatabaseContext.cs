@@ -182,6 +182,15 @@ namespace Brokerage.Common.Persistence
                         JsonConvert.DeserializeObject<IReadOnlyCollection<WithdrawalFeeEntity>>(v,
                             JsonSerializingSettings));
 
+            modelBuilder.Entity<WithdrawalEntity>()
+                .Property(e => e.UserContext)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v,
+                        JsonSerializingSettings),
+                    v =>
+                        JsonConvert.DeserializeObject<UserContextEntity>(v,
+                            JsonSerializingSettings));
+
             #endregion
         }
 

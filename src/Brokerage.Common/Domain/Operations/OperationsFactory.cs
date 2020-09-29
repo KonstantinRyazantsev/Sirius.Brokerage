@@ -7,6 +7,7 @@ using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
 using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
+using UserContext = Swisschain.Sirius.Executor.ApiContract.Transfers.UserContext;
 
 namespace Brokerage.Common.Domain.Operations
 {
@@ -25,7 +26,8 @@ namespace Brokerage.Common.Domain.Operations
             string brokerAccountAddress,
             Unit unit,
             long asAtBlockNumber,
-            long vaultId)
+            long vaultId,
+            string accountReferenceId)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
@@ -49,7 +51,17 @@ namespace Brokerage.Common.Domain.Operations
                     },
                     Component = nameof(Brokerage),
                     OperationType = "Deposit consolidation",
-                    VaultId = vaultId
+                    VaultId = vaultId,
+                    //TODO: What should we pass here
+                    UserContext = new UserContext()
+                    {
+                        WithdrawalParamsSignature = null,
+                        WithdrawalReferenceId = null,
+                        UserId = null,
+                        AccountReferenceId = accountReferenceId,
+                        ApiKeyId = null,
+                        PassClientIp = "127.0.0.1"
+                    }
                 }));
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
@@ -65,7 +77,8 @@ namespace Brokerage.Common.Domain.Operations
             string brokerAccountAddress,
             DestinationDetails destinationDetails,
             Unit unit,
-            long vaultId)
+            long vaultId,
+            Brokerage.Common.Domain.Withdrawals.UserContext userContext)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest
             {
@@ -103,7 +116,16 @@ namespace Brokerage.Common.Domain.Operations
                 },
                 Component = nameof(Brokerage),
                 OperationType = "Withdrawal",
-                VaultId = vaultId
+                VaultId = vaultId,
+                UserContext = new UserContext()
+                {
+                    AccountReferenceId = userContext.AccountReferenceId,
+                    ApiKeyId = userContext.ApiKeyId,
+                    WithdrawalReferenceId = userContext.WithdrawalReferenceId,
+                    UserId = userContext.UserId,
+                    PassClientIp = userContext.PassClientIp,
+                    WithdrawalParamsSignature = userContext.WithdrawalParamsSignature
+                }
             });
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)

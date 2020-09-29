@@ -21,13 +21,13 @@ message ExecuteWithdrawalRequest {
 
   google.protobuf.Int64Value accountId = 4;
 
-  google.protobuf.StringValue referenceId = 5;
+  int64 assetId = 5;
 
-  int64 assetId = 6;
+  common.BigDecimal amount = 6;
 
-  common.BigDecimal amount = 7;
+  .services.DestinationDetails destinationDetails = 7;
 
-  .services.DestinationDetails destinationDetails = 8;
+  .services.UserContext userContext = 8;
 }
 
 message DestinationDetails {
@@ -67,17 +67,15 @@ message ExecuteWithdrawalResponse{
 
   google.protobuf.Int64Value accountId = 4;
 
-  google.protobuf.StringValue referenceId = 5;
+  common.Unit unit = 5;
 
-  common.Unit unit = 6;
+  string tenantId = 6;
 
-  string tenantId = 7;
+  repeated common.Unit fees = 7;
 
-  repeated common.Unit fees = 8;
+  DestinationDetails destinationDetails = 8;
 
-  DestinationDetails destinationDetails = 9;
-
-  WithdrawalState State = 10;
+  WithdrawalState State = 9;
 
   enum WithdrawalState {
     PROCESSING = 0;
@@ -91,17 +89,19 @@ message ExecuteWithdrawalResponse{
     FAILED=4;
   }
 
-  TransactionInfo transactionInfo = 11;
+  TransactionInfo transactionInfo = 10;
 
-  WithdrawalError error = 12;
+  WithdrawalError error = 11;
 
-  google.protobuf.Int64Value operationId = 13;
+  google.protobuf.Int64Value operationId = 12;
 
-  google.protobuf.Timestamp createdAt = 14;
+  google.protobuf.Timestamp createdAt = 13;
 
-  google.protobuf.Timestamp updatedAt = 15;
+  google.protobuf.Timestamp updatedAt = 14;
 
-  int64 sequence = 16;
+  int64 sequence = 15;
+
+  .services.UserContext userContext = 16;
 }
 
 message WithdrawalError
@@ -131,4 +131,14 @@ message TransactionInfo{
   int64 requiredConfirmationsCount = 3;
 
   google.protobuf.Timestamp dateTime = 4;
+}
+
+
+message UserContext{
+  string pass_client_ip = 1;
+  google.protobuf.StringValue user_id = 2;
+  google.protobuf.StringValue api_key_id = 3;
+  google.protobuf.StringValue account_reference_id = 4;
+  google.protobuf.StringValue withdrawal_reference_id = 5;
+  google.protobuf.StringValue withdrawal_params_signature = 6;
 }

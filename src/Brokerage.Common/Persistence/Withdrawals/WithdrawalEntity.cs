@@ -27,8 +27,6 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public long? AccountId { get; set; }
 
-        public string ReferenceId { get; set; }
-
         public long AssetId { get; set; }
 
         public decimal Amount { get; set; }
@@ -62,5 +60,7 @@ namespace Brokerage.Common.Persistence.Withdrawals
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public UserContextEntity UserContext { get; set; }
     }
 }

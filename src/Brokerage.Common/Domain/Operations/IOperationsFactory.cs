@@ -12,13 +12,15 @@ namespace Brokerage.Common.Domain.Operations
             string brokerAccountAddress,
             Unit unit,
             long asAtBlockNumber,
-            long vaultId);
+            long vaultId,
+            string accountReferenceId);
 
         Task<Operation> StartWithdrawal(string tenantId,
             long withdrawalId,
             string brokerAccountAddress,
             DestinationDetails destinationDetails,
             Unit unit,
-            long vaultId);
+            long vaultId,
+            UserContext userContext);
     }
 }

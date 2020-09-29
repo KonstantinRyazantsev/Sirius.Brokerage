@@ -17,7 +17,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
@@ -27,13 +26,13 @@ namespace Brokerage.Common.Domain.Withdrawals
             WithdrawalError error,
             long? operationId,
             DateTime createdAt,
-            DateTime updatedAt)
+            DateTime updatedAt,
+            UserContext userContext)
         {
             Id = id;
             BrokerAccountId = brokerAccountId;
             BrokerAccountDetailsId = brokerAccountDetailsId;
             AccountId = accountId;
-            ReferenceId = referenceId;
             Unit = unit;
             TenantId = tenantId;
             Fees = fees;
@@ -44,6 +43,7 @@ namespace Brokerage.Common.Domain.Withdrawals
             OperationId = operationId;
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;
+            UserContext = userContext;
             Version = version;
             Sequence = sequence;
         }
@@ -54,7 +54,6 @@ namespace Brokerage.Common.Domain.Withdrawals
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountId { get; }
-        public string ReferenceId { get; }
         public Unit Unit { get; }
         public string TenantId { get; }
         public IReadOnlyCollection<Unit> Fees { get; }
@@ -65,6 +64,7 @@ namespace Brokerage.Common.Domain.Withdrawals
         public long? OperationId { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime UpdatedAt { get; private set; }
+        public UserContext UserContext { get; }
         public List<object> Events { get; } = new List<object>();
         
         public static Withdrawal Create(
@@ -72,11 +72,11 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
-            DestinationDetails destinationDetails)
+            DestinationDetails destinationDetails,
+            UserContext userContext)
         {
             var createdAt = DateTime.UtcNow;
             var withdrawal = new Withdrawal(
@@ -86,7 +86,6 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountId,
                 brokerAccountDetailsId,
                 accountId,
-                referenceId,
                 unit,
                 tenantId,
                 fees,
@@ -96,7 +95,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 null,
                 null,
                 createdAt,
-                createdAt);
+                createdAt,
+                userContext);
 
             withdrawal.AddUpdateEvent();
 
@@ -110,7 +110,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             long brokerAccountId,
             long brokerAccountDetailsId,
             long? accountId,
-            string referenceId,
             Unit unit,
             string tenantId,
             IReadOnlyCollection<Unit> fees,
@@ -120,7 +119,8 @@ namespace Brokerage.Common.Domain.Withdrawals
             WithdrawalError error,
             long? operationId,
             DateTime createdAt,
-            DateTime updatedDateTime)
+            DateTime updatedDateTime,
+            UserContext userContext)
         {
             return new Withdrawal(
                 id,
@@ -129,7 +129,6 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountId,
                 brokerAccountDetailsId,
                 accountId,
-                referenceId,
                 unit,
                 tenantId,
                 fees,
@@ -139,7 +138,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 error,
                 operationId,
                 createdAt,
-                updatedDateTime);
+                updatedDateTime,
+                userContext);
         }
 
         public async Task<Operation> Execute(
@@ -158,7 +158,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccountDetails.NaturalId.Address,
                 DestinationDetails,
                 Unit,
-                brokerAccount.VaultId);
+                brokerAccount.VaultId,
+                UserContext);
             
             OperationId = operation.Id;
             UpdatedAt = DateTime.UtcNow;
@@ -270,10 +271,18 @@ namespace Brokerage.Common.Domain.Withdrawals
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
                 OperationId = OperationId,
-                ReferenceId = ReferenceId,
                 AccountId = AccountId,
                 CreatedAt = CreatedAt,
-                UpdatedAt = UpdatedAt
+                UpdatedAt = UpdatedAt,
+                UserContext = new Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.UserContext()
+                {
+                    AccountReferenceId = UserContext.AccountReferenceId,
+                    ApiKeyId = UserContext.ApiKeyId,
+                    WithdrawalReferenceId = UserContext.WithdrawalReferenceId,
+                    UserId = UserContext.UserId,
+                    PassClientIp = UserContext.PassClientIp,
+                    WithdrawalParamsSignature = UserContext.WithdrawalParamsSignature,
+                }
             });
         }
     }
