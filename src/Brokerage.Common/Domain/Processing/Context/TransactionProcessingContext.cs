@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Domain.Operations;
@@ -16,7 +17,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             default,
             Array.Empty<Deposit>(),
             default,
-            default);
+            default,
+            Array.Empty<Account>());
 
         private readonly ConcurrentBag<Deposit> _deposits;
         private readonly ConcurrentBag<Operation> _newOperations;
@@ -27,9 +29,11 @@ namespace Brokerage.Common.Domain.Processing.Context
             TransactionInfo transactionInfo,
             IReadOnlyCollection<Deposit> deposits,
             Blockchain blockchain,
-            IReadOnlyCollection<MinDepositResidual> minDepositResiduals)
+            IReadOnlyCollection<MinDepositResidual> minDepositResiduals,
+            IReadOnlyCollection<Account> accounts)
         {
             MinDepositResiduals = minDepositResiduals;
+            Accounts = accounts;
             BrokerAccounts = brokerAccounts;
             Operation = operation;
             TransactionInfo = transactionInfo;
@@ -45,6 +49,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         }
 
         public IReadOnlyCollection<MinDepositResidual> MinDepositResiduals { get; private set; }
+        public IReadOnlyCollection<Account> Accounts { get; }
 
         public IReadOnlyCollection<Deposit> Deposits => _deposits;
         public IReadOnlyCollection<Operation> NewOperations => _newOperations;

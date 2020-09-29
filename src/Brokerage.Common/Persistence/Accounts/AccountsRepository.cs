@@ -82,6 +82,19 @@ namespace Brokerage.Common.Persistence.Accounts
             return count;
         }
 
+        public async Task<IReadOnlyCollection<Account>> GetAnyOf(long[] accountIds)
+        {
+            var accounts = _dbContext.Accounts
+                .Where(x => accountIds.Contains(x.Id));
+
+            await accounts.LoadAsync();
+
+            return accounts
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task Add(Account account)
         {
             var newEntity = MapToEntity(account);

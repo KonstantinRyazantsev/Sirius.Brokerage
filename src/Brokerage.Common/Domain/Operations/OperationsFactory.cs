@@ -26,7 +26,8 @@ namespace Brokerage.Common.Domain.Operations
             string brokerAccountAddress,
             Unit unit,
             long asAtBlockNumber,
-            long vaultId)
+            long vaultId,
+            string accountReferenceId)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
@@ -57,7 +58,7 @@ namespace Brokerage.Common.Domain.Operations
                         WithdrawalParamsSignature = "",
                         WithdrawalReferenceId = "",
                         UserId = "",
-                        AccountReferenceId = "",
+                        AccountReferenceId = accountReferenceId,
                         ApiKeyId = "",
                         PassClientIp = "127.0.0.1"
                     }

@@ -166,7 +166,8 @@ namespace Brokerage.Common.Domain.Deposits
             AccountDetails accountDetails,
             TransactionConfirmed tx, 
             IOperationsFactory operationsFactory,
-            decimal residual)
+            decimal residual,
+            Account account)
         {
             if (IsBrokerDeposit)
             {
@@ -186,7 +187,8 @@ namespace Brokerage.Common.Domain.Deposits
                 brokerAccountDetails.NaturalId.Address,
                 consolidationAmount,
                 tx.BlockNumber,
-                brokerAccount.VaultId);
+                brokerAccount.VaultId,
+                account.ReferenceId);
 
             ConsolidationOperationId = consolidationOperation.Id;
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);

@@ -68,6 +68,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                 await ProcessTinyDeposits(tx, processingContext, tinyDeposits);
 
+                var accDict = processingContext.Accounts.ToDictionary(x => x.Id);
+
                 foreach (var deposit in normalDeposits)
                 {
                     var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == deposit.BrokerAccountId);
@@ -75,7 +77,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == deposit.AccountDetailsId);
                     var brokerAccount = brokerAccountContext.BrokerAccount;
                     var accountDetails = accountDetailsContext.Details;
-
+                    accDict.TryGetValue(accountDetails.AccountId, out var account);
                     var residuals = prevMinResiduals[accountDetails.NaturalId]
                         .Where(x => x.AssetId == deposit.Unit.AssetId)
                         .ToArray();
@@ -86,7 +88,9 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         brokerAccountDetails,
                         accountDetails,
                         tx,
-                        _operationsFactory, margin);
+                        _operationsFactory, 
+                        margin,
+                        account);
 
                     foreach (var residual in residuals)
                     {
