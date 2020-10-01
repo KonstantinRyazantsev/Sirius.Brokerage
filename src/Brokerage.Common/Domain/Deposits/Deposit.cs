@@ -188,7 +188,8 @@ namespace Brokerage.Common.Domain.Deposits
                 consolidationAmount,
                 tx.BlockNumber,
                 brokerAccount.VaultId,
-                account.ReferenceId);
+                account.ReferenceId,
+                brokerAccount.Id);
 
             ConsolidationOperationId = consolidationOperation.Id;
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);

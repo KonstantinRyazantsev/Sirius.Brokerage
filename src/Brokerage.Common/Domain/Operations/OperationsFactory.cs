@@ -27,7 +27,8 @@ namespace Brokerage.Common.Domain.Operations
             Unit unit,
             long asAtBlockNumber,
             long vaultId,
-            string accountReferenceId)
+            string accountReferenceId,
+            long brokerAccountId)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
@@ -61,7 +62,9 @@ namespace Brokerage.Common.Domain.Operations
                         AccountReferenceId = accountReferenceId,
                         ApiKeyId = null,
                         PassClientIp = "127.0.0.1"
-                    }
+                    },
+                    DestinationGroup = brokerAccountId.ToString(),
+                    SourceGroup = brokerAccountId.ToString()
                 }));
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
@@ -78,7 +81,9 @@ namespace Brokerage.Common.Domain.Operations
             DestinationDetails destinationDetails,
             Unit unit,
             long vaultId,
-            Brokerage.Common.Domain.Withdrawals.UserContext userContext)
+            Brokerage.Common.Domain.Withdrawals.UserContext userContext,
+            string sourceGroup,
+            string destinationGroup)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest
             {
@@ -125,7 +130,9 @@ namespace Brokerage.Common.Domain.Operations
                     UserId = userContext.UserId,
                     PassClientIp = userContext.PassClientIp,
                     WithdrawalParamsSignature = userContext.WithdrawalParamsSignature
-                }
+                },
+                DestinationGroup = destinationGroup,
+                SourceGroup = sourceGroup
             });
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)

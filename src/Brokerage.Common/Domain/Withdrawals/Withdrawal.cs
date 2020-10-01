@@ -152,6 +152,7 @@ namespace Brokerage.Common.Domain.Withdrawals
             var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
             var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
 
+            //TODO: Pass destination group
             var operation = await operationsFactory.StartWithdrawal(
                 TenantId,
                 Id,
@@ -159,7 +160,9 @@ namespace Brokerage.Common.Domain.Withdrawals
                 DestinationDetails,
                 Unit,
                 brokerAccount.VaultId,
-                UserContext);
+                UserContext,
+                brokerAccount.Id.ToString(),
+                null);
             
             OperationId = operation.Id;
             UpdatedAt = DateTime.UtcNow;
