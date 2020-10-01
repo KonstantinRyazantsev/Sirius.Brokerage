@@ -9,7 +9,8 @@
 
         DestinationTagRequired,
 
-        TechnicalProblem
+        TechnicalProblem,
 
+        ValidationRejected
     }
 }

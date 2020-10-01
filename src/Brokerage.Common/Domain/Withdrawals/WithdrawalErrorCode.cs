@@ -5,6 +5,7 @@
         NotEnoughBalance,
         InvalidDestinationAddress,
         DestinationTagRequired,
-        TechnicalProblem
+        TechnicalProblem,
+        ValidationRejected
     }
 }

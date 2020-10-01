@@ -255,6 +255,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                                 .DestinationTagRequired,
                             WithdrawalErrorCode.TechnicalProblem =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode.TechnicalProblem,
+                            WithdrawalErrorCode.ValidationRejected =>
+                            Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode.ValidationRejected,
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code),
                                 Error.Code,
                                 null)
