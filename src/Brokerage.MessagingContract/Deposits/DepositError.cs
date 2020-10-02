@@ -8,7 +8,8 @@
 
         public enum DepositErrorCode
         {
-            TechnicalProblem
+            TechnicalProblem,
+            ValidationRejected
         }
     }
 }

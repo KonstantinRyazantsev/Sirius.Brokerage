@@ -26,6 +26,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
                         OperationErrorCode.DestinationTagRequired => DepositErrorCode.TechnicalProblem,
                         OperationErrorCode.AmountIsTooSmall => DepositErrorCode.TechnicalProblem,
+                        OperationErrorCode.ValidationRejected => DepositErrorCode.ValidationRejected,
 
                         _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
                     }));

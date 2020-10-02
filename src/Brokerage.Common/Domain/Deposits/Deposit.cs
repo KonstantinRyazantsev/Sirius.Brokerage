@@ -188,7 +188,8 @@ namespace Brokerage.Common.Domain.Deposits
                 consolidationAmount,
                 tx.BlockNumber,
                 brokerAccount.VaultId,
-                account.ReferenceId);
+                account.ReferenceId,
+                brokerAccount.Id);
 
             ConsolidationOperationId = consolidationOperation.Id;
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
@@ -325,7 +326,13 @@ namespace Brokerage.Common.Domain.Deposits
                     ? null
                     : new Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError()
                     {
-                        Code = Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
+                        Code = Error.Code switch {
+                            DepositErrorCode.TechnicalProblem => 
+                            Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
+                            DepositErrorCode.ValidationRejected => 
+                            Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.ValidationRejected,
+                            _ => throw new ArgumentOutOfRangeException(nameof(Error.Code), Error.Code, null)
+                        },
                         Message = Error.Message
                     },
                 UpdatedAt = UpdatedAt,

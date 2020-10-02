@@ -28,6 +28,7 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
                     OperationErrorCode.InvalidDestinationAddress => WithdrawalErrorCode.InvalidDestinationAddress,
                     OperationErrorCode.DestinationTagRequired => WithdrawalErrorCode.DestinationTagRequired,
                     OperationErrorCode.AmountIsTooSmall => WithdrawalErrorCode.NotEnoughBalance,
+                    OperationErrorCode.ValidationRejected => WithdrawalErrorCode.ValidationRejected,
                     _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, "")
                 });
 
