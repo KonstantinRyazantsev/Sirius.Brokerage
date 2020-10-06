@@ -22,6 +22,7 @@ namespace Brokerage.Worker.Messaging
             services.AddTransient<TransactionDetectedConsumer>();
             services.AddTransient<TransactionConfirmedConsumer>();
             services.AddTransient<OperationSentConsumer>();
+            services.AddTransient<OperationSigningConsumer>();
             services.AddTransient<OperationCompletedConsumer>();
             services.AddTransient<OperationFailedConsumer>();
             services.AddTransient<AssetAddedConsumer>();
@@ -147,6 +148,11 @@ namespace Brokerage.Worker.Messaging
             cfg.ReceiveEndpoint("sirius-brokerage-add-blockchains-to-accounts", e =>
             {
                 e.Consumer(context.GetRequiredService<AddBlockchainsToAccountsConsumer>);
+            });
+
+            cfg.ReceiveEndpoint("sirius-brokerage-operation-signing", e =>
+            {
+                e.Consumer(context.GetRequiredService<OperationSigningConsumer>);
             });
         }
     }

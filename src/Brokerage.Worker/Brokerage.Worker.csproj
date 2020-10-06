@@ -24,7 +24,8 @@
     <PackageReference Include="Swisschain.Extensions.MassTransit" Version="3.0.4" />
     <PackageReference Include="swisschain.extensions.postgres" Version="1.0.0" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.8.0" />
-    <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.4.0" />
+    <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="2.5.0-beta.1" />
+    <PackageReference Include="Swisschain.Sirius.Executor.MessagingContract" Version="1.4.0-beta.2" />
     <PackageReference Include="Swisschain.Sirius.Indexer.ApiClient" Version="2.2.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0" />
     <PackageReference Include="Swisschain.Sirius.Integrations.MessagingContract" Version="8.1.0" />
