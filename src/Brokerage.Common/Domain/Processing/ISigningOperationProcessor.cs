@@ -8,9 +8,4 @@ namespace Brokerage.Common.Domain.Processing
     {
         Task Process(OperationSigning evt, OperationProcessingContext processingContext);
     }
-
-    public interface IValidatingOperationProcessor
-    {
-        Task Process(OperationValidating evt, OperationProcessingContext processingContext);
-    }
 }

@@ -23,22 +23,4 @@ namespace Brokerage.Common.Domain.Withdrawals.Processors
             return Task.CompletedTask;
         }
     }
-
-    //public class ValidatinWithdrawalProcessor : IValidatingOperationProcessor
-    //{
-    //    public Task Process(OperationValidating evt, OperationProcessingContext processingContext)
-    //    {
-    //        if (processingContext.Operation.Type != OperationType.Withdrawal)
-    //        {
-    //            return Task.CompletedTask;
-    //        }
-
-    //        foreach (var withdrawal in processingContext.Withdrawals)
-    //        {
-    //            withdrawal.();
-    //        }
-
-    //        return Task.CompletedTask;
-    //    }
-    //}
 }

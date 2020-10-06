@@ -199,16 +199,6 @@ namespace Brokerage.Common.Domain.Withdrawals
             AddUpdateEvent();
         }
 
-        //TODO: Use it in the future for executing state
-        public void MoveToExecuting()
-        {
-            SwitchState(new[] { WithdrawalState.Signing }, WithdrawalState.Executing);
-
-            UpdatedAt = DateTime.UtcNow;
-
-            AddUpdateEvent();
-        }
-
         public void Fail(WithdrawalError error)
         {
             SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent, WithdrawalState.Validating, WithdrawalState.Processing }, 
