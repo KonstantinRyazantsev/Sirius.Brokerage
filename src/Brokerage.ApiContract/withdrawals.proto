@@ -87,6 +87,10 @@ message ExecuteWithdrawalResponse{
     COMPLETED=3;
     
     FAILED=4;
+
+    VALIDATING=5;
+
+    SIGNING=6;
   }
 
   TransactionInfo transactionInfo = 10;

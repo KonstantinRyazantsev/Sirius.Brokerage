@@ -16,6 +16,7 @@ namespace Brokerage.Common.Domain.Processing
         private readonly IReadOnlyCollection<Type> _completedOperationProcessors;
         private readonly IReadOnlyCollection<Type> _failedOperationProcessors;
         private readonly IReadOnlyCollection<Type> _cancelledBlockProcessors;
+        private readonly IReadOnlyCollection<Type> _signingOperationProcessors;
 
         public ProcessorsFactory(IServiceProvider serviceProvider)
         {
@@ -51,6 +52,11 @@ namespace Brokerage.Common.Domain.Processing
                 typeof(FailedWithdrawalProcessor)
             };
 
+            _signingOperationProcessors = new List<Type>()
+            {
+                typeof(SigningWithdrawalProcessor)
+            };
+
             _cancelledBlockProcessors = new List<Type>();
         }
 
@@ -75,6 +81,14 @@ namespace Brokerage.Common.Domain.Processing
             return _sentOperationProcessors
                 .Select(x => _serviceProvider.GetRequiredService(x))
                 .Cast<ISentOperationProcessor>()
+                .ToArray();
+        }
+
+        public IReadOnlyCollection<ISigningOperationProcessor> GetSigningOperationProcessors()
+        {
+            return _signingOperationProcessors
+                .Select(x => _serviceProvider.GetRequiredService(x))
+                .Cast<ISigningOperationProcessor>()
                 .ToArray();
         }
 

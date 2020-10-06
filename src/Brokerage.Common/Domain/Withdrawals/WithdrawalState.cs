@@ -6,6 +6,8 @@
         Executing,
         Sent,
         Completed,
-        Failed
+        Failed,
+        Validating,
+        Signing,
     }
 }

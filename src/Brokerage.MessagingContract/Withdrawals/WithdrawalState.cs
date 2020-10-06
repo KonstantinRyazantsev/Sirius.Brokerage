@@ -10,6 +10,10 @@
 
         Completed,
 
-        Failed
+        Failed,
+
+        Validating,
+
+        Signing,
     }
 }

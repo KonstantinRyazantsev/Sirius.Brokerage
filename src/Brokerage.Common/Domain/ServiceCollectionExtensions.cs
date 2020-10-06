@@ -27,6 +27,7 @@ namespace Brokerage.Common.Domain
             services.AddTransient<SentWithdrawalProcessor>();
             services.AddTransient<CompletedDepositProcessor>();
             services.AddTransient<CompletedWithdrawalProcessor>();
+            services.AddTransient<SigningWithdrawalProcessor>();
             services.AddTransient<FailedDepositProcessor>();
             services.AddTransient<FailedWithdrawalProcessor>();
             services.AddSingleton<IDestinationTagGeneratorFactory, DestinationTagGeneratorFactory>();

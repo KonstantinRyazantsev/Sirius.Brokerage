@@ -147,7 +147,7 @@ namespace Brokerage.Common.Domain.Withdrawals
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
             IOperationsFactory operationsFactory)
         {
-            SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Executing);
+            SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Validating);
 
             var brokerAccountDetails = await brokerAccountDetailsRepository.Get(BrokerAccountDetailsId);
             var brokerAccount = await brokerAccountsRepository.Get(BrokerAccountId);
@@ -174,7 +174,7 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void TrackSent()
         {
-            SwitchState(new[] {WithdrawalState.Executing}, WithdrawalState.Sent);
+            SwitchState(new[] {WithdrawalState.Signing}, WithdrawalState.Sent);
             
             UpdatedAt = DateTime.UtcNow;
 
@@ -190,9 +190,19 @@ namespace Brokerage.Common.Domain.Withdrawals
             AddUpdateEvent();
         }
 
+        public void MoveToSigning()
+        {
+            SwitchState(new[] { WithdrawalState.Validating }, WithdrawalState.Signing);
+
+            UpdatedAt = DateTime.UtcNow;
+
+            AddUpdateEvent();
+        }
+
         public void Fail(WithdrawalError error)
         {
-            SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent}, WithdrawalState.Failed);
+            SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent, WithdrawalState.Validating, WithdrawalState.Processing }, 
+                WithdrawalState.Failed);
             
             UpdatedAt = DateTime.UtcNow;
             Error = error;
@@ -273,6 +283,9 @@ namespace Brokerage.Common.Domain.Withdrawals
                     WithdrawalState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState
                         .Completed,
                     WithdrawalState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState.Failed,
+                    WithdrawalState.Signing => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState.Signing,
+                    WithdrawalState.Validating => Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalState.Validating,
+                    
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
                 OperationId = OperationId,

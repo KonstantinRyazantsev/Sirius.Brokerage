@@ -132,6 +132,8 @@ namespace Brokerage.GrpcServices
                                 WithdrawalState.Sent => ExecuteWithdrawalResponse.Types.WithdrawalState.Sent,
                                 WithdrawalState.Completed => ExecuteWithdrawalResponse.Types.WithdrawalState.Completed,
                                 WithdrawalState.Failed => ExecuteWithdrawalResponse.Types.WithdrawalState.Failed,
+                                WithdrawalState.Validating => ExecuteWithdrawalResponse.Types.WithdrawalState.Validating,
+                                WithdrawalState.Signing => ExecuteWithdrawalResponse.Types.WithdrawalState.Signing,
                                 _ => throw new ArgumentOutOfRangeException(nameof(withdrawal.State),
                                     withdrawal.State,
                                     null)
