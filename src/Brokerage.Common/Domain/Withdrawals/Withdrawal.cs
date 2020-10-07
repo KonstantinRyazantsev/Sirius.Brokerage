@@ -201,7 +201,12 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public void Fail(WithdrawalError error)
         {
-            SwitchState(new[] {WithdrawalState.Executing, WithdrawalState.Sent, WithdrawalState.Validating, WithdrawalState.Processing }, 
+            SwitchState(new[]
+                {
+                    WithdrawalState.Executing, WithdrawalState.Sent, 
+                    WithdrawalState.Validating, WithdrawalState.Processing,
+                    WithdrawalState.Signing
+                }, 
                 WithdrawalState.Failed);
             
             UpdatedAt = DateTime.UtcNow;
