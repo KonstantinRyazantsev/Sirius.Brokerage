@@ -20,7 +20,7 @@ namespace Brokerage.Common.Migrations
                 defaultValue:0);
 
             migrationBuilder.Sql(@" UPDATE brokerage.deposits
-                                    SET DepositType = 2");
+                                    SET ""DepositType"" = 2");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
