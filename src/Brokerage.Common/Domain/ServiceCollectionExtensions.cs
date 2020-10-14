@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Domain.Deposits.Processors;
+﻿using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Domain.Deposits.Processors;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
@@ -32,6 +33,7 @@ namespace Brokerage.Common.Domain
             services.AddTransient<FailedWithdrawalProcessor>();
             services.AddSingleton<IDestinationTagGeneratorFactory, DestinationTagGeneratorFactory>();
             services.AddSingleton<IAddressFormatterFactory, AddressFormatterFactory>();
+            services.AddSingleton<IDepositFactory, DepositFactory>();
 
             return services;
         }

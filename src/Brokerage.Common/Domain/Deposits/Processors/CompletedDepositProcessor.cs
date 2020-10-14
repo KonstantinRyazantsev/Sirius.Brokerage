@@ -47,7 +47,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                 foreach (var minDeposit in minDeposits)
                 {
-                    minDeposit.CompleteTiny(distributedFee);
+                    minDeposit.Complete(distributedFee);
                 }
             }
 

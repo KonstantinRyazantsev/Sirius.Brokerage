@@ -16,11 +16,16 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     public class DetectedDepositProcessor : IDetectedTransactionProcessor
     {
         private readonly IIdGenerator _idGenerator;
+        private readonly IDepositFactory _depositFactory;
         private IReadOnlyDictionary<string, BlockchainConfig> _blockchainsConfig;
 
-        public DetectedDepositProcessor(IIdGenerator idGenerator, AppConfig appConfig)
+        public DetectedDepositProcessor(
+            IIdGenerator idGenerator, 
+            AppConfig appConfig, 
+            IDepositFactory depositFactory)
         {
             _idGenerator = idGenerator;
+            _depositFactory = depositFactory;
             _blockchainsConfig = appConfig.Blockchains;
         }
 
@@ -44,8 +49,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     foreach (var (assetId, value) in accountContext.Income.Where(x => x.Value > 0))
                     {
                         var depositId = await _idGenerator.GetId($"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", IdGenerators.Deposits);
-
-                        var deposit = Deposit.Create(
+                        var depositType = value >= minDepositForConsolidation ? DepositType.RegularDeposit : DepositType.TinyDeposit;
+                        var deposit = _depositFactory.Create(
                             depositId,
                             brokerAccountContext.TenantId,
                             tx.BlockchainId,
@@ -58,7 +63,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                                 .Where(x => x.Unit.AssetId == assetId)
                                 .Select(x => new DepositSource(x.Address, x.Unit.Amount))
                                 .ToArray(),
-                            minDepositForConsolidation);
+                            minDepositForConsolidation,
+                            depositType);
 
                         processingContext.AddDeposit(deposit);
 

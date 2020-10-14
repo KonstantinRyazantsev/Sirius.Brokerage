@@ -15,10 +15,12 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     public class DetectedBrokerDepositProcessor : IDetectedTransactionProcessor
     {
         private readonly IIdGenerator _idGenerator;
+        private readonly IDepositFactory _depositFactory;
 
-        public DetectedBrokerDepositProcessor(IIdGenerator idGenerator)
+        public DetectedBrokerDepositProcessor(IIdGenerator idGenerator, IDepositFactory depositFactory)
         {
             _idGenerator = idGenerator;
+            _depositFactory = depositFactory;
         }
 
         public async Task Process(TransactionDetected tx, TransactionProcessingContext processingContext)
@@ -49,7 +51,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                     var depositId = await _idGenerator.GetId($"BrokerDeposits:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}", IdGenerators.Deposits);
                     
-                    var deposit = Deposit.Create(
+                    var deposit = _depositFactory.Create(
                         depositId,
                         brokerAccountContext.TenantId,
                         tx.BlockchainId,
@@ -62,7 +64,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                             .Where(x => x.Unit.AssetId == assetId)
                             .Select(x => new DepositSource(x.Address, x.Unit.Amount))
                             .ToArray(),
-                        default);
+                        default,
+                        DepositType.BrokerDeposit);
 
                     processingContext.AddDeposit(deposit);
 

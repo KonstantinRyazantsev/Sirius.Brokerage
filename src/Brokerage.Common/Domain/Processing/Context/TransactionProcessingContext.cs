@@ -11,7 +11,8 @@ using Brokerage.Common.ReadModels.Blockchains;
 namespace Brokerage.Common.Domain.Processing.Context
 {
     public sealed class TransactionProcessingContext
-    { public static readonly TransactionProcessingContext Empty = new TransactionProcessingContext(
+    {
+        public static readonly TransactionProcessingContext Empty = new TransactionProcessingContext(
             Array.Empty<BrokerAccountContext>(),
             default,
             default,
@@ -24,7 +25,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         private readonly ConcurrentBag<Operation> _newOperations;
         private readonly ConcurrentBag<MinDepositResidual> _newMinDepositResiduals;
 
-        public TransactionProcessingContext(IReadOnlyCollection<BrokerAccountContext> brokerAccounts, 
+        public TransactionProcessingContext(IReadOnlyCollection<BrokerAccountContext> brokerAccounts,
             Operation operation,
             TransactionInfo transactionInfo,
             IReadOnlyCollection<Deposit> deposits,
@@ -59,13 +60,13 @@ namespace Brokerage.Common.Domain.Processing.Context
         public Operation Operation { get; }
         public TransactionInfo TransactionInfo { get; }
         public Blockchain Blockchain { get; }
-        public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances  {  get; }
+        public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances { get; }
 
         public bool IsEmpty => !Deposits.Any() &&
                                !BrokerAccounts.Any() &&
                                !BrokerAccountBalances.Any() &&
                                Operation == null;
-    
+
         public void AddDeposit(Deposit deposit)
         {
             _deposits.Add(deposit);
@@ -75,7 +76,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         {
             _newOperations.Add(operation);
         }
-        
+
         public void AddNewMinDepositResidual(MinDepositResidual minDepositResidual)
         {
             _newMinDepositResiduals.Add(minDepositResidual);
