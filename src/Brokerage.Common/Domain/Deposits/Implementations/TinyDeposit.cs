@@ -96,7 +96,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             decimal minDepositForConsolidation)
         {
             var createdAt = DateTime.UtcNow;
-            var state = DepositState.Detected;
+            var state = DepositState.DetectedTiny;
 
             var deposit = new TinyDeposit(
                 id,
