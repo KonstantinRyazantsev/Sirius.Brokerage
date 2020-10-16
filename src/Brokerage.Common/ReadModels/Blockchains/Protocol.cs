@@ -6,5 +6,9 @@ namespace Brokerage.Common.ReadModels.Blockchains
     {
         public string Code { get; set; }
         public Capabilities Capabilities { get; set; }
+
+        public BlockchainAssetId FeePayingAssetId { get; set; }
+
+        public long FeePayingSiriusAssetId { get; set; }
     }
 }

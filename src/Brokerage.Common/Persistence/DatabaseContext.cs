@@ -141,6 +141,11 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<Asset>()
                 .ToTable(Tables.Assets)
                 .HasKey(x => x.Id);
+
+            modelBuilder.Entity<Asset>()
+                .HasIndex(x => new {x.BlockchainId, x.Symbol, x.Address})
+                .IsUnique(true)
+                .HasName("IX_Asset_BlockchainId_Symbol_Address");
         }
 
         private static void BuildWithdrawals(ModelBuilder modelBuilder)

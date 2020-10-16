@@ -29,6 +29,7 @@ namespace Brokerage.Common.Domain.Deposits
             DateTime createdAt,
             DateTime updatedAt,
             decimal minDepositForConsolidation,
+            long? provisioningOperationId,
             DepositType depositType)
         {
             Id = id;

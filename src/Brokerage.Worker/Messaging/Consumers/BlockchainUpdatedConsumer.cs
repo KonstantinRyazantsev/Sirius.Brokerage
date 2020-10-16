@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+using Brokerage.Common.Persistence.Assets;
 using Brokerage.Common.Persistence.Blockchains;
+using Brokerage.Common.ReadModels.Assets;
 using Brokerage.Common.ReadModels.Blockchains;
 using MassTransit;
 using Swisschain.Sirius.Integrations.MessagingContract.Blockchains;
@@ -9,15 +11,19 @@ namespace Brokerage.Worker.Messaging.Consumers
     public class BlockchainUpdatedConsumer : IConsumer<BlockchainUpdated>
     {
         private readonly IBlockchainsRepository _blockchainsRepository;
+        private readonly IAssetsRepository _assetsRepository;
 
-        public BlockchainUpdatedConsumer(IBlockchainsRepository blockchainsRepository)
+        public BlockchainUpdatedConsumer(IBlockchainsRepository blockchainsRepository, IAssetsRepository assetsRepository)
         {
             _blockchainsRepository = blockchainsRepository;
+            _assetsRepository = assetsRepository;
         }
 
         public async Task Consume(ConsumeContext<BlockchainUpdated> context)
         {
             var evt = context.Message;
+
+            Asset feePayingAsset = await _assetsRepository.GetByBlockchainAssetIdAsync(evt.Protocol.FeePayingAssetId);
             var blockchain = new Blockchain
             {
                 Id = evt.BlockchainId,
@@ -46,6 +52,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                                         }
                                 }
                     },
+                    FeePayingAssetId = evt.Protocol.FeePayingAssetId,
+                    FeePayingSiriusAssetId = feePayingAsset.Id
                 },
                 CreatedAt = evt.CreatedAt,
                 NetworkType = evt.NetworkType,

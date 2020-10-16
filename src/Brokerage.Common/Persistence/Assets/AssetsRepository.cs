@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.ReadModels.Assets;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Assets
 {
@@ -49,6 +50,16 @@ namespace Brokerage.Common.Persistence.Assets
             await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
             var asset = await context.Assets.FirstOrDefaultAsync(x => x.Id == id);
+
+            return asset;
+        }
+
+        public async Task<Asset> GetByBlockchainAssetIdAsync(BlockchainAssetId feePayingAssetId)
+        {
+            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+
+            var asset = await context.Assets.FirstOrDefaultAsync(x => x.Symbol == feePayingAssetId.Symbol &&
+                                                                      x.Address == feePayingAssetId.Address);
 
             return asset;
         }
