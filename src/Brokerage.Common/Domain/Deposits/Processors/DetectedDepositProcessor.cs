@@ -42,14 +42,23 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
             var deposits = new List<Deposit>();
 
+            var blockchain = processingContext.Blockchain;
+
             foreach (var brokerAccountContext in processingContext.BrokerAccounts)
             {
                 foreach (var accountContext in brokerAccountContext.Accounts)
                 {
                     foreach (var (assetId, value) in accountContext.Income.Where(x => x.Value > 0))
                     {
-                        var depositId = await _idGenerator.GetId($"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", IdGenerators.Deposits);
-                        var depositType = value >= minDepositForConsolidation ? DepositType.RegularDeposit : DepositType.TinyDeposit;
+                        DepositType depositType;
+                        if (blockchain.Protocol.FeePayingSiriusAssetId == assetId)
+                            depositType = value >= minDepositForConsolidation ? DepositType.RegularDeposit : DepositType.TinyDeposit;
+                        else
+                            depositType = value >= minDepositForConsolidation ? DepositType.TokenDeposit : DepositType.TinyDeposit;
+
+                        var depositId = await _idGenerator.GetId(
+                            $"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", 
+                            IdGenerators.Deposits);
                         var deposit = _depositFactory.Create(
                             depositId,
                             brokerAccountContext.TenantId,

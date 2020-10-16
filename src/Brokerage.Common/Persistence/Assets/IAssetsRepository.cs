@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Brokerage.Common.ReadModels.Assets;
+using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Persistence.Assets
 {
@@ -9,5 +10,7 @@ namespace Brokerage.Common.Persistence.Assets
         Task<Asset> GetAsync(long id);
 
         Task<Asset> GetOrDefaultAsync(long id);
+
+        Task<Asset> GetByBlockchainAssetIdAsync(BlockchainAssetId feePayingAssetId);
     }
 }
