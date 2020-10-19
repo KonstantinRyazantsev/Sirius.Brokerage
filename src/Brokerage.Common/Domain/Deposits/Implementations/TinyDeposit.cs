@@ -44,18 +44,13 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
-                DepositType.TinyDeposit)
+                DepositType.Tiny)
         {
         }
 
-        public override void Confirm(TransactionConfirmed tx)
+        public void Confirm(TransactionConfirmed tx)
         {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a tiny deposit");
-            }
-
-            SwitchState(new[] { DepositState.DetectedTiny }, DepositState.ConfirmedTiny);
+            SwitchState(new[] { DepositState.Detected }, DepositState.Confirmed);
 
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
             UpdatedAt = DateTime.UtcNow;
@@ -68,9 +63,9 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             return MinDepositResidual.Create(this.Id, this.Unit.Amount, accountDetails.NaturalId, this.Unit.AssetId);
         }
 
-        public override void Complete(IReadOnlyCollection<Unit> fees)
+        public void Complete(IReadOnlyCollection<Unit> fees)
         {
-            SwitchState(new[] { DepositState.ConfirmedTiny }, DepositState.CompletedTiny);
+            SwitchState(new[] { DepositState.Confirmed }, DepositState.Completed);
 
             Fees = fees;
             UpdatedAt = DateTime.UtcNow;
@@ -91,7 +86,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             decimal minDepositForConsolidation)
         {
             var createdAt = DateTime.UtcNow;
-            var state = DepositState.DetectedTiny;
+            var state = DepositState.Detected;
 
             var deposit = new TinyDeposit(
                 id,

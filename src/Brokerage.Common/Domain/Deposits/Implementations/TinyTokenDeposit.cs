@@ -10,9 +10,9 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits.Implementations
 {
-    public class TokenDeposit : Deposit
+    public class TinyTokenDeposit : Deposit
     {
-        protected TokenDeposit(
+        protected TinyTokenDeposit(
             long id,
             uint version,
             long sequence,
@@ -109,7 +109,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             AddDepositUpdatedEvent();
         }
 
-        public static TokenDeposit Create(
+        public static TinyTokenDeposit Create(
             long id,
             string tenantId,
             string blockchainId,
@@ -124,7 +124,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             var createdAt = DateTime.UtcNow;
             var state = DepositState.Detected;
 
-            var deposit = new TokenDeposit(
+            var deposit = new TinyTokenDeposit(
                 id,
                 default,
                 0,
@@ -151,7 +151,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
 
             return deposit;
         }
-        public static TokenDeposit Restore(
+        public static TinyTokenDeposit Restore(
             long id,
             uint version,
             long sequence,
@@ -171,7 +171,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             DateTime updatedAt,
             decimal minDepositForConsolidation)
         {
-            return new TokenDeposit(
+            return new TinyTokenDeposit(
                 id,
                 version,
                 sequence,

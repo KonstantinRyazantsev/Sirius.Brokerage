@@ -2,9 +2,10 @@
 {
     public enum DepositType
     {
-        TinyDeposit,
-        BrokerDeposit,
-        RegularDeposit,
-        TokenDeposit,
+        Tiny,
+        Broker,
+        Regular,
+        Token,
+        TinyToken,
     }
 }

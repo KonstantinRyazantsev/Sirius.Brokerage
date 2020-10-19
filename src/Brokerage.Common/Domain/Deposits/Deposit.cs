@@ -72,25 +72,10 @@ namespace Brokerage.Common.Domain.Deposits
         public List<object> Events { get; } = new List<object>();
         public decimal MinDepositForConsolidation { get; }
         public DepositType DepositType { get; }
-        public bool IsBrokerDeposit => AccountDetailsId == null;
-
-        public bool IsTiny => Unit.Amount < MinDepositForConsolidation;
-
-        public abstract void Confirm(TransactionConfirmed tx);
-
-        public virtual void Complete(IReadOnlyCollection<Unit> fees)
-        {
-            SwitchState(new[] { DepositState.Confirmed }, DepositState.Completed);
-
-            Fees = fees;
-            UpdatedAt = DateTime.UtcNow;
-
-            AddDepositUpdatedEvent();
-        }
 
         public void Fail(DepositError depositError)
         {
-            SwitchState(new[] { DepositState.Confirmed, DepositState.ConfirmedTiny }, DepositState.Failed);
+            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected, DepositState.Provisioned }, DepositState.Failed);
 
             UpdatedAt = DateTime.UtcNow;
             Error = depositError;
@@ -147,6 +132,7 @@ namespace Brokerage.Common.Domain.Deposits
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
                             DepositErrorCode.ValidationRejected =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.ValidationRejected,
+
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code), Error.Code, null)
                         },
                         Message = Error.Message
@@ -160,16 +146,16 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
-                    DepositState.ConfirmedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedTiny,
-                    DepositState.DetectedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedTiny,
-                    DepositState.CompletedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.CompletedTiny,
+                    
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
                 DepositType = DepositType switch {
-                    DepositType.TinyDeposit => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.TinyDeposit,
-                    DepositType.BrokerDeposit => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.BrokerDeposit,
-                    DepositType.RegularDeposit => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.RegularDeposit,
-                    DepositType.TokenDeposit => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.TokenDeposit,
+                    DepositType.Tiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Tiny,
+                    DepositType.Broker => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Broker,
+                    DepositType.Regular => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Regular,
+                    DepositType.Token => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Token,
+                    DepositType.TinyToken => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.TinyToken,
+
                     _ => throw new ArgumentOutOfRangeException(nameof(DepositType), DepositType, null)
                 }
             });

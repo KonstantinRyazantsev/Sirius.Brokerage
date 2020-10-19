@@ -24,7 +24,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 .Where(x => x.ConsolidationDepositId.HasValue)
                 .ToLookup(x => x.ConsolidationDepositId.Value, y => minDepositDictionary[y.DepositId]);
 
-            foreach (var deposit in processingContext.Deposits)
+            foreach (var deposit in processingContext.RegularDeposits)
             {
                 var assetId = deposit.Unit.AssetId;
                 var minDeposits = minDepositLookup[deposit.Id]

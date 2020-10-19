@@ -6,19 +6,6 @@ namespace Brokerage.Common.Domain.Deposits
 {
     public interface IDepositFactory
     {
-        Deposit Create(
-            long id,
-            string tenantId,
-            string blockchainId,
-            long brokerAccountId,
-            long brokerAccountDetailsId,
-            long? accountDetailsId,
-            Unit unit,
-            TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources,
-            decimal minDepositForConsolidation,
-            DepositType depositType);
-
         Deposit Restore(
             long id,
             uint version,

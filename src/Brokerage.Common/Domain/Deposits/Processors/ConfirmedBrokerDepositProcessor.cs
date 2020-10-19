@@ -18,13 +18,13 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return Task.CompletedTask;
             }
 
-            var brokerDeposits = processingContext.Deposits
-                .Where(x => x.IsBrokerDeposit)
+            var brokerDeposits = processingContext
+                .BrokerDeposits
                 .ToArray();
 
             foreach (var deposit in brokerDeposits)
             {
-                deposit.Confirm(tx);
+                deposit.Complete(tx);
             }
 
             var balanceChanges = brokerDeposits

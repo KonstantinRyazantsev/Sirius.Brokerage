@@ -11,82 +11,6 @@ namespace Brokerage.Common.Domain.Deposits
         {
         }
 
-        public Deposit Create(
-            long id,
-            string tenantId,
-            string blockchainId,
-            long brokerAccountId,
-            long brokerAccountDetailsId,
-            long? accountDetailsId,
-            Unit unit,
-            TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources,
-            decimal minDepositForConsolidation,
-            DepositType depositType)
-        {
-            Deposit deposit;
-
-            switch (depositType)
-            {
-                case DepositType.BrokerDeposit:
-                    deposit = BrokerDeposit.Create(
-                        id,
-                        tenantId,
-                        blockchainId,
-                        brokerAccountId,
-                        brokerAccountDetailsId,
-                        accountDetailsId,
-                        unit,
-                        transactionInfo,
-                        sources,
-                        minDepositForConsolidation);
-                    break;
-                case DepositType.RegularDeposit:
-                    deposit = RegularDeposit.Create(
-                        id,
-                        tenantId,
-                        blockchainId,
-                        brokerAccountId,
-                        brokerAccountDetailsId,
-                        accountDetailsId,
-                        unit,
-                        transactionInfo,
-                        sources,
-                        minDepositForConsolidation);
-                    break;
-                case DepositType.TinyDeposit:
-                    deposit = TinyDeposit.Create(
-                        id,
-                        tenantId,
-                        blockchainId,
-                        brokerAccountId,
-                        brokerAccountDetailsId,
-                        accountDetailsId,
-                        unit,
-                        transactionInfo,
-                        sources,
-                        minDepositForConsolidation);
-                    break;
-                case DepositType.TokenDeposit:
-                    deposit = TokenDeposit.Create(
-                        id,
-                        tenantId,
-                        blockchainId,
-                        brokerAccountId,
-                        brokerAccountDetailsId,
-                        accountDetailsId,
-                        unit,
-                        transactionInfo,
-                        sources,
-                        minDepositForConsolidation);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(depositType), depositType, null);
-            }
-
-            return deposit;
-        }
-
         public Deposit Restore(
             long id,
             uint version,
@@ -112,7 +36,7 @@ namespace Brokerage.Common.Domain.Deposits
 
             switch (depositType)
             {
-                case DepositType.BrokerDeposit:
+                case DepositType.Broker:
                     deposit = BrokerDeposit.Restore(
                         id,
                         version,
@@ -133,7 +57,7 @@ namespace Brokerage.Common.Domain.Deposits
                         updatedAt,
                         minDepositForConsolidation);
                     break;
-                case DepositType.RegularDeposit:
+                case DepositType.Regular:
                     deposit = RegularDeposit.Restore(
                         id,
                         version,
@@ -154,7 +78,7 @@ namespace Brokerage.Common.Domain.Deposits
                         updatedAt,
                         minDepositForConsolidation);
                     break;
-                case DepositType.TinyDeposit:
+                case DepositType.Tiny:
                     deposit = TinyDeposit.Restore(
                         id,
                         version,
@@ -175,8 +99,29 @@ namespace Brokerage.Common.Domain.Deposits
                         updatedAt,
                         minDepositForConsolidation);
                     break;
-                case DepositType.TokenDeposit:
+                case DepositType.Token:
                     deposit = TokenDeposit.Restore(
+                        id,
+                        version,
+                        sequence,
+                        tenantId,
+                        blockchainId,
+                        brokerAccountId,
+                        brokerAccountDetailsId,
+                        accountDetailsId,
+                        unit,
+                        consolidationOperationId,
+                        fees,
+                        transactionInfo,
+                        error,
+                        depositState,
+                        sources,
+                        createdAt,
+                        updatedAt,
+                        minDepositForConsolidation);
+                    break;
+                case DepositType.TinyToken:
+                    deposit = TinyTokenDeposit.Restore(
                         id,
                         version,
                         sequence,

@@ -47,7 +47,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
-                DepositType.RegularDeposit)
+                DepositType.Regular)
         {
         }
 
@@ -60,11 +60,6 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             decimal residual,
             Account account)
         {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
-            }
-
             SwitchState(new[] { DepositState.Detected, }, DepositState.Confirmed);
 
             var consolidationAmount = new Unit(
@@ -91,14 +86,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             return consolidationOperation;
         }
 
-        //ConfirmRegularWithDestinationTag
-        public override void Confirm(TransactionConfirmed tx)
+        public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
         {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
-            }
-
             SwitchState(new[] { DepositState.Detected }, DepositState.Completed);
 
             var date = DateTime.UtcNow;
@@ -109,7 +98,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             AddDepositUpdatedEvent();
         }
 
-        public override void Complete(IReadOnlyCollection<Unit> fees)
+        public void Complete(IReadOnlyCollection<Unit> fees)
         {
             SwitchState(new[] { DepositState.Confirmed }, DepositState.Completed);
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
 
@@ -12,21 +13,21 @@ namespace Brokerage.Common.Domain.Processing.Context
     {
         public static readonly OperationProcessingContext Empty = new OperationProcessingContext(
             null, 
-            Array.Empty<Deposit>(),
+            Array.Empty<RegularDeposit>(),
             Array.Empty<Withdrawal>(),
             new Dictionary<BrokerAccountBalancesId, BrokerAccountBalances>(),
             Array.Empty<MinDepositResidual>(),
-            Array.Empty<Deposit>());
+            Array.Empty<TinyDeposit>());
 
         public OperationProcessingContext(Operation operation, 
-            IReadOnlyCollection<Deposit> deposits, 
+            IReadOnlyCollection<RegularDeposit> regularDeposits, 
             IReadOnlyCollection<Withdrawal> withdrawals,
             IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> brokerAccountBalances,
             IReadOnlyCollection<MinDepositResidual> minDepositResiduals,
-            IReadOnlyCollection<Deposit> minDeposits)
+            IReadOnlyCollection<TinyDeposit> minDeposits)
         {
             Operation = operation;
-            Deposits = deposits;
+            RegularDeposits = regularDeposits;
             Withdrawals = withdrawals;
             BrokerAccountBalances = brokerAccountBalances;
             MinDepositResiduals = minDepositResiduals;
@@ -34,14 +35,14 @@ namespace Brokerage.Common.Domain.Processing.Context
         }
 
         public Operation Operation { get; }
-        public IReadOnlyCollection<Deposit> Deposits { get; }
+        public IReadOnlyCollection<RegularDeposit> RegularDeposits { get; }
         public IReadOnlyCollection<Withdrawal> Withdrawals { get; }
         public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances { get; }
         public IReadOnlyCollection<MinDepositResidual> MinDepositResiduals { get; }
-        public IReadOnlyCollection<Deposit> MinDeposits { get; }
+        public IReadOnlyCollection<TinyDeposit> MinDeposits { get; }
 
         public bool IsEmpty => Operation == null &&
-                               !Deposits.Any() &&
+                               !RegularDeposits.Any() &&
                                !Withdrawals.Any() &&
                                !BrokerAccountBalances.Any();
     }

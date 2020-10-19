@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
@@ -51,7 +52,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                     var depositId = await _idGenerator.GetId($"BrokerDeposits:{tx.TransactionId}-{brokerAccountDetailsId}-{assetId}", IdGenerators.Deposits);
                     
-                    var deposit = _depositFactory.Create(
+                    var deposit = BrokerDeposit.Create(
                         depositId,
                         brokerAccountContext.TenantId,
                         tx.BlockchainId,
@@ -64,8 +65,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                             .Where(x => x.Unit.AssetId == assetId)
                             .Select(x => new DepositSource(x.Address, x.Unit.Amount))
                             .ToArray(),
-                        default,
-                        DepositType.BrokerDeposit);
+                        default);
 
                     processingContext.AddDeposit(deposit);
 

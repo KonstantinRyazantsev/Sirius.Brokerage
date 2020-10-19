@@ -43,33 +43,18 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
-                DepositType.BrokerDeposit)
+                DepositType.Broker)
         {
         }
 
-        public override void Confirm(TransactionConfirmed tx)
+        public void Complete(TransactionConfirmed tx)
         {
-            if (!IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a regular deposit as a broker deposit");
-            }
-
             SwitchState(new[] { DepositState.Detected }, DepositState.Completed);
 
             var date = DateTime.UtcNow;
 
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
             UpdatedAt = date;
-
-            AddDepositUpdatedEvent();
-        }
-
-        public override void Complete(IReadOnlyCollection<Unit> fees)
-        {
-            SwitchState(new[] { DepositState.ConfirmedTiny }, DepositState.CompletedTiny);
-
-            Fees = fees;
-            UpdatedAt = DateTime.UtcNow;
 
             AddDepositUpdatedEvent();
         }
