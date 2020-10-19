@@ -7,7 +7,9 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
     public class WithdrawalUpdated
     {
         public long WithdrawalId { get; set; }
-        public long Sequence { get; set; }
+
+        public string TenantId { get; set; }
+
         public long BrokerAccountId { get; set; }
 
         public long BrokerAccountDetailsId { get; set; }
@@ -15,8 +17,6 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
         public long? AccountId { get; set; }
 
         public Unit Unit { get; set; }
-
-        public string TenantId { get; set; }
 
         public IReadOnlyCollection<Unit> Fees { get; set; }
 
@@ -28,12 +28,14 @@ namespace Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals
 
         public WithdrawalError Error { get; set; }
 
+        public TransferContext TransferContext { get; set; }
+
         public long? OperationId { get; set; }
+
+        public long Sequence { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-
-        public UserContext UserContext { get; set; }
     }
 }

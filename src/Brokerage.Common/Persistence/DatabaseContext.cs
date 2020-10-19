@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Swisschain.Extensions.Idempotency.EfCore;
+using Swisschain.Sirius.Sdk.Primitives;
 using DepositSourceEntity = Brokerage.Common.Persistence.Deposits.DepositSourceEntity;
 
 namespace Brokerage.Common.Persistence
@@ -19,7 +21,9 @@ namespace Brokerage.Common.Persistence
     {
         public const string SchemaName = "brokerage";
         public const string MigrationHistoryTable = "__EFMigrationsHistory";
-        private static readonly JsonSerializerSettings JsonSerializingSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+
+        private static readonly JsonSerializerSettings JsonSerializingSettings =
+            new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore};
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) :
             base(options)
@@ -130,7 +134,6 @@ namespace Brokerage.Common.Persistence
                             JsonSerializingSettings));
 
             #endregion
-
         }
 
         private static void BuildAssets(ModelBuilder modelBuilder)
@@ -145,14 +148,6 @@ namespace Brokerage.Common.Persistence
             modelBuilder.Entity<WithdrawalEntity>()
                 .ToTable(Tables.Withdrawals)
                 .HasKey(x => x.Id);
-
-            modelBuilder.Entity<WithdrawalFeeEntity>()
-                .ToTable(Tables.WithdrawalFees)
-                .HasKey(x => new
-                {
-                    x.WithdrawalId,
-                    x.AssetId
-                });
 
             modelBuilder.Entity<WithdrawalEntity>(e =>
             {
@@ -171,27 +166,23 @@ namespace Brokerage.Common.Persistence
                 .HasIndex(x => x.OperationId)
                 .HasName("IX_Withdrawal_OperationId");
 
-            #region Conversions
-
             modelBuilder.Entity<WithdrawalEntity>()
                 .Property(e => e.Fees)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
                         JsonSerializingSettings),
                     v =>
-                        JsonConvert.DeserializeObject<IReadOnlyCollection<WithdrawalFeeEntity>>(v,
+                        JsonConvert.DeserializeObject<IReadOnlyCollection<Unit>>(v,
                             JsonSerializingSettings));
 
             modelBuilder.Entity<WithdrawalEntity>()
-                .Property(e => e.UserContext)
+                .Property(e => e.TransferContext)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v,
                         JsonSerializingSettings),
                     v =>
-                        JsonConvert.DeserializeObject<UserContextEntity>(v,
+                        JsonConvert.DeserializeObject<TransferContext>(v,
                             JsonSerializingSettings));
-
-            #endregion
         }
 
         private static void BuildDeposits(ModelBuilder modelBuilder)
@@ -306,8 +297,8 @@ namespace Brokerage.Common.Persistence
                 .ToTable(Tables.Blockchains)
                 .HasKey(x => x.Id);
 
-            
-            var jsonSerializingSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+
+            var jsonSerializingSettings = new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore};
 
             modelBuilder.Entity<Blockchain>()
                 .Property(e => e.Protocol)
@@ -320,7 +311,7 @@ namespace Brokerage.Common.Persistence
         {
             modelBuilder.Entity<AccountDetailsEntity>()
                 .ToTable(Tables.AccountDetails)
-                .HasKey(c => new { c.Id });
+                .HasKey(c => new {c.Id});
 
             modelBuilder.Entity<AccountDetailsEntity>()
                 .HasIndex(x => x.NaturalId)
@@ -345,7 +336,7 @@ namespace Brokerage.Common.Persistence
         private static void BuildAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()
-                .HasKey(c => new { Id = c.Id });
+                .HasKey(c => new {Id = c.Id});
 
             modelBuilder.Entity<BrokerAccountEntity>()
                 .HasMany<AccountEntity>(s => s.Accounts)
@@ -357,7 +348,7 @@ namespace Brokerage.Common.Persistence
         private static void BuildBrokerAccountDetails(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BrokerAccountDetailsEntity>()
-                .HasKey(c => new { c.Id });
+                .HasKey(c => new {c.Id});
 
             modelBuilder.Entity<BrokerAccountDetailsEntity>()
                 .HasIndex(x => x.ActiveId)
@@ -395,7 +386,6 @@ namespace Brokerage.Common.Persistence
                             JsonSerializingSettings));
 
             #endregion
-
         }
     }
 }

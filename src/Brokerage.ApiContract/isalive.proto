@@ -2,7 +2,6 @@ syntax = "proto3";
 
 option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract";
 
-import "common.proto";
 package services;
 
 service Monitoring {

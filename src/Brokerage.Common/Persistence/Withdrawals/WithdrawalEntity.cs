@@ -12,15 +12,15 @@ namespace Brokerage.Common.Persistence.Withdrawals
     {
         public WithdrawalEntity()
         {
-            Fees = new HashSet<WithdrawalFeeEntity>();
+            Fees = new HashSet<Unit>();
         }
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
-        public uint Version { get; set; }
-        public long Sequence { get; set; }
-
+        
+        public string TenantId { get; set; }
+        
         public long BrokerAccountId { get; set; }
 
         public long BrokerAccountDetailsId { get; set; }
@@ -31,36 +31,38 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         public decimal Amount { get; set; }
 
-        public string TenantId { get; set; }
-
-        public IReadOnlyCollection<WithdrawalFeeEntity> Fees { get; set; }
-
-        //Destination
+        public IReadOnlyCollection<Unit> Fees { get; set; }
+        
         public string DestinationAddress { get; set; }
 
         public string DestinationTag { get; set; }
 
         public DestinationTagType? DestinationTagType { get; set; }
-
+        
         public WithdrawalState State { get; set; }
-
-        //Transaction
+        
         public string TransactionId { get; set; }
+        
         public long? TransactionBlock { get; set; }
+        
         public long? TransactionRequiredConfirmationsCount { get; set; }
+        
         public DateTimeOffset? TransactionDateTime { get; set; }
 
-        //Error
         public string WithdrawalErrorMessage { get; set; }
 
         public WithdrawalErrorCode? WithdrawalErrorCode { get; set; }
+        
+        public TransferContext TransferContext { get; set; }
 
         public long? OperationId { get; set; }
 
+        public uint Version { get; set; }
+        
+        public long Sequence { get; set; }
+        
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset UpdatedAt { get; set; }
-
-        public UserContextEntity UserContext { get; set; }
     }
 }

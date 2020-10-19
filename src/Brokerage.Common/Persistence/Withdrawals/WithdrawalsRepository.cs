@@ -63,45 +63,32 @@ namespace Brokerage.Common.Persistence.Withdrawals
 
         private static WithdrawalEntity MapToEntity(Withdrawal withdrawal)
         {
-            var depositEntity = new WithdrawalEntity()
+            var depositEntity = new WithdrawalEntity
             {
                 Id = withdrawal.Id,
-                Sequence = withdrawal.Sequence,
-                Version = withdrawal.Version,
+                TenantId = withdrawal.TenantId,
+                BrokerAccountId = withdrawal.BrokerAccountId,
+                BrokerAccountDetailsId = withdrawal.BrokerAccountDetailsId,
+                AccountId = withdrawal.AccountId,
                 AssetId = withdrawal.Unit.AssetId,
                 Amount = withdrawal.Unit.Amount,
-                OperationId = withdrawal.OperationId,
-                BrokerAccountDetailsId = withdrawal.BrokerAccountDetailsId,
-                Fees = withdrawal.Fees?.Select((x) => new WithdrawalFeeEntity
-                {
-                    AssetId = x.AssetId,
-                    Amount = x.Amount,
-                    WithdrawalId = withdrawal.Id
-                }).ToArray(),
-                WithdrawalErrorMessage = withdrawal.Error?.Message,
-                WithdrawalErrorCode = withdrawal.Error?.Code,
+                Fees = withdrawal.Fees,
+                DestinationAddress = withdrawal.DestinationDetails.Address,
+                DestinationTag = withdrawal.DestinationDetails.Tag,
+                DestinationTagType = withdrawal.DestinationDetails.TagType,
                 State = withdrawal.State,
                 TransactionId = withdrawal.TransactionInfo?.TransactionId,
                 TransactionBlock = withdrawal.TransactionInfo?.TransactionBlock,
                 TransactionRequiredConfirmationsCount = withdrawal.TransactionInfo?.RequiredConfirmationsCount,
                 TransactionDateTime = withdrawal.TransactionInfo?.DateTime,
-                BrokerAccountId = withdrawal.BrokerAccountId,
-                TenantId = withdrawal.TenantId,
-                DestinationTagType = withdrawal.DestinationDetails.TagType,
+                WithdrawalErrorMessage = withdrawal.Error?.Message,
+                WithdrawalErrorCode = withdrawal.Error?.Code,
+                TransferContext = withdrawal.TransferContext,
+                OperationId = withdrawal.OperationId,
+                Version = withdrawal.Version,
+                Sequence = withdrawal.Sequence,
                 UpdatedAt = withdrawal.UpdatedAt,
-                CreatedAt = withdrawal.CreatedAt,
-                DestinationAddress = withdrawal.DestinationDetails.Address,
-                AccountId = withdrawal.AccountId,
-                DestinationTag = withdrawal.DestinationDetails.Tag,
-                UserContext = new UserContextEntity()
-                {
-                    AccountReferenceId = withdrawal.UserContext.AccountReferenceId,
-                    ApiKeyId = withdrawal.UserContext.ApiKeyId,
-                    PassClientIp = withdrawal.UserContext.PassClientIp,
-                    UserId = withdrawal.UserContext.UserId,
-                    WithdrawalReferenceId = withdrawal.UserContext.WithdrawalReferenceId,
-                    WithdrawalParamsSignature = withdrawal.UserContext.WithdrawalParamsSignature,
-                }
+                CreatedAt = withdrawal.CreatedAt
             };
 
             return depositEntity;
@@ -118,37 +105,31 @@ namespace Brokerage.Common.Persistence.Withdrawals
                 withdrawalEntity.AccountId,
                 new Unit(withdrawalEntity.AssetId, withdrawalEntity.Amount),
                 withdrawalEntity.TenantId,
-                withdrawalEntity.Fees?
-                    .Select(x => new Unit(x.AssetId, x.Amount))
-                    .ToArray(),
+                withdrawalEntity.Fees,
                 new DestinationDetails(
                     withdrawalEntity.DestinationAddress,
                     withdrawalEntity.DestinationTag,
                     withdrawalEntity.DestinationTagType),
                 withdrawalEntity.State,
-                withdrawalEntity.TransactionId != null ? new TransactionInfo(
-                    withdrawalEntity.TransactionId,
-                    // ReSharper disable once PossibleInvalidOperationException
-                    withdrawalEntity.TransactionBlock.Value,
-                    // ReSharper disable once PossibleInvalidOperationException
-                    withdrawalEntity.TransactionRequiredConfirmationsCount.Value,
-                    // ReSharper disable once PossibleInvalidOperationException
-                    withdrawalEntity.TransactionDateTime.Value.UtcDateTime) : null,
-                withdrawalEntity.WithdrawalErrorCode == null ?
-                    null :
-                    new WithdrawalError(withdrawalEntity.WithdrawalErrorMessage, withdrawalEntity.WithdrawalErrorCode.Value),
+                withdrawalEntity.TransactionId != null
+                    ? new TransactionInfo(
+                        withdrawalEntity.TransactionId,
+                        // ReSharper disable once PossibleInvalidOperationException
+                        withdrawalEntity.TransactionBlock.Value,
+                        // ReSharper disable once PossibleInvalidOperationException
+                        withdrawalEntity.TransactionRequiredConfirmationsCount.Value,
+                        // ReSharper disable once PossibleInvalidOperationException
+                        withdrawalEntity.TransactionDateTime.Value.UtcDateTime)
+                    : null,
+                withdrawalEntity.WithdrawalErrorCode != null
+                    ? new WithdrawalError(
+                        withdrawalEntity.WithdrawalErrorMessage,
+                        withdrawalEntity.WithdrawalErrorCode.Value)
+                    : null,
                 withdrawalEntity.OperationId,
                 withdrawalEntity.CreatedAt.UtcDateTime,
                 withdrawalEntity.UpdatedAt.UtcDateTime,
-                new UserContext()
-                {
-                    AccountReferenceId = withdrawalEntity.UserContext.AccountReferenceId,
-                    UserId = withdrawalEntity.UserContext.UserId,
-                    ApiKeyId = withdrawalEntity.UserContext.ApiKeyId,
-                    WithdrawalReferenceId = withdrawalEntity.UserContext.WithdrawalReferenceId,
-                    PassClientIp = withdrawalEntity.UserContext.PassClientIp,
-                    WithdrawalParamsSignature = withdrawalEntity.UserContext.WithdrawalParamsSignature
-                });
+                withdrawalEntity.TransferContext);
 
             return withdrawal;
         }

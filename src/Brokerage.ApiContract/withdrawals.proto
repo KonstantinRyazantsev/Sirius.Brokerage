@@ -9,140 +9,105 @@ import "google/protobuf/wrappers.proto";
 package services;
 
 service Withdrawals {
-  rpc Execute (ExecuteWithdrawalRequest) returns (ExecuteWithdrawalWrapperResponse);
+    rpc Execute (ExecuteWithdrawalRequest) returns (ExecuteWithdrawalWrapperResponse);
 }
 
 message ExecuteWithdrawalRequest {
-  string tenantId = 1;
-
-  string requestId = 2;
-
-  int64 brokerAccountId = 3;
-
-  google.protobuf.Int64Value accountId = 4;
-
-  int64 assetId = 5;
-
-  common.BigDecimal amount = 6;
-
-  .services.DestinationDetails destinationDetails = 7;
-
-  .services.UserContext userContext = 8;
-}
-
-message DestinationDetails {
-  string address = 1;
-
-  google.protobuf.StringValue Tag = 2;
-
-  common.NullableDestinationTagType tagType = 3;
+    string request_id = 1;
+    string tenant_id = 2;
+    int64 broker_account_id = 3;
+    google.protobuf.Int64Value account_id = 4;
+    int64 asset_id = 5;
+    common.BigDecimal amount = 6;
+    .services.DestinationDetails destination_details = 7;
+    .services.TransferContext transfer_context = 8;    
 }
 
 message ExecuteWithdrawalWrapperResponse {
-    oneof kind{
-      ExecuteWithdrawalResponse response = 1;
-      ErrorResponseBody error =2;
+    oneof kind {
+        ExecuteWithdrawalResponse response = 1;
+        ErrorResponseBody error = 2;
     }
 }
 
 message ErrorResponseBody {
 
-  enum ErrorCode {
-    INVALID_PARAMETERS = 0;
-    UNAUTHORIZED = 1;
-    TECHNICAL_PROBLEMS = 2;
-    NOT_ENOUGH_BALANCE = 3;
-  }
+    enum ErrorCode {
+        INVALID_PARAMETERS = 0;
+        UNAUTHORIZED = 1;
+        TECHNICAL_PROBLEMS = 2;
+        NOT_ENOUGH_BALANCE = 3;
+    }
 
-  ErrorCode errorCode = 1;
-  string errorMessage = 2;
+    ErrorCode error_code = 1;
+    string error_message = 2;
 }
 
-message ExecuteWithdrawalResponse{
-  int64 id = 1;
+message ExecuteWithdrawalResponse {
+    enum WithdrawalState {
+        PROCESSING = 0;
+        EXECUTING = 1;
+        SENT = 2;
+        COMPLETED = 3;
+        FAILED = 4;
+        VALIDATING = 5;
+        SIGNING = 6;
+    }
 
-  int64 brokerAccountId = 2;
-
-  int64 brokerAccountDetailsId = 3;
-
-  google.protobuf.Int64Value accountId = 4;
-
-  common.Unit unit = 5;
-
-  string tenantId = 6;
-
-  repeated common.Unit fees = 7;
-
-  DestinationDetails destinationDetails = 8;
-
-  WithdrawalState State = 9;
-
-  enum WithdrawalState {
-    PROCESSING = 0;
-    
-    EXECUTING=1;
-    
-    SENT=2;
-    
-    COMPLETED=3;
-    
-    FAILED=4;
-
-    VALIDATING=5;
-
-    SIGNING=6;
-  }
-
-  TransactionInfo transactionInfo = 10;
-
-  WithdrawalError error = 11;
-
-  google.protobuf.Int64Value operationId = 12;
-
-  google.protobuf.Timestamp createdAt = 13;
-
-  google.protobuf.Timestamp updatedAt = 14;
-
-  int64 sequence = 15;
-
-  .services.UserContext userContext = 16;
+    int64 id = 1;
+    string tenant_id = 2;
+    int64 broker_account_id = 3;
+    int64 broker_account_details_id = 4;
+    google.protobuf.Int64Value account_id = 5;
+    common.Unit unit = 6;    
+    repeated common.Unit fees = 7;
+    DestinationDetails destination_details = 8;
+    WithdrawalState state = 9;
+    TransactionInfo transaction_info = 10;
+    WithdrawalError error = 11;
+    .services.TransferContext transfer_context = 12;
+    google.protobuf.Int64Value operation_id = 13;
+    int64 sequence = 14;
+    google.protobuf.Timestamp created_at = 15;
+    google.protobuf.Timestamp updated_at = 16;    
 }
 
-message WithdrawalError
-{
-  string messageInfo = 1; 
+message WithdrawalError {
+    enum WithdrawalErrorCode {
+        NOT_ENOUGH_BALANCE = 0;
+        INVALID_DESTINATION_ADDRESS = 1;
+        DESTINATION_TAG_REQUIRED = 2;
+        TECHNICAL_PROBLEM = 3;
+    }
 
-  WithdrawalErrorCode errorCode = 2;
-
-  enum WithdrawalErrorCode
-  {
-    NOT_ENOUGH_BALANCE=0;
-     
-    INVALID_DESTINATION_ADDRESS=1;
-     
-    DESTINATION_TAG_REQUIRED=2;
-     
-    TECHNICAL_PROBLEM=3;
-  }
+    string message_info = 1;
+    WithdrawalErrorCode error_code = 2;
 }
 
-
-message TransactionInfo{
-  string transactionId = 1;
-
-  int64 transactionBlock = 2;  
-
-  int64 requiredConfirmationsCount = 3;
-
-  google.protobuf.Timestamp dateTime = 4;
+message TransactionInfo {
+    string transaction_id = 1;
+    int64 transaction_block = 2;
+    int64 required_confirmations_count = 3;
+    google.protobuf.Timestamp date_time = 4;
 }
 
+message DestinationDetails {
+    string address = 1;
+    google.protobuf.StringValue tag = 2;
+    common.NullableDestinationTagType tag_type = 3;
+}
 
-message UserContext{
-  string pass_client_ip = 1;
-  google.protobuf.StringValue user_id = 2;
-  google.protobuf.StringValue api_key_id = 3;
-  google.protobuf.StringValue account_reference_id = 4;
-  google.protobuf.StringValue withdrawal_reference_id = 5;
-  google.protobuf.StringValue withdrawal_params_signature = 6;
+message TransferContext {
+    google.protobuf.StringValue account_reference_id = 1;
+    google.protobuf.StringValue withdrawal_reference_id = 2;
+    google.protobuf.StringValue document = 3;
+    google.protobuf.StringValue signature = 4;
+    .services.RequestContext request_context = 5;
+}
+
+message RequestContext {
+    google.protobuf.StringValue user_id = 1;
+    google.protobuf.StringValue api_key_id = 2;
+    google.protobuf.StringValue ip = 3;
+    google.protobuf.Timestamp timestamp = 4;
 }
