@@ -5,9 +5,6 @@ using Google.Protobuf.WellKnownTypes;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
-using DestinationTagType = Swisschain.Sirius.Sdk.Primitives.DestinationTagType;
-using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
-using UserContext = Swisschain.Sirius.Executor.ApiContract.Transfers.UserContext;
 
 namespace Brokerage.Common.Domain.Operations
 {
@@ -24,7 +21,7 @@ namespace Brokerage.Common.Domain.Operations
             long depositId,
             string accountAddress,
             string brokerAccountAddress,
-            Unit unit,
+            Swisschain.Sirius.Sdk.Primitives.Unit unit,
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,
@@ -50,21 +47,26 @@ namespace Brokerage.Common.Domain.Operations
                             Amount = unit.Amount,
                         }
                     },
-                    Component = nameof(Brokerage),
-                    OperationType = "Deposit consolidation",
                     VaultId = vaultId,
-                    //TODO: What should we pass here
-                    UserContext = new UserContext()
+                    TransferContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.TransferContext
                     {
-                        WithdrawalParamsSignature = null,
-                        WithdrawalReferenceId = null,
-                        UserId = null,
                         AccountReferenceId = accountReferenceId,
-                        ApiKeyId = null,
-                        PassClientIp = "127.0.0.1"
-                    },
-                    DestinationGroup = brokerAccountId.ToString(),
-                    SourceGroup = brokerAccountId.ToString()
+                        WithdrawalReferenceId = null,
+                        Component = nameof(Brokerage),
+                        OperationType = "Deposit consolidation",
+                        SourceGroup = brokerAccountId.ToString(),
+                        DestinationGroup = brokerAccountId.ToString(),
+                        Document = null,
+                        Signature = null,
+                        //TODO: What should we pass here
+                        RequestContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.RequestContext
+                        {
+                            UserId = null,
+                            ApiKeyId = null,
+                            Ip = "127.0.0.1",
+                            Timestamp = DateTime.UtcNow.ToTimestamp()
+                        }
+                    }
                 }));
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
@@ -79,9 +81,9 @@ namespace Brokerage.Common.Domain.Operations
             long withdrawalId,
             string brokerAccountAddress,
             DestinationDetails destinationDetails,
-            Unit unit,
+            Swisschain.Sirius.Sdk.Primitives.Unit unit,
             long vaultId,
-            Brokerage.Common.Domain.Withdrawals.UserContext userContext,
+            Withdrawals.TransferContext transferContext,
             string sourceGroup,
             string destinationGroup)
         {
@@ -103,13 +105,13 @@ namespace Brokerage.Common.Domain.Operations
                         DestinationAddress = destinationDetails.Address,
                         DestinationTag = destinationDetails.Tag,
                         DestinationTagType = destinationDetails.TagType switch {
-                            DestinationTagType.Text => new NullableDestinationTagType
+                            Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Text => new NullableDestinationTagType
                             {
-                                Value = Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Text
+                                Value = DestinationTagType.Text
                             },
-                            DestinationTagType.Number => new NullableDestinationTagType
+                            Swisschain.Sirius.Sdk.Primitives.DestinationTagType.Number => new NullableDestinationTagType
                             {
-                                Value = Swisschain.Sirius.Executor.ApiContract.Transfers.DestinationTagType.Number
+                                Value = DestinationTagType.Number
                             },
                             null => new NullableDestinationTagType
                             {
@@ -119,20 +121,25 @@ namespace Brokerage.Common.Domain.Operations
                         }
                     }
                 },
-                Component = nameof(Brokerage),
-                OperationType = "Withdrawal",
                 VaultId = vaultId,
-                UserContext = new UserContext()
+                TransferContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.TransferContext
                 {
-                    AccountReferenceId = userContext.AccountReferenceId,
-                    ApiKeyId = userContext.ApiKeyId,
-                    WithdrawalReferenceId = userContext.WithdrawalReferenceId,
-                    UserId = userContext.UserId,
-                    PassClientIp = userContext.PassClientIp,
-                    WithdrawalParamsSignature = userContext.WithdrawalParamsSignature
-                },
-                DestinationGroup = destinationGroup,
-                SourceGroup = sourceGroup
+                    AccountReferenceId = transferContext.AccountReferenceId,
+                    WithdrawalReferenceId = transferContext.WithdrawalReferenceId,
+                    Component = nameof(Brokerage),
+                    OperationType = "Withdrawal",
+                    SourceGroup = sourceGroup,
+                    DestinationGroup = destinationGroup,
+                    Document = transferContext.Document,
+                    Signature = transferContext.Signature,
+                    RequestContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.RequestContext
+                    {
+                        UserId = transferContext.RequestContext.UserId,
+                        ApiKeyId = transferContext.RequestContext.ApiKeyId,
+                        Ip = transferContext.RequestContext.Ip,
+                        Timestamp = transferContext.RequestContext.Timestamp.ToTimestamp()
+                    }
+                }
             });
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)

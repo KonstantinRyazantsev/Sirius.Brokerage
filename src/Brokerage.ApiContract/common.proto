@@ -3,7 +3,6 @@ syntax = "proto3";
 option csharp_namespace = "Swisschain.Sirius.Brokerage.ApiContract.Common";
 
 import "google/protobuf/struct.proto";
-import "google/protobuf/wrappers.proto";
 
 package common;
 

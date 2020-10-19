@@ -22,7 +22,7 @@ namespace Brokerage.Common.Domain.Operations
             DestinationDetails destinationDetails,
             Unit unit,
             long vaultId,
-            UserContext userContext,
+            TransferContext transferContext,
             string sourceGroup,
             string destinationGroup);
     }
