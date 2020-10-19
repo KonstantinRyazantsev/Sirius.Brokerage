@@ -68,8 +68,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             long? accountDetailsId,
             Unit unit,
             TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources,
-            decimal minDepositForConsolidation)
+            IReadOnlyCollection<DepositSource> sources)
         {
             var createdAt = DateTime.UtcNow;
             var state = DepositState.Detected;
@@ -95,7 +94,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                     .ToArray(),
                 createdAt,
                 createdAt,
-                minDepositForConsolidation);
+                0);
 
             deposit.AddDepositUpdatedEvent();
 
