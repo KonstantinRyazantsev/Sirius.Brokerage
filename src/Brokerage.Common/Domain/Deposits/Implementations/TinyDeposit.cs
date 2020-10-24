@@ -155,5 +155,10 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 updatedAt,
                 minDepositForConsolidation);
         }
+
+        public void AddConsolidationOperationId(long consolidationOperationId)
+        {
+            this.ConsolidationOperationId = consolidationOperationId;
+        }
     }
 }

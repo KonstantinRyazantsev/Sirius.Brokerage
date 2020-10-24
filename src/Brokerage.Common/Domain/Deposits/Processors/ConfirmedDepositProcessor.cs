@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Configuration;
+using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
@@ -74,6 +75,11 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     var brokerAccount = brokerAccountContext.BrokerAccount;
                     var accountDetails = accountDetailsContext.Details;
                     accDict.TryGetValue(accountDetails.AccountId, out var account);
+
+                    //tinyDepositsLookup[accountDetails.NaturalId]
+                    //        .Where(x => x.Unit.AssetId == deposit.Unit.AssetId)
+                    //        .ToArray();
+
                     var residuals = prevMinResiduals[accountDetails.NaturalId]
                         .Where(x => x.AssetId == deposit.Unit.AssetId)
                         .ToArray();
@@ -84,7 +90,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                         brokerAccountDetails,
                         accountDetails,
                         tx,
-                        _operationsFactory, 
+                        _operationsFactory,
                         margin,
                         account);
 
@@ -92,6 +98,11 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     {
                         residual.AddConsolidationDeposit(deposit.Id);
                     }
+
+                    //foreach (var tinyDeposit in correlatedTinyDeposits)
+                    //{
+                    //    tinyDeposit.AddConsolidationOperationId(consolidationOperation.Id);
+                    //}
 
                     processingContext.AddNewOperation(consolidationOperation);
                 }
@@ -106,8 +117,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             }
         }
 
-        private static void ProcessTinyDeposits(
-            TransactionConfirmed tx, 
+        private static void ProcessTinyDeposits(TransactionConfirmed tx,
             TransactionProcessingContext processingContext,
             IEnumerable<TinyDeposit> tinyDeposits)
         {

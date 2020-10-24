@@ -50,7 +50,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                     var rawMinDeposits = await depositsRepository.GetAnyFor(
                         minDepositResiduals
                             .Where(x => x.ConsolidationDepositId.HasValue)
-                            .Select(x => x.ConsolidationDepositId.Value)
+                            .Select(x => x.DepositId)
                             .ToHashSet());
                     var minDeposits = rawMinDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
 
