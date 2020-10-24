@@ -96,6 +96,13 @@ namespace Brokerage.Common.Domain.Processing.Context
             switch (deposit.DepositType)
             {
                 case DepositType.Regular:
+                    _regularDeposits.Add(deposit as RegularDeposit);
+                    break;
+                case DepositType.Broker:
+                    _brokerDeposits.Add(deposit as BrokerDeposit);
+                    break;
+                case DepositType.Tiny:
+                    _tinyDeposits.Add(deposit as TinyDeposit);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(deposit.DepositType), deposit.DepositType, null);

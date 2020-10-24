@@ -47,11 +47,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                         .ToDictionary(x => x.NaturalId);
                     var minDepositResiduals = await minDepositResidualsRepository.GetForConsolidationDeposits(
                         deposits.Select(x => x.Id).ToHashSet());
-                    var minDeposits = (await depositsRepository.GetAnyFor(
+                    var rawMinDeposits = await depositsRepository.GetAnyFor(
                         minDepositResiduals
                             .Where(x => x.ConsolidationDepositId.HasValue)
-                        .Select(x => x.ConsolidationDepositId.Value)
-                        .ToHashSet())).Cast<TinyDeposit>().ToArray();
+                            .Select(x => x.ConsolidationDepositId.Value)
+                            .ToHashSet());
+                    var minDeposits = rawMinDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
 
                     return new OperationProcessingContext(
                         operation,

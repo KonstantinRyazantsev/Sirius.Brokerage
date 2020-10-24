@@ -69,7 +69,9 @@ namespace Brokerage.Common.Persistence.Deposits
                 .Deposits
                 .AsQueryable();
 
-            await deposits.Where(x => consolidationDepositsIds.Contains(x.Id)).LoadAsync();
+            deposits = deposits.Where(x => consolidationDepositsIds.Contains(x.Id));
+            
+            await deposits.LoadAsync();
 
             return deposits
                 .AsEnumerable()
