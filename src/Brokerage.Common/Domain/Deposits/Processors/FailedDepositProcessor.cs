@@ -16,7 +16,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return Task.CompletedTask;
             }
 
-            foreach (var deposit in processingContext.Deposits)
+            foreach (var deposit in processingContext.RegularDeposits)
             {
                 deposit.Fail(new DepositError(evt.ErrorMessage,
                     evt.ErrorCode switch

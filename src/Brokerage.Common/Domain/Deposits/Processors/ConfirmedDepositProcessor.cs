@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Configuration;
 using Brokerage.Common.Domain.BrokerAccounts;
+using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
@@ -27,12 +28,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return;
             }
 
-            var regularDeposits = processingContext.Deposits
-                .Where(x => !x.IsBrokerDeposit)
+            var regularDeposits = processingContext.RegularDeposits
                 .ToArray();
-
-            var normalDeposits = regularDeposits
-                .Where(x => !x.IsTiny);
 
             var groupedBalanceChanges = regularDeposits
                 .GroupBy(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId));
@@ -63,14 +60,13 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 var prevMinResiduals = processingContext.MinDepositResiduals
                     .ToLookup(x => x.AccountDetailsId);
 
-                var tinyDeposits = regularDeposits
-                    .Where(x => x.IsTiny);
+                var tinyDeposits = processingContext.TinyDeposits;
 
-                await ProcessTinyDeposits(tx, processingContext, tinyDeposits);
+                ProcessTinyDeposits(tx, processingContext, tinyDeposits);
 
                 var accDict = processingContext.Accounts.ToDictionary(x => x.Id);
 
-                foreach (var deposit in normalDeposits)
+                foreach (var deposit in regularDeposits)
                 {
                     var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == deposit.BrokerAccountId);
                     var brokerAccountDetails = brokerAccountContext.AllBrokerAccountDetails[deposit.BrokerAccountDetailsId];
@@ -84,7 +80,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                     var margin = residuals.Sum(x => x.Amount);
 
-                    var consolidationOperation = await deposit.ConfirmRegular(brokerAccount,
+                    var consolidationOperation = await deposit.ConfirmWithConsolidation(brokerAccount,
                         brokerAccountDetails,
                         accountDetails,
                         tx,
@@ -100,7 +96,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     processingContext.AddNewOperation(consolidationOperation);
                 }
 
-
                 //Moves pending to Owned
                 foreach (var change in balanceChanges)
                 {
@@ -111,7 +106,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             }
         }
 
-        private static async Task ProcessTinyDeposits(TransactionConfirmed tx, TransactionProcessingContext processingContext, IEnumerable<Deposit> tinyDeposits)
+        private static void ProcessTinyDeposits(
+            TransactionConfirmed tx, 
+            TransactionProcessingContext processingContext,
+            IEnumerable<TinyDeposit> tinyDeposits)
         {
             foreach (var tinyDeposit in tinyDeposits)
             {
@@ -119,10 +117,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == tinyDeposit.AccountDetailsId);
                 var accountDetails = accountDetailsContext.Details;
 
-                var minDepositResidual = await tinyDeposit.ConfirmTiny(
-                    accountDetails,
-                    tx);
-
+                tinyDeposit.Confirm(tx);
+                var minDepositResidual = tinyDeposit.GetResidual(accountDetails);
                 processingContext.AddNewMinDepositResidual(minDepositResidual);
             }
         }

@@ -1,4 +1,5 @@
-﻿using Brokerage.Common.Persistence.Accounts;
+﻿using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Persistence.Accounts;
 using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
@@ -22,14 +23,17 @@ namespace Brokerage.Common.Persistence
 
         public IMinDepositResidualsRepository MinDepositResiduals { get; private set; }
 
+        public IDepositFactory DepositFactory { get; private set; }
+
         protected override void ProvisionRepositories(DatabaseContext dbContext)
         {
+            DepositFactory = new DepositFactory();
             AccountDetails = new AccountDetailsRepository(dbContext);
             Accounts = new AccountsRepository(dbContext);
             BrokerAccountDetails = new BrokerAccountDetailsRepository(dbContext);
             BrokerAccountBalances = new BrokerAccountsBalancesRepository(dbContext);
             BrokerAccounts = new BrokerAccountsRepository(dbContext);
-            Deposits = new DepositsRepository(dbContext);
+            Deposits = new DepositsRepository(dbContext, DepositFactory);
             Withdrawals = new WithdrawalsRepository(dbContext);
             Operations = new OperationsRepository(dbContext);
             DetectedTransactions = new DetectedTransactionsRepository(dbContext);

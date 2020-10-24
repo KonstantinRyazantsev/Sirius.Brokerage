@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Brokerage.Common.Domain.Accounts;
-using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Domain.Operations;
 using Swisschain.Sirius.Brokerage.MessagingContract.Deposits;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
@@ -12,9 +8,9 @@ using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 namespace Brokerage.Common.Domain.Deposits
 {
     // TODO: Natural ID
-    public class Deposit
+    public abstract class Deposit
     {
-        private Deposit(
+        protected Deposit(
             long id,
             uint version,
             long sequence,
@@ -32,7 +28,8 @@ namespace Brokerage.Common.Domain.Deposits
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal minDepositForConsolidation)
+            decimal minDepositForConsolidation,
+            DepositType depositType)
         {
             Id = id;
             Version = version;
@@ -52,238 +49,41 @@ namespace Brokerage.Common.Domain.Deposits
             UpdatedAt = updatedAt;
             ConsolidationOperationId = consolidationOperationId;
             MinDepositForConsolidation = minDepositForConsolidation;
+            DepositType = depositType;
         }
 
         public long Id { get; }
         public uint Version { get; }
-        public long Sequence { get; private set; }
+        public long Sequence { get; protected set; }
         public string TenantId { get; }
         public string BlockchainId { get; }
         public long BrokerAccountId { get; }
         public long BrokerAccountDetailsId { get; }
         public long? AccountDetailsId { get; }
         public Unit Unit { get; }
-        public IReadOnlyCollection<Unit> Fees { get; private set; }
-        public TransactionInfo TransactionInfo { get; private set; }
-        public DepositError Error { get; private set; }
-        public DepositState State { get; private set; }
+        public IReadOnlyCollection<Unit> Fees { get; protected set; }
+        public TransactionInfo TransactionInfo { get; protected set; }
+        public DepositError Error { get; protected set; }
+        public DepositState State { get; protected set; }
         public IReadOnlyCollection<DepositSource> Sources { get; }
         public DateTime CreatedAt { get; }
-        public DateTime UpdatedAt { get; private set; }
-        public long? ConsolidationOperationId { get; private set; }
+        public DateTime UpdatedAt { get; protected set; }
+        public long? ConsolidationOperationId { get; protected set; }
         public List<object> Events { get; } = new List<object>();
         public decimal MinDepositForConsolidation { get; }
-        public bool IsBrokerDeposit => AccountDetailsId == null;
-
-        public bool IsTiny => Unit.Amount < MinDepositForConsolidation;
-        public static Deposit Create(
-            long id,
-            string tenantId,
-            string blockchainId,
-            long brokerAccountId,
-            long brokerAccountDetailsId,
-            long? accountDetailsId,
-            Unit unit,
-            TransactionInfo transactionInfo,
-            IReadOnlyCollection<DepositSource> sources,
-            decimal minDepositForConsolidation)
-        {
-            var createdAt = DateTime.UtcNow;
-            var state = unit.Amount >= minDepositForConsolidation
-                ? DepositState.Detected : DepositState.DetectedTiny;
-            var deposit = new Deposit(
-                id,
-                default,
-                0,
-                tenantId,
-                blockchainId,
-                brokerAccountId,
-                brokerAccountDetailsId,
-                accountDetailsId,
-                unit,
-                null,
-                Array.Empty<Unit>(),
-                transactionInfo,
-                null,
-                state,
-                sources
-                    .GroupBy(x => x.Address)
-                    .Select(g => new DepositSource(g.Key, g.Sum(x => x.Amount)))
-                    .ToArray(),
-                createdAt,
-                createdAt,
-                minDepositForConsolidation);
-
-            deposit.AddDepositUpdatedEvent();
-
-            return deposit;
-        }
-
-        public static Deposit Restore(
-            long id,
-            uint version,
-            long sequence,
-            string tenantId,
-            string blockchainId,
-            long brokerAccountId,
-            long brokerAccountDetailsId,
-            long? accountDetailsId,
-            Unit unit,
-            long? consolidationOperationId,
-            IReadOnlyCollection<Unit> fees,
-            TransactionInfo transactionInfo,
-            DepositError error,
-            DepositState depositState,
-            IReadOnlyCollection<DepositSource> sources,
-            DateTime createdAt,
-            DateTime updatedAt,
-            decimal minDepositForConsolidation)
-        {
-            return new Deposit(
-                id,
-                version,
-                sequence,
-                tenantId,
-                blockchainId,
-                brokerAccountId,
-                brokerAccountDetailsId,
-                accountDetailsId,
-                unit,
-                consolidationOperationId,
-                fees,
-                transactionInfo,
-                error,
-                depositState,
-                sources,
-                createdAt,
-                updatedAt,
-                minDepositForConsolidation);
-        }
-
-        public async Task<Operation> ConfirmRegular(
-            BrokerAccount brokerAccount,
-            BrokerAccountDetails brokerAccountDetails,
-            AccountDetails accountDetails,
-            TransactionConfirmed tx, 
-            IOperationsFactory operationsFactory,
-            decimal residual,
-            Account account)
-        {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
-            }
-
-            SwitchState(new[] {DepositState.Detected, }, DepositState.Confirmed);
-
-            var consolidationAmount = new Unit(
-                this.Unit.AssetId,
-                this.Unit.Amount + residual);
-
-            var consolidationOperation = await operationsFactory.StartDepositConsolidation(
-                TenantId,
-                Id,
-                accountDetails.NaturalId.Address,
-                brokerAccountDetails.NaturalId.Address,
-                consolidationAmount,
-                tx.BlockNumber,
-                brokerAccount.VaultId,
-                account.ReferenceId,
-                brokerAccount.Id);
-
-            ConsolidationOperationId = consolidationOperation.Id;
-            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-            UpdatedAt = DateTime.UtcNow;
-
-            AddDepositUpdatedEvent();
-
-            return consolidationOperation;
-        }
-
-        public Task<MinDepositResidual> ConfirmTiny(
-            AccountDetails accountDetails,
-            TransactionConfirmed tx)
-        {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a tiny deposit");
-            }
-
-            SwitchState(new[] { DepositState.DetectedTiny }, DepositState.ConfirmedTiny);
-
-            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-            UpdatedAt = DateTime.UtcNow;
-
-            AddDepositUpdatedEvent();
-
-            return Task.FromResult(MinDepositResidual.Create(this.Id, this.Unit.Amount, accountDetails.NaturalId, this.Unit.AssetId));
-        }
-
-        public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
-        {
-            if (IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a broker deposit as a regular deposit");
-            }
-
-            SwitchState(new[] {DepositState.Detected}, DepositState.Completed);
-
-            var date = DateTime.UtcNow;
-
-            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-            UpdatedAt = date;
-
-            AddDepositUpdatedEvent();
-        }
-
-        public void ConfirmBroker(TransactionConfirmed tx)
-        {
-            if (!IsBrokerDeposit)
-            {
-                throw new InvalidOperationException("Can't confirm a regular deposit as a broker deposit");
-            }
-
-            SwitchState(new[] {DepositState.Detected}, DepositState.Completed);
-
-            var date = DateTime.UtcNow;
-
-            TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
-            UpdatedAt = date;
-
-            AddDepositUpdatedEvent();
-        }
-
-        public void Complete(IReadOnlyCollection<Unit> fees)
-        {
-            SwitchState(new[] {DepositState.Confirmed}, DepositState.Completed);
-
-            Fees = fees;
-            UpdatedAt = DateTime.UtcNow;
-
-            AddDepositUpdatedEvent();
-        }
-
-        public void CompleteTiny(IReadOnlyCollection<Unit> fees)
-        {
-            SwitchState(new[] { DepositState.ConfirmedTiny }, DepositState.CompletedTiny);
-
-            Fees = fees;
-            UpdatedAt = DateTime.UtcNow;
-
-            AddDepositUpdatedEvent();
-        }
+        public DepositType DepositType { get; }
 
         public void Fail(DepositError depositError)
         {
-            SwitchState(new[] {DepositState.Confirmed}, DepositState.Failed);
-            
+            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected, DepositState.Provisioned }, DepositState.Failed);
+
             UpdatedAt = DateTime.UtcNow;
             Error = depositError;
 
             AddDepositUpdatedEvent();
         }
 
-        private void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
+        protected void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
         {
             if (!allowedStates.Contains(State))
             {
@@ -295,7 +95,7 @@ namespace Brokerage.Common.Domain.Deposits
             State = targetState;
         }
 
-        private void AddDepositUpdatedEvent()
+        protected void AddDepositUpdatedEvent()
         {
             Events.Add(new DepositUpdated
             {
@@ -326,11 +126,13 @@ namespace Brokerage.Common.Domain.Deposits
                     ? null
                     : new Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError()
                     {
-                        Code = Error.Code switch {
-                            DepositErrorCode.TechnicalProblem => 
+                        Code = Error.Code switch
+                        {
+                            DepositErrorCode.TechnicalProblem =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
-                            DepositErrorCode.ValidationRejected => 
+                            DepositErrorCode.ValidationRejected =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.ValidationRejected,
+
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code), Error.Code, null)
                         },
                         Message = Error.Message
@@ -344,10 +146,17 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
-                    DepositState.ConfirmedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.ConfirmedTiny,
-                    DepositState.DetectedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.DetectedTiny,
-                    DepositState.CompletedTiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.CompletedTiny,
+                    
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
+                },
+                DepositType = DepositType switch {
+                    DepositType.Tiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Tiny,
+                    DepositType.Broker => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Broker,
+                    DepositType.Regular => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Regular,
+                    DepositType.Token => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Token,
+                    DepositType.TinyToken => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.TinyToken,
+
+                    _ => throw new ArgumentOutOfRangeException(nameof(DepositType), DepositType, null)
                 }
             });
         }

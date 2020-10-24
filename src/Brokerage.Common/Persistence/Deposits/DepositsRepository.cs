@@ -12,10 +12,12 @@ namespace Brokerage.Common.Persistence.Deposits
     public class DepositsRepository : IDepositsRepository
     {
         private readonly DatabaseContext _dbContext;
+        private readonly IDepositFactory _depositFactory;
 
-        public DepositsRepository(DatabaseContext dbContext)
+        public DepositsRepository(DatabaseContext dbContext, IDepositFactory depositFactory)
         {
             _dbContext = dbContext;
+            _depositFactory = depositFactory;
         }
 
         public async Task<IReadOnlyCollection<Deposit>> Search(string blockchainId, 
@@ -99,7 +101,7 @@ namespace Brokerage.Common.Persistence.Deposits
             await _dbContext.SaveChangesAsync();
         }
 
-        private static DepositEntity MapToEntity(Deposit deposit)
+        private DepositEntity MapToEntity(Deposit deposit)
         {
             var depositState = deposit.State switch
             {
@@ -108,13 +110,20 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositState.Completed => DepositStateEnum.Completed,
                 DepositState.Confirmed => DepositStateEnum.Confirmed,
                 DepositState.Failed =>    DepositStateEnum.Failed,
-                DepositState.ConfirmedTiny => DepositStateEnum.ConfirmedTiny,
-                DepositState.DetectedTiny => DepositStateEnum.DetectedTiny,
-                DepositState.CompletedTiny => DepositStateEnum.CompletedTiny,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(deposit.State),
                     deposit.State,
                     null)
+            };
+
+            var depositType = deposit.DepositType switch
+            {
+                DepositType.Tiny => DepositTypeEnum.TinyDeposit,
+                DepositType.Broker => DepositTypeEnum.BrokerDeposit,
+                DepositType.Regular => DepositTypeEnum.RegularDeposit,
+                DepositType.Token => DepositTypeEnum.TokenDeposit,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(deposit.DepositType), deposit.DepositType, null)
             };
 
             var depositEntity = new DepositEntity
@@ -151,13 +160,14 @@ namespace Brokerage.Common.Persistence.Deposits
                 TransactionDateTime = deposit.TransactionInfo.DateTime,
                 CreatedAt = deposit.CreatedAt,
                 UpdatedAt = deposit.UpdatedAt,
-                MinDepositForConsolidation = deposit.MinDepositForConsolidation
+                MinDepositForConsolidation = deposit.MinDepositForConsolidation,
+                DepositType = depositType
             };
 
             return depositEntity;
         }
 
-        private static Deposit MapToDomain(DepositEntity depositEntity)
+        private Deposit MapToDomain(DepositEntity depositEntity)
         {
             var depositError = depositEntity.ErrorMessage == null && depositEntity.ErrorCode == null
                 ? null
@@ -170,16 +180,23 @@ namespace Brokerage.Common.Persistence.Deposits
                 DepositStateEnum.Completed => DepositState.Completed,
                 DepositStateEnum.Confirmed => DepositState.Confirmed,
                 DepositStateEnum.Failed => DepositState.Failed,
-                DepositStateEnum.ConfirmedTiny => DepositState.ConfirmedTiny,
-                DepositStateEnum.DetectedTiny => DepositState.DetectedTiny,
-                DepositStateEnum.CompletedTiny => DepositState.CompletedTiny,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.State),
                     depositEntity.State,
                     null)
             };
 
-            var deposit = Deposit.Restore(
+            var depositType = depositEntity.DepositType switch
+            {
+                DepositTypeEnum.TinyDeposit => DepositType.Tiny,
+                DepositTypeEnum.BrokerDeposit => DepositType.Broker,
+                DepositTypeEnum.RegularDeposit => DepositType.Regular,
+                DepositTypeEnum.TokenDeposit => DepositType.Token,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.DepositType), depositEntity.DepositType, null)
+            };
+
+            var deposit = _depositFactory.Restore(
                 depositEntity.Id,
                 depositEntity.Version,
                 depositEntity.Sequence,
@@ -205,7 +222,8 @@ namespace Brokerage.Common.Persistence.Deposits
                     .ToArray(),
                 depositEntity.CreatedAt.UtcDateTime,
                 depositEntity.UpdatedAt.UtcDateTime,
-                depositEntity.MinDepositForConsolidation);
+                depositEntity.MinDepositForConsolidation,
+                depositType);
 
             return deposit;
         }
