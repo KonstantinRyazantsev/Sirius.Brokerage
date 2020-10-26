@@ -11,6 +11,8 @@
 
         TechnicalProblem,
 
-        ValidationRejected
+        ValidationRejected,
+
+        SigningRejected
     }
 }

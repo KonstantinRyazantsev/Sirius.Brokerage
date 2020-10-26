@@ -294,6 +294,9 @@ namespace Brokerage.Common.Domain.Withdrawals
                             WithdrawalErrorCode.ValidationRejected =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode
                                 .ValidationRejected,
+                            WithdrawalErrorCode.SigningRejected =>
+                            Swisschain.Sirius.Brokerage.MessagingContract.Withdrawals.WithdrawalErrorCode
+                                .SigningRejected,
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code),
                                 Error.Code,
                                 null)
