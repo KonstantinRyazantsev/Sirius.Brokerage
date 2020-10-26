@@ -3,6 +3,7 @@
     public enum DepositErrorCode
     {
         TechnicalProblem = 0,
-        ValidationRejected = 1
+        ValidationRejected = 1,
+        SigningRejected = 2
     }
 }

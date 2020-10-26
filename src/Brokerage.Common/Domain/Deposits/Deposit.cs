@@ -331,6 +331,8 @@ namespace Brokerage.Common.Domain.Deposits
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
                             DepositErrorCode.ValidationRejected => 
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.ValidationRejected,
+                            DepositErrorCode.SigningRejected => 
+                            Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.SigningRejected,
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code), Error.Code, null)
                         },
                         Message = Error.Message
