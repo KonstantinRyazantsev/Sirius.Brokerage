@@ -141,13 +141,6 @@ namespace Brokerage.Common.Domain.Processing.Context
             var minimumDepositResiduals = await minDepositResidualsRepository
                 .GetAnyOfForUpdate(matchedAccountDetails.Select(x => x.NaturalId).ToHashSet());
 
-            //if (minimumDepositResiduals.Any())
-            //{
-            //    var depositIds = minimumDepositResiduals.Select(x => x.DepositId).ToHashSet();
-            //    var tinyDeposits = await depositsRepository.GetAnyFor(depositIds);
-            //    deposits = deposits.Concat(tinyDeposits).ToArray();
-            //}
-
             allBrokerAccountDetails.AddRange(depositBrokerAccountDetails);
 
             var brokerAccountsContext = matchedBrokerAccounts

@@ -76,10 +76,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     var accountDetails = accountDetailsContext.Details;
                     accDict.TryGetValue(accountDetails.AccountId, out var account);
 
-                    //tinyDepositsLookup[accountDetails.NaturalId]
-                    //        .Where(x => x.Unit.AssetId == deposit.Unit.AssetId)
-                    //        .ToArray();
-
                     var residuals = prevMinResiduals[accountDetails.NaturalId]
                         .Where(x => x.AssetId == deposit.Unit.AssetId)
                         .ToArray();
@@ -98,11 +94,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     {
                         residual.AddConsolidationDeposit(deposit.Id);
                     }
-
-                    //foreach (var tinyDeposit in correlatedTinyDeposits)
-                    //{
-                    //    tinyDeposit.AddConsolidationOperationId(consolidationOperation.Id);
-                    //}
 
                     processingContext.AddNewOperation(consolidationOperation);
                 }
