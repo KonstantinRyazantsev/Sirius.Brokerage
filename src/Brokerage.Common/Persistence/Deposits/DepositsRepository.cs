@@ -163,7 +163,8 @@ namespace Brokerage.Common.Persistence.Deposits
                 CreatedAt = deposit.CreatedAt,
                 UpdatedAt = deposit.UpdatedAt,
                 MinDepositForConsolidation = deposit.MinDepositForConsolidation,
-                DepositType = depositType
+                DepositType = depositType,
+                ProvisioningOperationId = deposit.ProvisioningOperationId
             };
 
             return depositEntity;
@@ -225,6 +226,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 depositEntity.CreatedAt.UtcDateTime,
                 depositEntity.UpdatedAt.UtcDateTime,
                 depositEntity.MinDepositForConsolidation,
+                depositEntity.ProvisioningOperationId,
                 depositType);
 
             return deposit;

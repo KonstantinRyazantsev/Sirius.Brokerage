@@ -50,6 +50,7 @@ namespace Brokerage.Common.Domain.Deposits
             UpdatedAt = updatedAt;
             ConsolidationOperationId = consolidationOperationId;
             MinDepositForConsolidation = minDepositForConsolidation;
+            ProvisioningOperationId = provisioningOperationId;
             DepositType = depositType;
         }
 
@@ -72,6 +73,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long? ConsolidationOperationId { get; protected set; }
         public List<object> Events { get; } = new List<object>();
         public decimal MinDepositForConsolidation { get; }
+        public long? ProvisioningOperationId { get; }
         public DepositType DepositType { get; }
 
         protected void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)

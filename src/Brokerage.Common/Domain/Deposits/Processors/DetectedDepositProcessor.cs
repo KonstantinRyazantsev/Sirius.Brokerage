@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Configuration;
@@ -21,8 +22,8 @@ namespace Brokerage.Common.Domain.Deposits.Processors
         private IReadOnlyDictionary<string, BlockchainConfig> _blockchainsConfig;
 
         public DetectedDepositProcessor(
-            IIdGenerator idGenerator, 
-            AppConfig appConfig, 
+            IIdGenerator idGenerator,
+            AppConfig appConfig,
             IDepositFactory depositFactory)
         {
             _idGenerator = idGenerator;
@@ -53,55 +54,100 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     {
                         DepositType depositType;
                         if (blockchain.Protocol.FeePayingSiriusAssetId == assetId)
-                            depositType = value >= minDepositForConsolidation ? DepositType.RegularDeposit : DepositType.TinyDeposit;
+                            depositType = value >= minDepositForConsolidation ? DepositType.Regular : DepositType.Tiny;
                         else
-                            depositType = value >= minDepositForConsolidation ? DepositType.TokenDeposit : DepositType.TinyDeposit;
+                            depositType = value >= minDepositForConsolidation ? DepositType.Token : DepositType.TinyToken;
 
                         var depositId = await _idGenerator.GetId(
-                            $"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}", 
+                            $"Deposits:{tx.TransactionId}-{accountContext.Details.Id}-{assetId}",
                             IdGenerators.Deposits);
 
-                        if (depositType == DepositType.Regular)
+                        var transferSources = tx.Sources
+                            .Where(x => x.Unit.AssetId == assetId)
+                            .Select(x => new DepositSource(x.Address, x.Unit.Amount))
+                            .ToArray();
+
+                        switch (depositType)
                         {
-                            var deposit = RegularDeposit.Create(
-                                depositId,
-                                brokerAccountContext.TenantId,
-                                tx.BlockchainId,
-                                brokerAccountContext.BrokerAccountId,
-                                brokerAccountContext.ActiveDetails.Id,
-                                accountContext.Details.Id,
-                                new Unit(assetId, value),
-                                processingContext.TransactionInfo,
-                                tx.Sources
-                                    .Where(x => x.Unit.AssetId == assetId)
-                                    .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                                    .ToArray(),
-                                minDepositForConsolidation);
+                            case DepositType.Regular:
+                                {
+                                    var deposit = RegularDeposit.Create(
+                                        depositId,
+                                        brokerAccountContext.TenantId,
+                                        tx.BlockchainId,
+                                        brokerAccountContext.BrokerAccountId,
+                                        brokerAccountContext.ActiveDetails.Id,
+                                        accountContext.Details.Id,
+                                        new Unit(assetId, value),
+                                        processingContext.TransactionInfo,
+                                        transferSources,
+                                        minDepositForConsolidation);
 
-                            processingContext.AddDeposit(deposit);
+                                    processingContext.AddDeposit(deposit);
 
-                            deposits.Add(deposit);
-                        }
-                        else if (depositType == DepositType.Tiny)
-                        {
-                            var deposit = TinyDeposit.Create(
-                                depositId,
-                                brokerAccountContext.TenantId,
-                                tx.BlockchainId,
-                                brokerAccountContext.BrokerAccountId,
-                                brokerAccountContext.ActiveDetails.Id,
-                                accountContext.Details.Id,
-                                new Unit(assetId, value),
-                                processingContext.TransactionInfo,
-                                tx.Sources
-                                    .Where(x => x.Unit.AssetId == assetId)
-                                    .Select(x => new DepositSource(x.Address, x.Unit.Amount))
-                                    .ToArray(),
-                                minDepositForConsolidation);
+                                    deposits.Add(deposit);
+                                }
+                                break;
+                            case DepositType.Tiny:
+                                {
+                                    var deposit = TinyDeposit.Create(
+                                        depositId,
+                                        brokerAccountContext.TenantId,
+                                        tx.BlockchainId,
+                                        brokerAccountContext.BrokerAccountId,
+                                        brokerAccountContext.ActiveDetails.Id,
+                                        accountContext.Details.Id,
+                                        new Unit(assetId, value),
+                                        processingContext.TransactionInfo,
+                                        transferSources,
+                                        minDepositForConsolidation);
 
-                            processingContext.AddDeposit(deposit);
+                                    processingContext.AddDeposit(deposit);
 
-                            deposits.Add(deposit);
+                                    deposits.Add(deposit);
+                                }
+                                break;
+                            case DepositType.TinyToken:
+                                {
+                                    var deposit = TinyTokenDeposit.Create(
+                                        depositId,
+                                        brokerAccountContext.TenantId,
+                                        tx.BlockchainId,
+                                        brokerAccountContext.BrokerAccountId,
+                                        brokerAccountContext.ActiveDetails.Id,
+                                        accountContext.Details.Id,
+                                        new Unit(assetId, value),
+                                        processingContext.TransactionInfo,
+                                        transferSources,
+                                        minDepositForConsolidation);
+
+                                    processingContext.AddDeposit(deposit);
+
+                                    deposits.Add(deposit);
+                                }
+                                break;
+
+                            case DepositType.Token:
+                                {
+                                    var deposit = TokenDeposit.Create(
+                                        depositId,
+                                        brokerAccountContext.TenantId,
+                                        tx.BlockchainId,
+                                        brokerAccountContext.BrokerAccountId,
+                                        brokerAccountContext.ActiveDetails.Id,
+                                        accountContext.Details.Id,
+                                        new Unit(assetId, value),
+                                        processingContext.TransactionInfo,
+                                        transferSources,
+                                        minDepositForConsolidation);
+
+                                    processingContext.AddDeposit(deposit);
+
+                                    deposits.Add(deposit);
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(depositType), depositType, null);
                         }
                     }
                 }

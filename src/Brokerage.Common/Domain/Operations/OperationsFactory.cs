@@ -5,6 +5,7 @@ using Google.Protobuf.WellKnownTypes;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Executor.ApiContract.Common;
 using Swisschain.Sirius.Executor.ApiContract.Transfers;
+using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace Brokerage.Common.Domain.Operations
 {
@@ -22,6 +23,66 @@ namespace Brokerage.Common.Domain.Operations
             string accountAddress,
             string brokerAccountAddress,
             Swisschain.Sirius.Sdk.Primitives.Unit unit,
+            long asAtBlockNumber,
+            long vaultId,
+            string accountReferenceId,
+            long brokerAccountId)
+        {
+            var response = await _executorClient.Transfers.ExecuteAsync(
+                new ExecuteTransferRequest(new ExecuteTransferRequest
+                {
+                    AssetId = unit.AssetId,
+                    Operation = new OperationRequest
+                    {
+                        AsAtBlockNumber = asAtBlockNumber,
+                        RequestId = $"Brokerage:DepositConsolidation:{depositId}",
+                        FeePayerAddress = brokerAccountAddress,
+                        TenantId = tenantId
+                    },
+                    Movements =
+                    {
+                        new Movement
+                        {
+                            SourceAddress = accountAddress,
+                            DestinationAddress = brokerAccountAddress,
+                            Amount = unit.Amount,
+                        }
+                    },
+                    VaultId = vaultId,
+                    TransferContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.TransferContext
+                    {
+                        AccountReferenceId = accountReferenceId,
+                        WithdrawalReferenceId = null,
+                        Component = nameof(Brokerage),
+                        OperationType = "Deposit consolidation",
+                        SourceGroup = brokerAccountId.ToString(),
+                        DestinationGroup = brokerAccountId.ToString(),
+                        Document = null,
+                        Signature = null,
+                        //TODO: What should we pass here
+                        RequestContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.RequestContext
+                        {
+                            UserId = null,
+                            ApiKeyId = null,
+                            Ip = "127.0.0.1",
+                            Timestamp = DateTime.UtcNow.ToTimestamp()
+                        }
+                    }
+                }));
+
+            if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Failed to start deposit consolidation {response.Error.ErrorCode} {response.Error.ErrorMessage}");
+            }
+
+            return Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
+        }
+
+        public async Task<Operation> StartDepositProvisioning(string tenantId,
+            long depositId,
+            string accountAddress,
+            string brokerAccountAddress,
+            Unit unit,
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,

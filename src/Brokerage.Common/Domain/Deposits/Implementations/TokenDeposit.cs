@@ -30,7 +30,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal minDepositForConsolidation) :
+            decimal minDepositForConsolidation,
+            long? provisioningOperationId) :
             base(id, version, sequence,
                 tenantId,
                 blockchainId,
@@ -47,6 +48,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
+                provisioningOperationId,
                 DepositType.Token)
         {
         }
@@ -76,7 +78,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 this.Unit.AssetId,
                 this.Unit.Amount + residual);
 
-            var consolidationOperation = await operationsFactory.StartDepositConsolidation(
+            var provisioningOperation = await operationsFactory.StartDepositConsolidation(
                 TenantId,
                 Id,
                 accountDetails.NaturalId.Address,
@@ -87,13 +89,13 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 account.ReferenceId,
                 brokerAccount.Id);
 
-            ConsolidationOperationId = consolidationOperation.Id;
+            ProvisioningOperationId = provisioningOperation.Id;
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
             UpdatedAt = DateTime.UtcNow;
 
             AddDepositUpdatedEvent();
 
-            return consolidationOperation;
+            return provisioningOperation;
         }
 
 
@@ -155,7 +157,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                     .ToArray(),
                 createdAt,
                 createdAt,
-                minDepositForConsolidation);
+                minDepositForConsolidation,
+                null);
 
             deposit.AddDepositUpdatedEvent();
 
@@ -179,7 +182,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal minDepositForConsolidation)
+            decimal minDepositForConsolidation,
+            long? provisioningOperationId)
         {
             return new TokenDeposit(
                 id,
@@ -199,7 +203,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 sources,
                 createdAt,
                 updatedAt,
-                minDepositForConsolidation);
+                minDepositForConsolidation,
+                provisioningOperationId);
         }
     }
 }

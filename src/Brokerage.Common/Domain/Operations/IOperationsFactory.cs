@@ -16,6 +16,16 @@ namespace Brokerage.Common.Domain.Operations
             string accountReferenceId,
             long brokerAccountId);
 
+        Task<Operation> StartDepositProvisioning(string tenantId,
+            long depositId,
+            string accountAddress,
+            string brokerAccountAddress,
+            Unit unit,
+            long asAtBlockNumber,
+            long vaultId,
+            string accountReferenceId,
+            long brokerAccountId);
+
         Task<Operation> StartWithdrawal(string tenantId,
             long withdrawalId,
             string brokerAccountAddress,

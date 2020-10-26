@@ -47,6 +47,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
+                null,
                 DepositType.Regular)
         {
         }

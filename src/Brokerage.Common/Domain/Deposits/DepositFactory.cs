@@ -30,6 +30,7 @@ namespace Brokerage.Common.Domain.Deposits
             DateTime createdAt,
             DateTime updatedAt,
             decimal minDepositForConsolidation,
+            long? provisioningOperationId,
             DepositType depositType)
         {
             Deposit deposit;
@@ -118,7 +119,8 @@ namespace Brokerage.Common.Domain.Deposits
                         sources,
                         createdAt,
                         updatedAt,
-                        minDepositForConsolidation);
+                        minDepositForConsolidation,
+                        provisioningOperationId);
                     break;
                 case DepositType.TinyToken:
                     deposit = TinyTokenDeposit.Restore(
@@ -139,7 +141,8 @@ namespace Brokerage.Common.Domain.Deposits
                         sources,
                         createdAt,
                         updatedAt,
-                        minDepositForConsolidation);
+                        minDepositForConsolidation,
+                        provisioningOperationId);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(depositType), depositType, null);

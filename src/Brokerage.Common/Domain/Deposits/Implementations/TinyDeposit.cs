@@ -44,6 +44,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
+                null,
                 DepositType.Tiny)
         {
         }
@@ -96,7 +97,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             decimal minDepositForConsolidation)
         {
             var createdAt = DateTime.UtcNow;
-            var state = DepositState.DetectedTiny;
+            var state = DepositState.Detected;
 
             var deposit = new TinyDeposit(
                 id,

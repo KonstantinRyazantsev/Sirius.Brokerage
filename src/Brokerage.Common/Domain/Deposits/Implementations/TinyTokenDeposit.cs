@@ -30,7 +30,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal minDepositForConsolidation) :
+            decimal minDepositForConsolidation,
+            long? provisioningOperationId) :
             base(id, version, sequence,
                 tenantId,
                 blockchainId,
@@ -47,6 +48,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 createdAt,
                 updatedAt,
                 minDepositForConsolidation,
+                provisioningOperationId,
                 DepositType.Token)
         {
         }
@@ -154,7 +156,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                     .ToArray(),
                 createdAt,
                 createdAt,
-                minDepositForConsolidation);
+                minDepositForConsolidation,
+                null);
 
             deposit.AddDepositUpdatedEvent();
 
@@ -178,7 +181,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             IReadOnlyCollection<DepositSource> sources,
             DateTime createdAt,
             DateTime updatedAt,
-            decimal minDepositForConsolidation)
+            decimal minDepositForConsolidation,
+            long? provisioningOperationId)
         {
             return new TinyTokenDeposit(
                 id,
@@ -198,7 +202,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 sources,
                 createdAt,
                 updatedAt,
-                minDepositForConsolidation);
+                minDepositForConsolidation,
+                provisioningOperationId);
         }
     }
 }
