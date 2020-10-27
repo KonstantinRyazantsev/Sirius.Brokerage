@@ -50,7 +50,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
 
         public void Fail(DepositError depositError)
         {
-            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected }, DepositState.Failed);
+            SwitchState(new[] { DepositState.Confirmed }, DepositState.Failed);
 
             UpdatedAt = DateTime.UtcNow;
             Error = depositError;
