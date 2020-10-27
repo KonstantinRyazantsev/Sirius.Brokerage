@@ -48,6 +48,16 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
         {
         }
 
+        public void Fail(DepositError depositError)
+        {
+            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected }, DepositState.Failed);
+
+            UpdatedAt = DateTime.UtcNow;
+            Error = depositError;
+
+            AddDepositUpdatedEvent();
+        }
+
         public void Confirm(TransactionConfirmed tx)
         {
             SwitchState(new[] { DepositState.Detected }, DepositState.Confirmed);

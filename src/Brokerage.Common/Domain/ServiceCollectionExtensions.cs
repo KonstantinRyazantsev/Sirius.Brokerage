@@ -23,6 +23,7 @@ namespace Brokerage.Common.Domain
             services.AddTransient<DetectedDepositProcessor>();
             services.AddTransient<DetectedBrokerDepositProcessor>();
             services.AddTransient<ConfirmedDepositProcessor>();
+            services.AddTransient<ConfirmedTinyDepositProcessor>();
             services.AddTransient<ConfirmedBrokerDepositProcessor>();
             services.AddTransient<ConfirmedDepositConsolidationProcessor>();
             services.AddTransient<SentWithdrawalProcessor>();

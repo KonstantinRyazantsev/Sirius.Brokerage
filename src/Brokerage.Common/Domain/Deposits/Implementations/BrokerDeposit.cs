@@ -59,6 +59,16 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             AddDepositUpdatedEvent();
         }
 
+        public void Fail(DepositError depositError)
+        {
+            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected }, DepositState.Failed);
+
+            UpdatedAt = DateTime.UtcNow;
+            Error = depositError;
+
+            AddDepositUpdatedEvent();
+        }
+
         public static BrokerDeposit Create(
             long id,
             string tenantId,

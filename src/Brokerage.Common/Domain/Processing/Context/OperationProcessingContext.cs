@@ -24,14 +24,14 @@ namespace Brokerage.Common.Domain.Processing.Context
             IReadOnlyCollection<Withdrawal> withdrawals,
             IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> brokerAccountBalances,
             IReadOnlyCollection<MinDepositResidual> minDepositResiduals,
-            IReadOnlyCollection<TinyDeposit> minDeposits)
+            IReadOnlyCollection<TinyDeposit> tinyDeposits)
         {
             Operation = operation;
             RegularDeposits = regularDeposits;
             Withdrawals = withdrawals;
             BrokerAccountBalances = brokerAccountBalances;
             MinDepositResiduals = minDepositResiduals;
-            MinDeposits = minDeposits;
+            TinyDeposits = tinyDeposits;
         }
 
         public Operation Operation { get; }
@@ -39,7 +39,7 @@ namespace Brokerage.Common.Domain.Processing.Context
         public IReadOnlyCollection<Withdrawal> Withdrawals { get; }
         public IReadOnlyDictionary<BrokerAccountBalancesId, BrokerAccountBalances> BrokerAccountBalances { get; }
         public IReadOnlyCollection<MinDepositResidual> MinDepositResiduals { get; }
-        public IReadOnlyCollection<TinyDeposit> MinDeposits { get; }
+        public IReadOnlyCollection<TinyDeposit> TinyDeposits { get; }
 
         public bool IsEmpty => Operation == null &&
                                !RegularDeposits.Any() &&

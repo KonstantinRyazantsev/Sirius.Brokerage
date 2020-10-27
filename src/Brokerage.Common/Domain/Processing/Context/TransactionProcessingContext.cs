@@ -104,6 +104,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                 case DepositType.Tiny:
                     _tinyDeposits.Add(deposit as TinyDeposit);
                     break;
+                case DepositType.Token:
+                    _tokenDeposits.Add(deposit as TokenDeposit);
+                    break;
+                case DepositType.TinyToken:
+                    _tinyTokenDeposits.Add(deposit as TinyTokenDeposit);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(deposit.DepositType), deposit.DepositType, null);
             }

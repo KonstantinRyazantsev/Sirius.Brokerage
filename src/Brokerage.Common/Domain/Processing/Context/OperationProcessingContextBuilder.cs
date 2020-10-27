@@ -47,12 +47,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                         .ToDictionary(x => x.NaturalId);
                     var minDepositResiduals = await minDepositResidualsRepository.GetForConsolidationDeposits(
                         deposits.Select(x => x.Id).ToHashSet());
-                    var rawMinDeposits = await depositsRepository.GetAnyFor(
+                    var rawTinyDeposits = await depositsRepository.GetAnyFor(
                         minDepositResiduals
                             .Where(x => x.ConsolidationDepositId.HasValue)
                             .Select(x => x.DepositId)
                             .ToHashSet());
-                    var minDeposits = rawMinDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
+                    var tinyDeposits = rawTinyDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
 
                     return new OperationProcessingContext(
                         operation,
@@ -60,7 +60,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                         Array.Empty<Withdrawal>(),
                         brokerAccountBalances,
                         minDepositResiduals,
-                        minDeposits);
+                        tinyDeposits);
                 }
 
                 // TODO:

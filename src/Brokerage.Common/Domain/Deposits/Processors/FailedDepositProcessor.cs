@@ -16,24 +16,34 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return Task.CompletedTask;
             }
 
+            foreach (var deposit in processingContext.TinyDeposits)
+            {
+                deposit.Fail(GetDepositError(evt));
+            }
+
             foreach (var deposit in processingContext.RegularDeposits)
             {
-                deposit.Fail(new DepositError(evt.ErrorMessage,
-                    evt.ErrorCode switch
-                    {
-                        OperationErrorCode.TechnicalProblem => DepositErrorCode.TechnicalProblem,
-                        OperationErrorCode.NotEnoughBalance => DepositErrorCode.TechnicalProblem,
-                        OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
-                        OperationErrorCode.DestinationTagRequired => DepositErrorCode.TechnicalProblem,
-                        OperationErrorCode.AmountIsTooSmall => DepositErrorCode.TechnicalProblem,
-                        OperationErrorCode.ValidationRejected => DepositErrorCode.ValidationRejected,
-                        OperationErrorCode.SigningRejected => DepositErrorCode.SigningRejected,
-
-                        _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
-                    }));
+                deposit.Fail(GetDepositError(evt));
             }
 
             return Task.CompletedTask;
+        }
+
+        private static DepositError GetDepositError(OperationFailed evt)
+        {
+            return new DepositError(evt.ErrorMessage,
+                evt.ErrorCode switch
+                {
+                    OperationErrorCode.TechnicalProblem => DepositErrorCode.TechnicalProblem,
+                    OperationErrorCode.NotEnoughBalance => DepositErrorCode.TechnicalProblem,
+                    OperationErrorCode.InvalidDestinationAddress => DepositErrorCode.TechnicalProblem,
+                    OperationErrorCode.DestinationTagRequired => DepositErrorCode.TechnicalProblem,
+                    OperationErrorCode.AmountIsTooSmall => DepositErrorCode.TechnicalProblem,
+                    OperationErrorCode.ValidationRejected => DepositErrorCode.ValidationRejected,
+                    OperationErrorCode.SigningRejected => DepositErrorCode.SigningRejected,
+
+                    _ => throw new ArgumentOutOfRangeException(nameof(evt.ErrorCode), evt.ErrorCode, null)
+                });
         }
     }
 }

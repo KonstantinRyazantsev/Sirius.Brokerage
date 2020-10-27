@@ -51,7 +51,17 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
         {
         }
 
-        public async Task<Operation> ConfirmWithConsolidation(
+        public void Fail(DepositError depositError)
+        {
+            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected }, DepositState.Failed);
+
+            UpdatedAt = DateTime.UtcNow;
+            Error = depositError;
+
+            AddDepositUpdatedEvent();
+        }
+
+        public async Task<Operation> Confirm(
             BrokerAccount brokerAccount,
             BrokerAccountDetails brokerAccountDetails,
             AccountDetails accountDetails,
@@ -86,7 +96,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             return consolidationOperation;
         }
 
-        public void ConfirmRegularWithDestinationTag(TransactionConfirmed tx)
+        public void CompleteWithDestinationTag(TransactionConfirmed tx)
         {
             SwitchState(new[] { DepositState.Detected }, DepositState.Completed);
 
@@ -98,7 +108,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             AddDepositUpdatedEvent();
         }
 
-        public void Complete(IReadOnlyCollection<Unit> fees)
+        public void CompleteWithoutDestinationTag(IReadOnlyCollection<Unit> fees)
         {
             SwitchState(new[] { DepositState.Confirmed }, DepositState.Completed);
 

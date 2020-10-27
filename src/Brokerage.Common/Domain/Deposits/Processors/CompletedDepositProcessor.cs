@@ -19,7 +19,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                 return Task.CompletedTask;
             }
 
-            var minDepositDictionary = processingContext.MinDeposits.ToDictionary(x => x.Id);
+            var minDepositDictionary = processingContext.TinyDeposits.ToDictionary(x => x.Id);
             var minDepositLookup = processingContext.MinDepositResiduals
                 .Where(x => x.ConsolidationDepositId.HasValue)
                 .ToLookup(x => x.ConsolidationDepositId.Value, y => minDepositDictionary[y.DepositId]);

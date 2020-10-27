@@ -58,7 +58,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                 }
 
                 var updatedDeposits = processingContext.RegularDeposits.Where(x => x.Events.Any()).ToArray();
-                var updatedMinDeposits = processingContext.MinDeposits.Where(x => x.Events.Any()).ToArray();
+                var updatedMinDeposits = processingContext.TinyDeposits.Where(x => x.Events.Any()).ToArray();
                 var minDepositResiduals = processingContext.MinDepositResiduals;
                 var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
                 var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();

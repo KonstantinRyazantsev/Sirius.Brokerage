@@ -120,10 +120,10 @@ namespace Brokerage.Common.Persistence.Deposits
 
             var depositType = deposit.DepositType switch
             {
-                DepositType.Tiny => DepositTypeEnum.TinyDeposit,
-                DepositType.Broker => DepositTypeEnum.BrokerDeposit,
-                DepositType.Regular => DepositTypeEnum.RegularDeposit,
-                DepositType.Token => DepositTypeEnum.TokenDeposit,
+                DepositType.Tiny => DepositTypeEnum.Tiny,
+                DepositType.Broker => DepositTypeEnum.Broker,
+                DepositType.Regular => DepositTypeEnum.Regular,
+                DepositType.Token => DepositTypeEnum.Token,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(deposit.DepositType), deposit.DepositType, null)
             };
@@ -190,10 +190,10 @@ namespace Brokerage.Common.Persistence.Deposits
 
             var depositType = depositEntity.DepositType switch
             {
-                DepositTypeEnum.TinyDeposit => DepositType.Tiny,
-                DepositTypeEnum.BrokerDeposit => DepositType.Broker,
-                DepositTypeEnum.RegularDeposit => DepositType.Regular,
-                DepositTypeEnum.TokenDeposit => DepositType.Token,
+                DepositTypeEnum.Tiny => DepositType.Tiny,
+                DepositTypeEnum.Broker => DepositType.Broker,
+                DepositTypeEnum.Regular => DepositType.Regular,
+                DepositTypeEnum.Token => DepositType.Token,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(depositEntity.DepositType), depositEntity.DepositType, null)
             };

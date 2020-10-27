@@ -73,16 +73,6 @@ namespace Brokerage.Common.Domain.Deposits
         public decimal MinDepositForConsolidation { get; }
         public DepositType DepositType { get; }
 
-        public void Fail(DepositError depositError)
-        {
-            SwitchState(new[] { DepositState.Confirmed, DepositState.Detected, DepositState.Provisioned }, DepositState.Failed);
-
-            UpdatedAt = DateTime.UtcNow;
-            Error = depositError;
-
-            AddDepositUpdatedEvent();
-        }
-
         protected void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
         {
             if (!allowedStates.Contains(State))

@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Brokerage.Common.Configuration;
-using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
-using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
@@ -46,7 +42,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             {
                 foreach (var deposit in regularDeposits)
                 {
-                    deposit.ConfirmRegularWithDestinationTag(tx);
+                    deposit.CompleteWithDestinationTag(tx);
                 }
 
                 foreach (var change in balanceChanges)
@@ -60,10 +56,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
             {
                 var prevMinResiduals = processingContext.MinDepositResiduals
                     .ToLookup(x => x.AccountDetailsId);
-
-                var tinyDeposits = processingContext.TinyDeposits;
-
-                ProcessTinyDeposits(tx, processingContext, tinyDeposits);
 
                 var accDict = processingContext.Accounts.ToDictionary(x => x.Id);
 
@@ -82,7 +74,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                     var margin = residuals.Sum(x => x.Amount);
 
-                    var consolidationOperation = await deposit.ConfirmWithConsolidation(brokerAccount,
+                    var consolidationOperation = await deposit.Confirm(brokerAccount,
                         brokerAccountDetails,
                         accountDetails,
                         tx,
@@ -105,22 +97,6 @@ namespace Brokerage.Common.Domain.Deposits.Processors
 
                     balances.ConfirmRegularPendingBalance(change.Amount);
                 }
-            }
-        }
-
-        private static void ProcessTinyDeposits(TransactionConfirmed tx,
-            TransactionProcessingContext processingContext,
-            IEnumerable<TinyDeposit> tinyDeposits)
-        {
-            foreach (var tinyDeposit in tinyDeposits)
-            {
-                var brokerAccountContext = processingContext.BrokerAccounts.Single(x => x.BrokerAccountId == tinyDeposit.BrokerAccountId);
-                var accountDetailsContext = brokerAccountContext.Accounts.Single(x => x.Details.Id == tinyDeposit.AccountDetailsId);
-                var accountDetails = accountDetailsContext.Details;
-
-                tinyDeposit.Confirm(tx);
-                var minDepositResidual = tinyDeposit.GetResidual(accountDetails);
-                processingContext.AddNewMinDepositResidual(minDepositResidual);
             }
         }
     }
