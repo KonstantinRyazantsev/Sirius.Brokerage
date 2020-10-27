@@ -38,7 +38,7 @@
     <PackageReference Include="Swisschain.Extensions.Idempotency.MassTransit" Version="3.0.1" />
     <PackageReference Include="Swisschain.Sirius.Confirmator.MessagingContract" Version="3.0.1-beta" />
     <PackageReference Include="Swisschain.Sirius.Executor.ApiClient" Version="3.0.0" />
-    <PackageReference Include="Swisschain.Sirius.Executor.MessagingContract" Version="1.4.0" />
+    <PackageReference Include="Swisschain.Sirius.Executor.MessagingContract" Version="1.5.0" />
     <PackageReference Include="Swisschain.Sirius.Indexer.MessagingContract" Version="4.0.0" />
     <PackageReference Include="Swisschain.Sirius.Sdk" Version="5.0.0" />
     <PackageReference Include="Swisschain.Sirius.Sdk.Crypto" Version="2.3.0" />

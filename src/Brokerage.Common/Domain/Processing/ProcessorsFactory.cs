@@ -30,6 +30,7 @@ namespace Brokerage.Common.Domain.Processing
 
             _confirmedTransactionProcessors = new List<Type>
             {
+                typeof(ConfirmedTinyDepositProcessor),
                 typeof(ConfirmedDepositProcessor),
                 typeof(ConfirmedBrokerDepositProcessor),
                 typeof(ConfirmedDepositConsolidationProcessor)

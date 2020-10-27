@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Deposits;
+using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
 using Brokerage.Common.Persistence.BrokerAccounts;
@@ -33,10 +34,12 @@ namespace Brokerage.Common.Domain.Processing.Context
             {
                 case OperationType.DepositConsolidation:
                 {
-                    var deposits = await depositsRepository.Search(
+                    var deposits = (await depositsRepository.Search(
                         blockchainId: null,
                         transactionId: null,
-                        consolidationOperationId: operation.Id);
+                        consolidationOperationId: operation.Id))
+                        .Cast<RegularDeposit>()
+                        .ToArray();
                     var brokerAccountIds = deposits
                         .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                         .ToHashSet();
@@ -44,11 +47,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                         .ToDictionary(x => x.NaturalId);
                     var minDepositResiduals = await minDepositResidualsRepository.GetForConsolidationDeposits(
                         deposits.Select(x => x.Id).ToHashSet());
-                    var minDeposits = await depositsRepository.GetAnyFor(
+                    var rawTinyDeposits = await depositsRepository.GetAnyFor(
                         minDepositResiduals
                             .Where(x => x.ConsolidationDepositId.HasValue)
-                        .Select(x => x.ConsolidationDepositId.Value)
-                        .ToHashSet());
+                            .Select(x => x.DepositId)
+                            .ToHashSet());
+                    var tinyDeposits = rawTinyDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
 
                     return new OperationProcessingContext(
                         operation,
@@ -56,7 +60,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                         Array.Empty<Withdrawal>(),
                         brokerAccountBalances,
                         minDepositResiduals,
-                        minDeposits);
+                        tinyDeposits);
                 }
 
                 // TODO:
@@ -71,14 +75,14 @@ namespace Brokerage.Common.Domain.Processing.Context
 
                     return new OperationProcessingContext(
                         operation,
-                        Array.Empty<Deposit>(),
+                        Array.Empty<RegularDeposit>(),
                         new[] {withdrawal},
                         new Dictionary<BrokerAccountBalancesId, BrokerAccountBalances>
                         {
                             [brokerAccountBalances.NaturalId] = brokerAccountBalances
                         },
                         Array.Empty<MinDepositResidual>(),
-                        Array.Empty<Deposit>());
+                        Array.Empty<TinyDeposit>());
                 }
 
                 default:

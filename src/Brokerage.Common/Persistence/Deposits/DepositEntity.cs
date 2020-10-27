@@ -40,5 +40,7 @@ namespace Brokerage.Common.Persistence.Deposits
         public DateTimeOffset UpdatedAt { get; set; }
 
         public decimal MinDepositForConsolidation { get; set; }
+
+        public DepositTypeEnum DepositType { get; set; }
     }
 }

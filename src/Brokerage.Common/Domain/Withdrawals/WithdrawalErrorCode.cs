@@ -6,6 +6,7 @@
         InvalidDestinationAddress,
         DestinationTagRequired,
         TechnicalProblem,
-        ValidationRejected
+        ValidationRejected,
+        SigningRejected
     }
 }
