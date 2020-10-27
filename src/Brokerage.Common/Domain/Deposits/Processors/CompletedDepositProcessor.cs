@@ -43,7 +43,7 @@ namespace Brokerage.Common.Domain.Deposits.Processors
                     distributedFee = listFees;
                 }
 
-                deposit.Complete(distributedFee);
+                deposit.CompleteWithoutDestinationTag(distributedFee);
 
                 foreach (var minDeposit in minDeposits)
                 {
