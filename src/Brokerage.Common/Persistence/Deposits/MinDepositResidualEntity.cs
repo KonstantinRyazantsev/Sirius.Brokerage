@@ -22,6 +22,8 @@ namespace Brokerage.Common.Persistence.Deposits
 
         public long? ConsolidationDepositId { get; set; }
 
+        public long? ProvisioningDepositId { get; set; }
+
         public uint xmin { get; set; }
 
     }

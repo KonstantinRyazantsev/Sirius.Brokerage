@@ -8,12 +8,14 @@ namespace Brokerage.Common.Domain.Operations
     {
         private Operation(
             long id,
+            string blockchainId,
             OperationType type,
             IReadOnlyCollection<Unit> actualFees,
             IReadOnlyCollection<Unit> expectedFees,
             uint version)
         {
             Id = id;
+            BlockchainId = blockchainId;
             Type = type;
             ActualFees = actualFees ?? Array.Empty<Unit>();
             ExpectedFees = expectedFees ?? Array.Empty<Unit>();
@@ -21,6 +23,7 @@ namespace Brokerage.Common.Domain.Operations
         }
 
         public long Id { get; }
+        public string BlockchainId { get; }
         public OperationType Type { get; }
         public IReadOnlyCollection<Unit> ActualFees { get; private set; }
         public IReadOnlyCollection<Unit> ExpectedFees { get; private set; }
@@ -28,9 +31,10 @@ namespace Brokerage.Common.Domain.Operations
 
         public static Operation Create(
             long id,
+            string blockchainId,
             OperationType type)
         {
-            return new Operation(id, type, null, null, 0);
+            return new Operation(id, blockchainId, type, null, null, 0);
         }
 
         public void AddExpectedFees(IReadOnlyCollection<Unit> expectedFees)
@@ -45,12 +49,13 @@ namespace Brokerage.Common.Domain.Operations
 
         public static Operation Restore(
                         long id,
+                        string blockchainId,
                         OperationType type,
                         IReadOnlyCollection<Unit> actualFees,
                         IReadOnlyCollection<Unit> expectedFees,
                         uint version)
         {
-            return new Operation(id, type, actualFees, expectedFees, version);
+            return new Operation(id, blockchainId, type, actualFees, expectedFees, version);
         }
     }
 }

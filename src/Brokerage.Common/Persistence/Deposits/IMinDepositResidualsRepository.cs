@@ -12,5 +12,6 @@ namespace Brokerage.Common.Persistence.Deposits
         Task Save(IReadOnlyCollection<MinDepositResidual> newMinDepositResiduals);
         Task Remove(IReadOnlyCollection<MinDepositResidual> prevMinDepositResiduals);
         Task<IReadOnlyCollection<MinDepositResidual>> GetForConsolidationDeposits(HashSet<long> consolidationDeposits);
+        Task<IReadOnlyCollection<MinDepositResidual>> GetForProvisioningDeposits(HashSet<long> provisioningDeposits);
     }
 }

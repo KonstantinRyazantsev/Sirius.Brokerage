@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Withdrawals;
+using Brokerage.Common.ReadModels.Blockchains;
 using Google.Protobuf.WellKnownTypes;
 using Swisschain.Sirius.Executor.ApiClient;
 using Swisschain.Sirius.Executor.ApiContract.Common;
@@ -26,7 +27,8 @@ namespace Brokerage.Common.Domain.Operations
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,
-            long brokerAccountId)
+            long brokerAccountId,
+            Blockchain blockchain)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
@@ -75,7 +77,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start deposit consolidation {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            return Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
+            return Operation.Create(response.Response.Operation.Id, blockchain.Id, OperationType.DepositConsolidation);
         }
 
         public async Task<Operation> StartDepositProvisioning(string tenantId,
@@ -86,8 +88,32 @@ namespace Brokerage.Common.Domain.Operations
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,
-            long brokerAccountId)
+            long brokerAccountId,
+            Blockchain blockchain)
         {
+            var movement = new Movement
+            {
+                SourceAddress = brokerAccountAddress,
+                DestinationAddress = accountAddress,
+                Amount = unit.Amount,
+            };
+
+            var estimationResponse = await _executorClient.Transfers.EstimateAsync(new EstimateTransferRequest()
+            {
+                AssetId = unit.AssetId,
+                VaultId = vaultId,
+                TenantId = tenantId,
+                FeePayerAddress = brokerAccountAddress,
+                Movements = { movement },
+                RequestId = $"Brokerage:DepositProvisioning:{depositId}"
+            });
+
+            if (estimationResponse.BodyCase == EstimateTransferResponse.BodyOneofCase.Error)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to start deposit provisioning {estimationResponse.Error.ErrorCode} {estimationResponse.Error.ErrorMessage}");
+            }
+
             var response = await _executorClient.Transfers.ExecuteAsync(
                 new ExecuteTransferRequest(new ExecuteTransferRequest
                 {
@@ -95,18 +121,14 @@ namespace Brokerage.Common.Domain.Operations
                     Operation = new OperationRequest
                     {
                         AsAtBlockNumber = asAtBlockNumber,
-                        RequestId = $"Brokerage:DepositConsolidation:{depositId}",
+                        RequestId = $"Brokerage:DepositProvisioning:{depositId}",
                         FeePayerAddress = brokerAccountAddress,
-                        TenantId = tenantId
+                        TenantId = tenantId,
+                        Fees = { estimationResponse.Response.Fees }
                     },
                     Movements =
                     {
-                        new Movement
-                        {
-                            SourceAddress = accountAddress,
-                            DestinationAddress = brokerAccountAddress,
-                            Amount = unit.Amount,
-                        }
+                        movement
                     },
                     VaultId = vaultId,
                     TransferContext = new Swisschain.Sirius.Executor.ApiContract.Transfers.TransferContext
@@ -114,7 +136,7 @@ namespace Brokerage.Common.Domain.Operations
                         AccountReferenceId = accountReferenceId,
                         WithdrawalReferenceId = null,
                         Component = nameof(Brokerage),
-                        OperationType = "Deposit consolidation",
+                        OperationType = "Deposit provisioning",
                         SourceGroup = brokerAccountId.ToString(),
                         DestinationGroup = brokerAccountId.ToString(),
                         Document = null,
@@ -132,10 +154,10 @@ namespace Brokerage.Common.Domain.Operations
 
             if (response.BodyCase == ExecuteTransferResponse.BodyOneofCase.Error)
             {
-                throw new InvalidOperationException($"Failed to start deposit consolidation {response.Error.ErrorCode} {response.Error.ErrorMessage}");
+                throw new InvalidOperationException($"Failed to start deposit provisioning {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            return Operation.Create(response.Response.Operation.Id, OperationType.DepositConsolidation);
+            return Operation.Create(response.Response.Operation.Id, blockchain.Id, OperationType.DepositProvisioning);
         }
 
         public async Task<Operation> StartWithdrawal(string tenantId,
@@ -146,7 +168,8 @@ namespace Brokerage.Common.Domain.Operations
             long vaultId,
             Withdrawals.TransferContext transferContext,
             string sourceGroup,
-            string destinationGroup)
+            string destinationGroup,
+            Blockchain blockchain)
         {
             var response = await _executorClient.Transfers.ExecuteAsync(new ExecuteTransferRequest
             {
@@ -208,7 +231,7 @@ namespace Brokerage.Common.Domain.Operations
                 throw new InvalidOperationException($"Failed to start withdrawal {response.Error.ErrorCode} {response.Error.ErrorMessage}");
             }
 
-            return Operation.Create(response.Response.Operation.Id, OperationType.Withdrawal);
+            return Operation.Create(response.Response.Operation.Id, blockchain.Id, OperationType.Withdrawal);
         }
     }
 }

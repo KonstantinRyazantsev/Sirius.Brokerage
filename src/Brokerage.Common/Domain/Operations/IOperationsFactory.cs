@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Brokerage.Common.Domain.Withdrawals;
+using Brokerage.Common.ReadModels.Blockchains;
 using Unit = Swisschain.Sirius.Sdk.Primitives.Unit;
 
 namespace Brokerage.Common.Domain.Operations
@@ -14,7 +15,8 @@ namespace Brokerage.Common.Domain.Operations
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,
-            long brokerAccountId);
+            long brokerAccountId,
+            Blockchain blockchain);
 
         Task<Operation> StartDepositProvisioning(string tenantId,
             long depositId,
@@ -24,7 +26,8 @@ namespace Brokerage.Common.Domain.Operations
             long asAtBlockNumber,
             long vaultId,
             string accountReferenceId,
-            long brokerAccountId);
+            long brokerAccountId,
+            Blockchain blockchain);
 
         Task<Operation> StartWithdrawal(string tenantId,
             long withdrawalId,
@@ -34,6 +37,7 @@ namespace Brokerage.Common.Domain.Operations
             long vaultId,
             TransferContext transferContext,
             string sourceGroup,
-            string destinationGroup);
+            string destinationGroup,
+            Blockchain blockchain);
     }
 }

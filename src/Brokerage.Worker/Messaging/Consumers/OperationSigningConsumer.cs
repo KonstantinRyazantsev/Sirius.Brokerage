@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -17,16 +18,19 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
+        private readonly IBlockchainsRepository _blockchainsRepository;
 
         public OperationSigningConsumer(ILogger<OperationSigningConsumer> logger,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             OperationProcessingContextBuilder processingContextBuilder,
-            IProcessorsFactory processorsFactory)
+            IProcessorsFactory processorsFactory,
+            IBlockchainsRepository blockchainsRepository)
         {
             _logger = logger;
             _unitOfWorkManager = unitOfWorkManager;
             _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
+            _blockchainsRepository = blockchainsRepository;
         }
 
         public async Task Consume(ConsumeContext<OperationSigning> context)
@@ -43,7 +47,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.Deposits,
                     unitOfWork.BrokerAccountBalances,
                     unitOfWork.Withdrawals,
-                    unitOfWork.MinDepositResiduals);
+                    unitOfWork.MinDepositResiduals,
+                    _blockchainsRepository);
 
                 if (processingContext.IsEmpty)
                 {

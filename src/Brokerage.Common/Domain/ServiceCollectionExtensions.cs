@@ -22,12 +22,14 @@ namespace Brokerage.Common.Domain
 
             services.AddTransient<DetectedDepositProcessor>();
             services.AddTransient<DetectedBrokerDepositProcessor>();
-            services.AddTransient<ConfirmedDepositProcessor>();
+            services.AddTransient<ConfirmedRegularDepositProcessor>();
+            services.AddTransient<ConfirmedTokenDepositProcessor>();
             services.AddTransient<ConfirmedTinyDepositProcessor>();
+            services.AddTransient<ConfirmedTinyTokenDepositProcessor>();
             services.AddTransient<ConfirmedBrokerDepositProcessor>();
             services.AddTransient<ConfirmedDepositConsolidationProcessor>();
             services.AddTransient<SentWithdrawalProcessor>();
-            services.AddTransient<CompletedDepositProcessor>();
+            services.AddTransient<CompletedRegularDepositProcessor>();
             services.AddTransient<CompletedWithdrawalProcessor>();
             services.AddTransient<SigningWithdrawalProcessor>();
             services.AddTransient<FailedDepositProcessor>();

@@ -98,6 +98,24 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<IReadOnlyCollection<MinDepositResidual>> GetForProvisioningDeposits(HashSet<long> provisioningDeposits)
+        {
+            if (!provisioningDeposits.Any())
+                return Array.Empty<MinDepositResidual>();
+
+            var minDepositResiduals = _dbContext.MinDepositResiduals.AsQueryable();
+
+            await minDepositResiduals
+                .Where(x => x.ProvisioningDepositId != null &&
+                            provisioningDeposits.Contains(x.ProvisioningDepositId.Value))
+                .LoadAsync();
+
+            return minDepositResiduals
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         private MinDepositResidual MapToDomain(MinDepositResidualEntity entity)
         {
             var domainModel = MinDepositResidual.Restore(
@@ -109,6 +127,7 @@ namespace Brokerage.Common.Persistence.Deposits
                     entity.TagType),
                 entity.AssetId,
                 entity.ConsolidationDepositId,
+                entity.ProvisioningDepositId,
                 entity.CreatedAt,
                 entity.xmin);
 
@@ -125,6 +144,7 @@ namespace Brokerage.Common.Persistence.Deposits
                 BlockchainId = model.AccountDetailsId.BlockchainId,
                 Address = model.AccountDetailsId.Address,
                 ConsolidationDepositId = model.ConsolidationDepositId,
+                ProvisioningDepositId = model.ProvisioningDepositId,
                 Tag = model.AccountDetailsId.Tag,
                 CreatedAt = model.CreatedAt,
                 TagType = model.AccountDetailsId.TagType,

@@ -28,10 +28,13 @@ namespace Brokerage.Common.Domain.Processing
                 typeof(DetectedBrokerDepositProcessor)
             };
 
+            //Order of registration matters 
             _confirmedTransactionProcessors = new List<Type>
             {
                 typeof(ConfirmedTinyDepositProcessor),
-                typeof(ConfirmedDepositProcessor),
+                typeof(ConfirmedTinyTokenDepositProcessor),
+                typeof(ConfirmedRegularDepositProcessor),
+                typeof(ConfirmedTokenDepositProcessor),
                 typeof(ConfirmedBrokerDepositProcessor),
                 typeof(ConfirmedDepositConsolidationProcessor)
             };
@@ -43,7 +46,7 @@ namespace Brokerage.Common.Domain.Processing
 
             _completedOperationProcessors = new List<Type>
             {
-                typeof(CompletedDepositProcessor),
+                typeof(CompletedRegularDepositProcessor),
                 typeof(CompletedWithdrawalProcessor)
             };
 

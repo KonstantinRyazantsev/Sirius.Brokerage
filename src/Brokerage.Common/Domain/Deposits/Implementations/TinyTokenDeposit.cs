@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Accounts;
 using Brokerage.Common.Domain.BrokerAccounts;
 using Brokerage.Common.Domain.Operations;
+using Brokerage.Common.ReadModels.Blockchains;
 using Swisschain.Sirius.Confirmator.MessagingContract;
 using Swisschain.Sirius.Sdk.Primitives;
 
@@ -70,7 +71,8 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             TransactionConfirmed tx,
             IOperationsFactory operationsFactory,
             decimal residual,
-            Account account)
+            Account account,
+            Blockchain blockchain)
         {
             SwitchState(new[] { DepositState.Detected, }, DepositState.Confirmed);
 
@@ -87,7 +89,7 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
                 tx.BlockNumber,
                 brokerAccount.VaultId,
                 account.ReferenceId,
-                brokerAccount.Id);
+                brokerAccount.Id, blockchain);
 
             ConsolidationOperationId = consolidationOperation.Id;
             TransactionInfo = TransactionInfo.UpdateRequiredConfirmationsCount(tx.RequiredConfirmationsCount);
@@ -118,6 +120,11 @@ namespace Brokerage.Common.Domain.Deposits.Implementations
             UpdatedAt = DateTime.UtcNow;
 
             AddDepositUpdatedEvent();
+        }
+
+        public MinDepositResidual GetResidual(AccountDetails accountDetails)
+        {
+            return MinDepositResidual.Create(this.Id, this.Unit.Amount, accountDetails.NaturalId, this.Unit.AssetId);
         }
 
         public static TinyTokenDeposit Create(

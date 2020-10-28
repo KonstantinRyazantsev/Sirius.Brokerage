@@ -60,6 +60,46 @@ namespace Brokerage.Common.Persistence.Deposits
                 .ToArray();
         }
 
+        public async Task<IReadOnlyCollection<Deposit>> SearchForProvisioning(string blockchainId,
+            string transactionId,
+            long? provisioningOperationId)
+        {
+            var deposits = _dbContext
+                .Deposits
+                .AsQueryable();
+
+            if (blockchainId != null)
+            {
+                deposits = deposits.Where(x => x.BlockchainId == blockchainId);
+            }
+
+            if (transactionId != null)
+            {
+                if (provisioningOperationId != null)
+                {
+                    deposits = deposits.Where(x => x.TransactionId == transactionId || x.ProvisioningOperationId == provisioningOperationId);
+                }
+                else
+                {
+                    deposits = deposits.Where(x => x.TransactionId == transactionId);
+                }
+            }
+            else
+            {
+                if (provisioningOperationId != null)
+                {
+                    deposits = deposits.Where(x => x.ProvisioningOperationId == provisioningOperationId);
+                }
+            }
+
+            await deposits.LoadAsync();
+
+            return deposits
+                .AsEnumerable()
+                .Select(MapToDomain)
+                .ToArray();
+        }
+
         public async Task<IReadOnlyCollection<Deposit>> GetAnyFor(HashSet<long> consolidationDepositsIds)
         {
             if (!consolidationDepositsIds.Any())

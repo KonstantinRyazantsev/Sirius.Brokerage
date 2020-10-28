@@ -10,7 +10,7 @@ using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Deposits.Processors
 {
-    public class CompletedDepositProcessor : ICompletedOperationProcessor
+    public class CompletedRegularDepositProcessor : ICompletedOperationProcessor
     {
         public Task Process(OperationCompleted evt, OperationProcessingContext processingContext)
         {

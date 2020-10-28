@@ -16,12 +16,10 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     public class DetectedBrokerDepositProcessor : IDetectedTransactionProcessor
     {
         private readonly IIdGenerator _idGenerator;
-        private readonly IDepositFactory _depositFactory;
 
-        public DetectedBrokerDepositProcessor(IIdGenerator idGenerator, IDepositFactory depositFactory)
+        public DetectedBrokerDepositProcessor(IIdGenerator idGenerator)
         {
             _idGenerator = idGenerator;
-            _depositFactory = depositFactory;
         }
 
         public async Task Process(TransactionDetected tx, TransactionProcessingContext processingContext)

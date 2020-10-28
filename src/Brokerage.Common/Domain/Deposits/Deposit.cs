@@ -73,7 +73,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long? ConsolidationOperationId { get; protected set; }
         public List<object> Events { get; } = new List<object>();
         public decimal MinDepositForConsolidation { get; }
-        public long? ProvisioningOperationId { get; }
+        public long? ProvisioningOperationId { get; protected set; }
         public DepositType DepositType { get; }
 
         protected void SwitchState(IEnumerable<DepositState> allowedStates, DepositState targetState)
@@ -125,7 +125,7 @@ namespace Brokerage.Common.Domain.Deposits
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.TechnicalProblem,
                             DepositErrorCode.ValidationRejected =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.ValidationRejected,
-                            DepositErrorCode.SigningRejected => 
+                            DepositErrorCode.SigningRejected =>
                             Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositError.DepositErrorCode.SigningRejected,
 
                             _ => throw new ArgumentOutOfRangeException(nameof(Error.Code), Error.Code, null)
@@ -141,10 +141,11 @@ namespace Brokerage.Common.Domain.Deposits
                     DepositState.Completed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Completed,
                     DepositState.Failed => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Failed,
                     DepositState.Cancelled => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositState.Cancelled,
-                    
+
                     _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
                 },
-                DepositType = DepositType switch {
+                DepositType = DepositType switch
+                {
                     DepositType.Tiny => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Tiny,
                     DepositType.Broker => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Broker,
                     DepositType.Regular => Swisschain.Sirius.Brokerage.MessagingContract.Deposits.DepositType.Regular,

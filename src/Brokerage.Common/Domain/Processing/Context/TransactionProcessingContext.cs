@@ -65,7 +65,6 @@ namespace Brokerage.Common.Domain.Processing.Context
         public IReadOnlyCollection<MinDepositResidual> MinDepositResiduals { get; private set; }
         public IReadOnlyCollection<Account> Accounts { get; }
 
-        public IReadOnlyCollection<Deposit> Deposits => _deposits;
         public IReadOnlyCollection<Operation> NewOperations => _newOperations;
 
         public IReadOnlyCollection<MinDepositResidual> NewMinDepositResiduals => _newMinDepositResiduals;
@@ -80,6 +79,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                                !BrokerAccountBalances.Any() &&
                                Operation == null;
 
+        public IReadOnlyCollection<Deposit> Deposits => _deposits;
         public IReadOnlyCollection<BrokerDeposit> BrokerDeposits => _brokerDeposits;
 
         public IReadOnlyCollection<TinyTokenDeposit> TinyTokenDeposits => _tinyTokenDeposits;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Persistence.BrokerAccounts;
+using Brokerage.Common.ReadModels.Blockchains;
 using Swisschain.Sirius.Sdk.Primitives;
 
 namespace Brokerage.Common.Domain.Withdrawals
@@ -142,7 +143,8 @@ namespace Brokerage.Common.Domain.Withdrawals
 
         public async Task<Operation> Execute(IBrokerAccountsRepository brokerAccountsRepository,
             IBrokerAccountDetailsRepository brokerAccountDetailsRepository,
-            IOperationsFactory operationsFactory)
+            IOperationsFactory operationsFactory,
+            Blockchain blockchain)
         {
             SwitchState(new[] {WithdrawalState.Processing}, WithdrawalState.Validating);
 
@@ -159,7 +161,8 @@ namespace Brokerage.Common.Domain.Withdrawals
                 brokerAccount.VaultId,
                 TransferContext,
                 brokerAccount.Id.ToString(),
-                null);
+                null,
+                blockchain);
 
             OperationId = operation.Id;
             UpdatedAt = DateTime.UtcNow;

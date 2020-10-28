@@ -54,6 +54,7 @@ namespace Brokerage.Common.Persistence.Operations
         {
             return Operation.Restore(
                 entity.Id,
+                entity.BlockchainId,
                 entity.Type,
                 entity.ActualFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
                 entity.ExpectedFees.Select(x => new Unit(x.AssetId, x.Amount)).ToArray(),
@@ -65,6 +66,7 @@ namespace Brokerage.Common.Persistence.Operations
             return new OperationEntity
             {
                 Id = operation.Id,
+                BlockchainId = operation.BlockchainId,
                 Type = operation.Type,
                 ExpectedFees = operation.ExpectedFees.Select(x => new ExpectedOperationFeeEntity
                 {

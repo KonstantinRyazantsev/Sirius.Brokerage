@@ -17,6 +17,7 @@ namespace Brokerage.Common.Persistence.Operations
         public IReadOnlyCollection<ExpectedOperationFeeEntity> ExpectedFees { get; set; }
 
         public long Id { get; set; }
+        public string BlockchainId { get; set; }
         public OperationType Type { get; set; }
 
         public uint Version { get; set; }

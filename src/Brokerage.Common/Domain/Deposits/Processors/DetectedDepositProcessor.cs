@@ -18,16 +18,13 @@ namespace Brokerage.Common.Domain.Deposits.Processors
     public class DetectedDepositProcessor : IDetectedTransactionProcessor
     {
         private readonly IIdGenerator _idGenerator;
-        private readonly IDepositFactory _depositFactory;
         private IReadOnlyDictionary<string, BlockchainConfig> _blockchainsConfig;
 
         public DetectedDepositProcessor(
             IIdGenerator idGenerator,
-            AppConfig appConfig,
-            IDepositFactory depositFactory)
+            AppConfig appConfig)
         {
             _idGenerator = idGenerator;
-            _depositFactory = depositFactory;
             _blockchainsConfig = appConfig.Blockchains;
         }
 

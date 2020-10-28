@@ -7,6 +7,7 @@ using Brokerage.Common.Domain.Deposits;
 using Brokerage.Common.Domain.Deposits.Implementations;
 using Brokerage.Common.Domain.Operations;
 using Brokerage.Common.Domain.Withdrawals;
+using Brokerage.Common.Persistence.Blockchains;
 using Brokerage.Common.Persistence.BrokerAccounts;
 using Brokerage.Common.Persistence.Deposits;
 using Brokerage.Common.Persistence.Operations;
@@ -21,7 +22,8 @@ namespace Brokerage.Common.Domain.Processing.Context
             IDepositsRepository depositsRepository,
             IBrokerAccountsBalancesRepository brokerAccountsBalancesRepository,
             IWithdrawalsRepository withdrawalsRepository,
-            IMinDepositResidualsRepository minDepositResidualsRepository)
+            IMinDepositResidualsRepository minDepositResidualsRepository,
+            IBlockchainsRepository blockchainsRepository)
         {
             var operation = await operationsRepository.GetOrDefault(operationId);
 
@@ -30,16 +32,16 @@ namespace Brokerage.Common.Domain.Processing.Context
                 return OperationProcessingContext.Empty;
             }
 
+            var blockchain = await blockchainsRepository.GetAsync(operation.BlockchainId);
+
             switch (operation.Type)
             {
                 case OperationType.DepositConsolidation:
                 {
-                    var deposits = (await depositsRepository.Search(
+                    var deposits = await depositsRepository.Search(
                         blockchainId: null,
                         transactionId: null,
-                        consolidationOperationId: operation.Id))
-                        .Cast<RegularDeposit>()
-                        .ToArray();
+                        consolidationOperationId: operation.Id);
                     var brokerAccountIds = deposits
                         .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
                         .ToHashSet();
@@ -47,12 +49,12 @@ namespace Brokerage.Common.Domain.Processing.Context
                         .ToDictionary(x => x.NaturalId);
                     var minDepositResiduals = await minDepositResidualsRepository.GetForConsolidationDeposits(
                         deposits.Select(x => x.Id).ToHashSet());
-                    var rawTinyDeposits = await depositsRepository.GetAnyFor(
-                        minDepositResiduals
-                            .Where(x => x.ConsolidationDepositId.HasValue)
-                            .Select(x => x.DepositId)
-                            .ToHashSet());
-                    var tinyDeposits = rawTinyDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
+                    //var rawTinyDeposits = await depositsRepository.GetAnyFor(
+                    //    minDepositResiduals
+                    //        .Where(x => x.ConsolidationDepositId.HasValue)
+                    //        .Select(x => x.DepositId)
+                    //        .ToHashSet());
+                    //var tinyDeposits = rawTinyDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
 
                     return new OperationProcessingContext(
                         operation,
@@ -60,12 +62,37 @@ namespace Brokerage.Common.Domain.Processing.Context
                         Array.Empty<Withdrawal>(),
                         brokerAccountBalances,
                         minDepositResiduals,
-                        tinyDeposits);
+                        blockchain);
                 }
 
-                // TODO:
-                //case OperationType.DepositProvisioning:
-                //    break;
+                case OperationType.DepositProvisioning:
+                {
+                    var deposits = await depositsRepository.SearchForProvisioning(
+                        blockchainId: null,
+                        transactionId: null,
+                        provisioningOperationId: operation.Id);
+                    var brokerAccountIds = deposits
+                        .Select(x => new BrokerAccountBalancesId(x.BrokerAccountId, x.Unit.AssetId))
+                        .ToHashSet();
+                    var brokerAccountBalances = (await brokerAccountsBalancesRepository.GetAnyOf(brokerAccountIds))
+                        .ToDictionary(x => x.NaturalId);
+                    var minDepositResiduals = await minDepositResidualsRepository.GetForProvisioningDeposits(
+                        deposits.Select(x => x.Id).ToHashSet());
+                    //var rawTinyDeposits = await depositsRepository.GetAnyFor(
+                    //    minDepositResiduals
+                    //        .Where(x => x.ConsolidationDepositId.HasValue)
+                    //        .Select(x => x.DepositId)
+                    //        .ToHashSet());
+                    //var tinyDeposits = rawTinyDeposits.Where(x => x is TinyDeposit).Cast<TinyDeposit>().ToArray();
+
+                    return new OperationProcessingContext(
+                        operation,
+                        deposits,
+                        Array.Empty<Withdrawal>(),
+                        brokerAccountBalances,
+                        minDepositResiduals,
+                        blockchain);
+                }
 
                 case OperationType.Withdrawal:
                 {
@@ -82,7 +109,7 @@ namespace Brokerage.Common.Domain.Processing.Context
                             [brokerAccountBalances.NaturalId] = brokerAccountBalances
                         },
                         Array.Empty<MinDepositResidual>(),
-                        Array.Empty<TinyDeposit>());
+                        blockchain);
                 }
 
                 default:

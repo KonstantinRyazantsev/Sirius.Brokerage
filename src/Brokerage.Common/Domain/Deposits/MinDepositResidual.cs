@@ -11,6 +11,7 @@ namespace Brokerage.Common.Domain.Deposits
             AccountDetailsId accountDetailsId,
             long assetId,
             long? consolidationDepositId,
+            long? provisioningDepositId,
             DateTimeOffset createdAt,
             uint version)
         {
@@ -19,6 +20,7 @@ namespace Brokerage.Common.Domain.Deposits
             AccountDetailsId = accountDetailsId;
             AssetId = assetId;
             ConsolidationDepositId = consolidationDepositId;
+            ProvisioningDepositId = provisioningDepositId;
             CreatedAt = createdAt;
             Version = version;
         }
@@ -32,6 +34,7 @@ namespace Brokerage.Common.Domain.Deposits
         public long AssetId { get; private set; }
 
         public long? ConsolidationDepositId { get; private set; }
+        public long? ProvisioningDepositId { get; private set; }
 
         public DateTimeOffset CreatedAt { get; private set; }
 
@@ -40,12 +43,21 @@ namespace Brokerage.Common.Domain.Deposits
         public static MinDepositResidual Create(long depositId, decimal amount, AccountDetailsId accountDetailsId, long assetId)
         {
             var createdAt = DateTimeOffset.UtcNow;
-            return new MinDepositResidual(depositId, amount, accountDetailsId, assetId, null, createdAt, default);
+            return new MinDepositResidual(
+                depositId, 
+                amount, 
+                accountDetailsId, 
+                assetId, 
+                null, 
+                null,
+                createdAt
+                , default);
         }
 
         public static MinDepositResidual Restore(long depositId, decimal amount, AccountDetailsId accountDetailsId,
             long assetId,
             long? consolidationDepositId,
+            long? provisioningDepositId,
             DateTimeOffset createdAt,
             uint version)
         {
@@ -54,7 +66,8 @@ namespace Brokerage.Common.Domain.Deposits
                 amount, 
                 accountDetailsId, 
                 assetId, 
-                consolidationDepositId, 
+                consolidationDepositId,
+                provisioningDepositId,
                 createdAt, 
                 version);
         }
@@ -62,6 +75,11 @@ namespace Brokerage.Common.Domain.Deposits
         public void AddConsolidationDeposit(long depositId)
         {
             ConsolidationDepositId = depositId;
+        }
+
+        public void AddProvisioningDeposit(long depositId)
+        {
+            ProvisioningDepositId = depositId;
         }
     }
 }

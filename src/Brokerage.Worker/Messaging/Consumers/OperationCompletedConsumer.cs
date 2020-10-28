@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Brokerage.Common.Domain.Processing;
 using Brokerage.Common.Domain.Processing.Context;
 using Brokerage.Common.Persistence;
+using Brokerage.Common.Persistence.Blockchains;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Swisschain.Extensions.Idempotency;
@@ -17,16 +18,19 @@ namespace Brokerage.Worker.Messaging.Consumers
         private readonly IUnitOfWorkManager<UnitOfWork> _unitOfWorkManager;
         private readonly OperationProcessingContextBuilder _processingContextBuilder;
         private readonly IProcessorsFactory _processorsFactory;
+        private readonly IBlockchainsRepository _blockchainsRepository;
 
         public OperationCompletedConsumer(ILogger<OperationCompletedConsumer> logger,
             IUnitOfWorkManager<UnitOfWork> unitOfWorkManager,
             OperationProcessingContextBuilder processingContextBuilder,
-            IProcessorsFactory processorsFactory)
+            IProcessorsFactory processorsFactory,
+            IBlockchainsRepository blockchainsRepository)
         {
             _logger = logger;
             _unitOfWorkManager = unitOfWorkManager;
             _processingContextBuilder = processingContextBuilder;
             _processorsFactory = processorsFactory;
+            _blockchainsRepository = blockchainsRepository;
         }
 
         public async Task Consume(ConsumeContext<OperationCompleted> context)
@@ -43,7 +47,8 @@ namespace Brokerage.Worker.Messaging.Consumers
                     unitOfWork.Deposits,
                     unitOfWork.BrokerAccountBalances,
                     unitOfWork.Withdrawals,
-                    unitOfWork.MinDepositResiduals);
+                    unitOfWork.MinDepositResiduals,
+                    _blockchainsRepository);
                 
                 if (processingContext.IsEmpty)
                 {
@@ -57,8 +62,7 @@ namespace Brokerage.Worker.Messaging.Consumers
                     await processor.Process(evt, processingContext);
                 }
 
-                var updatedDeposits = processingContext.RegularDeposits.Where(x => x.Events.Any()).ToArray();
-                var updatedMinDeposits = processingContext.TinyDeposits.Where(x => x.Events.Any()).ToArray();
+                var updatedDeposits = processingContext.Deposits.Where(x => x.Events.Any()).ToArray();
                 var minDepositResiduals = processingContext.MinDepositResiduals;
                 var updatedWithdrawals = processingContext.Withdrawals.Where(x => x.Events.Any()).ToArray();
                 var updatedBrokerAccountBalances = processingContext.BrokerAccountBalances.Values.Where(x => x.Events.Any()).ToArray();
@@ -68,18 +72,12 @@ namespace Brokerage.Worker.Messaging.Consumers
                 operation.AddActualFees(evt.ActualFees);
 
                 await unitOfWork.Deposits.Save(updatedDeposits);
-                await unitOfWork.Deposits.Save(updatedMinDeposits);
                 await unitOfWork.Withdrawals.Update(updatedWithdrawals);
                 await unitOfWork.BrokerAccountBalances.Save(updatedBrokerAccountBalances);
                 await unitOfWork.Operations.Update(operation);
                 await unitOfWork.MinDepositResiduals.Remove(minDepositResiduals);
 
                 foreach (var @event in updatedDeposits.SelectMany(x => x.Events))
-                {
-                    unitOfWork.Outbox.Publish(@event);
-                }
-
-                foreach (var @event in updatedMinDeposits.SelectMany(x => x.Events))
                 {
                     unitOfWork.Outbox.Publish(@event);
                 }
